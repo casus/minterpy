@@ -51,6 +51,7 @@ class MultiIndexTree:
 
     @property
     def stored_masks(self) -> ARRAY_DICT:  # the intermediary results required for DDS
+        # TODO remove when regular DDS functionality is no longer required (together with the dds module)
         if self._stored_masks is None:  # lazy evaluation
             # based on the splittings one can compute all required correspondences
             # between nodes in the left and the right of the tree

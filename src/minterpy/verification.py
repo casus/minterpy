@@ -103,9 +103,7 @@ def rectify_eval_input(x, coefficients, exponents, verify_input):
 
 
 def convert_eval_output(results_placeholder):
-    # TODO DISCUSS: what shape should the output of the evaluation have?
-    #  NOTE: e.g. evaluating a single polynomial at a single point should intuitively return a single float (not an array)
-    #   but multiple points and also multiple polynomial are also supported!
+    # TODO
     # convert into the expected shape
     out = results_placeholder.squeeze()
     if out.size == 1:  # do not return 0D but rather 1D array:

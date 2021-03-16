@@ -19,7 +19,7 @@ from minterpy.utils import eval_newt_polys_on
 
 
 def invert_triangular(triangular_matrix: np.ndarray) -> np.ndarray:
-    # FIXME: triangular inversion is not working!
+    # FIXME: triangular inversion is not working! required when using barycentric transforms?
     # i, j = triangular_matrix.shape  # square matrix
     # inverted_matrix = solve_triangular(triangular_matrix, np.identity(i))
     inverted_matrix = np.linalg.inv(triangular_matrix)
@@ -38,6 +38,7 @@ def _build_newton_to_lagrange(transformation: TransformationABC, require_inverti
     special property: half of the values will always be 0 (lower triangular matrix).
 
     TODO use the barycentric transformation (only if the indices are complete!)
+    TODO find solution for the case that the multi indices are separate from the grid indices
 
     NOTE: it is inefficient to compute this by inversion:
         newton_to_lagrange = inv(lagrange_to_newton) # based on DDS
@@ -46,7 +47,6 @@ def _build_newton_to_lagrange(transformation: TransformationABC, require_inverti
         with the fixed polynomial defining the unisolvent nodes to perform the transformation on
     :param require_invertible: weather or not the output matrix should be square
     :return: the transformation matrix from Newton to Lagrange basis
-
     """
     grid = transformation.grid
     if require_invertible:

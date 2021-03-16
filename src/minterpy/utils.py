@@ -120,7 +120,8 @@ def newt_eval(x, coefficients, exponents, generating_points, verify_input: bool 
 
      NOTE: assuming equal input array shapes as the reference implementation
 
-    # TODO idea for improvement: make use of the sparsity of the exponent matrix and avoid iterating over the zero entries!
+    TODO idea for improvement: make use of the sparsity of the exponent matrix
+     and avoid iterating over the zero entries!
 
      n = polynomial degree
      N = amount of coefficients
