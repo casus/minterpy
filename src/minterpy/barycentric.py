@@ -16,16 +16,6 @@ this allows a very efficient computation and compact storage of the transformati
 
 in the following this compact format is called "factorised"
 a factorised transformation can be stored as just numpy arrays!
-
-TODO the matrix of factors is itself of nested triangular form again. further optimisations meaningful?
- the trafo could be stored in an even more compressed format!
- how would this affect the transformation speed? balance.
- does it make sense to use the most compressed format for long term storage (precomputation)
- how much effort is required for "unrolling"/decopmpressing the transformations when required?
-
-TODO IDEA: class for "nestest triangular matrix"
-    functions for getting all entries (value, idx1, idx2), efficiently -> loop
-    function for efficient matrix multiplication
 """
 
 import numpy as np

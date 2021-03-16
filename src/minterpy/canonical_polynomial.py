@@ -199,15 +199,17 @@ def canonical_sub(self, other):
     return CanonicalPolynomial(res_coeffs, self.multi_index, self.internal_domain, self.user_domain)
 
 
-# TODO Use Horner scheme for evaluation:
-#     https://github.com/MrMinimal64/multivar_horner
-#     package also supports naive evaluation, but not of multiple coefficient sets
+
 def can_eval(x, coefficients, exponents, verify_input: bool = False):
     """ naive evaluation of the canonical polynomial
 
     version able to handle both:
      - list of input points x (2D input)
      - list of input coefficients (2D input)
+
+    TODO Use Horner scheme for evaluation:
+     https://github.com/MrMinimal64/multivar_horner
+     package also supports naive evaluation, but not of multiple coefficient sets
 
     NOTE: assuming equal input array shapes as the Newton evaluation
 

@@ -17,7 +17,7 @@ __all__ = ['MultiIndex']
 from minterpy.verification import check_shape
 
 
-# TODO implement comparison operations based on the multi index utils (>=, == ...)
+# TODO implement (set) comparison operations based on the multi index utils (>=, == ...)
 class MultiIndex(object):
 
     def __init__(self, exponents: np.ndarray, lp_degree=None, poly_deg_dtype=None):
@@ -96,10 +96,11 @@ class MultiIndex(object):
     def lp_degree(self):
         return self._lp_degree
 
-    # TODO is a setter really meaningful for this attribute?
-    #  should rather be computed from the exponents and be fixed afterwards
+
     @lp_degree.setter
     def lp_degree(self, lp_degree):
+        # TODO is a setter really meaningful for this attribute?
+        #  should rather be computed from the exponents and be fixed afterwards
         if lp_degree <= 0.0:
             raise ValueError(f"The lp_degree needs to be a positive value! <{lp_degree}> given.")
         self._lp_degree = lp_degree

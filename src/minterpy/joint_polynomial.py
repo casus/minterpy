@@ -17,24 +17,7 @@ __credits__ = ["Jannik Michelfeit"]
 __email__ = "jannik@michelfe.it"
 __status__ = "Development"
 
-# TODO integrate derivation code directly into the polynomial class
-#  API: e.g. grad = interpolant.gradient()
-#  pro: intuitive use
-#  drawback: gradient operators will be computed multiple times
 
-# TODO Define abstract methods for derivative, intergration, convolution
-
-# TODO attributes: amount of coefficients = len(multi_index)
-
-# TODO make the coefficients optional. a polynomial can exist without fixed coefficients!
-#  transformations, derivation etc. are coefficient agnostic
-#  just prevent evaluation etc.
-#  idea: "Abstract Polynomial" class? automatically convert into "concrete" when coeffs are assigned
-#  -> allow computation
-
-# TODO add higher level API. user should not be bothered with the different polynomial bases
-#   use the required bases internally (e.g. newton for evaluation).
-#   compute the required conversion matrices, coefficients etc. on demand
 from minterpy.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC, MultivariatePolynomialABC
 from minterpy.verification import rectify_query_points
 

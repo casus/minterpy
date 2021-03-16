@@ -114,7 +114,6 @@ def eval_all_newt_polys(x, exponents, generating_points, max_exponents, prod_pla
 def evaluate_multiple(x, coefficients, exponents, generating_points, max_exponents, prod_placeholder,
                       monomial_vals_placeholder, results_placeholder):
     nr_points = x.shape[1]
-    # TODO coeff matrix might be triangular
     nr_polynomials = coefficients.shape[1]
     for point_nr in range(nr_points):
         x_single = x[:, point_nr]

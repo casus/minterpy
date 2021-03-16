@@ -4,8 +4,7 @@ from typing import Optional
 
 import numpy as np
 
-from minterpy.barycentric import transform_barycentric_piecewise, transform_barycentric_factorised, compute_l2n_factorised, \
-    compute_n2l_factorised
+from minterpy.barycentric import transform_barycentric_factorised, compute_l2n_factorised, compute_n2l_factorised
 from minterpy.dds import dds_n_dimensional, compile_splits, compile_subtree_sizes, precompute_masks
 from minterpy.global_settings import ARRAY, FLOAT_DTYPE, ARRAY_DICT
 from minterpy.verification import check_type_n_values, check_shape
@@ -59,8 +58,6 @@ class MultiIndexTree:
             exponents = self.multi_index.exponents
             self._stored_masks = precompute_masks(self.split_positions, self.subtree_sizes, exponents)
         return self._stored_masks
-
-
 
     @property
     def n2l_trafo(self):

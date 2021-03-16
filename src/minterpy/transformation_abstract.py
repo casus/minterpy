@@ -13,11 +13,6 @@ from minterpy.multivariate_polynomial_abstract import MultivariatePolynomialSing
 __all__ = ['TransformationABC']
 
 
-# TODO find a way to avoid computing the identical transformation matrices multiple times
-#   e.g. when computing newt2lagr and then lagr2newton
-#   -> higher level API class: just uses grid and multi indices and compute the required matrices on demand,
-#   depending on the input and output types (not specified by the class, but rather the input arguments!)
-
 class TransformationABC(ABC):
     """
     Abstract base class for Transformation class.

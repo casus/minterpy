@@ -20,10 +20,6 @@ def dummy():
 lagrange_generate_internal_domain = verify_domain
 lagrange_generate_user_domain = verify_domain
 
-
-# TODO: name is misleading: Lagrange Polynomials have a different definition
-#  https://en.wikipedia.org/wiki/Lagrange_polynomial
-#  Lagrange Polynomial usually refers to a single "Monomial" of a polynomial in Lagrange BASIS.
 class LagrangePolynomial(MultivariatePolynomialSingleABC):
     """
     class for defining polynomials in Lagrange basis
