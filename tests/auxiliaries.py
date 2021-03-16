@@ -4,7 +4,7 @@ from typing import Iterable, List, Type
 
 import numpy as np
 
-from minterpy import MultiIndex, Grid, Regression, LagrangePolynomial, Derivator, MultivariatePolynomialSingleABC, \
+from minterpy import MultiIndex, Grid, LagrangePolynomial, Derivator, MultivariatePolynomialSingleABC, \
     TransformationABC
 from minterpy.transformation_meta import get_transformation_class
 from minterpy.verification import check_shape, check_is_square
@@ -113,13 +113,6 @@ def get_poly(spatial_dimension, poly_degree, lp_degree,
     if separate_indices:
         multi_index = delete_random_index(multi_index)
     return cls(None, multi_index, grid=grid)
-
-
-def get_regression(spatial_dimension, poly_degree, lp_degree, get_incomplete: bool = False,
-                   separate_indices: bool = False) -> Regression:
-    lagr_poly = get_poly(spatial_dimension, poly_degree, lp_degree, cls=LagrangePolynomial,
-                         get_incomplete=get_incomplete, separate_indices=separate_indices)
-    return Regression(lagr_poly, verbose=True)
 
 
 def get_transformer(spatial_dimension, poly_degree, lp_degree, cls_from=LagrangePolynomial,
