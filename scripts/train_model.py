@@ -25,7 +25,7 @@ _logger = logging.getLogger(__name__)
 def main(cfg_path: Path, log_level: int):
     logging.basicConfig(stream=sys.stdout,
                         level=log_level,
-                        datefmt='%Y-%m-%d %H:%M',
+                        datefmt='%Y-%m-%d %H:%m',
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     # YOUR CODE GOES HERE! Keep the main functionality in src/minterpy
     # est = minterpy.models.Estimator()
