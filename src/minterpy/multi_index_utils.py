@@ -28,6 +28,10 @@ def get_exponent_matrix(spatial_dimension: int, poly_degree: int, lp_degree: Uni
     pre allocate the right amount of memory
     then starting from the 0 vector, lexicographically "count up" and add all valid exponent vectors
 
+    NOTE: this has only been tested for up to dim 4 and up to deg 5.
+        be aware that the preallocated array might be too small
+        (<- will raise an IndexError by accessing the array out of bounds)!
+
     :param spatial_dimension: the dimensionality m
     :param poly_degree: the highest exponent which should occur in the exponent matrix
     :param lp_degree: the value for p of the l_p-norm
@@ -81,7 +85,6 @@ def get_exponent_matrix(spatial_dimension: int, poly_degree: int, lp_degree: Uni
         out = out.copy()  # independent copy
         del exponents  # free up memory
     return out
-
 
 
 NORM_FCT = lp_norm
