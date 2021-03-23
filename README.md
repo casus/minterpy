@@ -6,7 +6,7 @@ Classical interpolation schemes in arbitrary dimensions.
 
 Here will follow a longer description of the project
 
-## Installation
+## Installation using conda
 
 In order to set up the necessary environment:
 
@@ -56,6 +56,35 @@ Then take a look into the `scripts` and `notebooks` folders.
    ```
    conda env update -f environment.lock.yaml --prune
    ```
+
+## Installation using pip
+
+1. use the virtual environment of your choice, e.g. [virtualenv]:
+
+   ```
+   virtualenv -p 3.8.5 venv_minterpy
+   ```
+   and activate it:
+   ```
+   source venv_minterpy/bin/activate
+   ```
+
+2. install requirements via pip:
+   ```
+   pip install -r requirements.txt
+   ```
+
+3. install minterpy via setup.py
+   ```
+   python setup.py install # or `develop`
+   ```
+
+4. run the unit_tests via setup.py
+   ```
+   python setup.py test
+   ```
+   if all tests are passed, the tested functions shall run properly. 
+
 ## Project Organization
 
 ```
@@ -102,4 +131,5 @@ For details and usage information on PyScaffold see https://pyscaffold.org/.
 [Jupyter]: https://jupyter.org/
 [nbstripout]: https://github.com/kynan/nbstripout
 [Google style]: http://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
+[virtualenv]: https://virtualenv.pypa.io/en/latest/index.html
 [dsproject extension]: https://github.com/pyscaffold/pyscaffoldext-dsproject
