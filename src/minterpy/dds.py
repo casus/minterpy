@@ -58,9 +58,9 @@ def compile_splits(exponents: ARRAY) -> TYPED_LIST:
     prev_splits = set()  # TODO use Numba typed Set. not implemented yet
     prev_splits.add(0)
     splits = [prev_splits]
-    nr_dimensions = exponents.shape[0]
+    nr_dimensions = exponents.shape[1]
     for dim_idx in range(nr_dimensions - 2, -1, -1):
-        exp_row = exponents[dim_idx]
+        exp_row = exponents[:, dim_idx]
         found_splits = find_splits(exp_row, prev_splits)
         splits.insert(0, found_splits)  # at the first position
         prev_splits = found_splits
@@ -254,11 +254,11 @@ def compute_projection_mask(dim_idx: int, node_idx_left: int, node_idx_right: in
     leaf_nr_r = 0
     dim_idx = dim_idx + 1  # required for slicing the exponent vectors for comparison correctly
     leaf_pos_r = leaf_positions_r[leaf_nr_r]  # index of the first entry of this leaf
-    exp_vect_r = exponents[:dim_idx, leaf_pos_r]
+    exp_vect_r = exponents[leaf_pos_r, :dim_idx]
     for leaf_pos_l, leaf_size_l in zip(leaf_positions_l, leaf_sizes_l):
         # NOTE: some left leaf nodes do not have a correspondence in the right subtree!
         # -> check for equality of the first entry (only in the lower dimensions)
-        exp_vect_l = exponents[:dim_idx, leaf_pos_l]
+        exp_vect_l = exponents[leaf_pos_l, :dim_idx]
         if np.array_equal(exp_vect_r, exp_vect_l):  # -> these two leaf nodes match
             # link all positions in the left leaf corresponding to existing positions in the right leaf:
             leaf_size_r = leaf_sizes_r[leaf_nr_r]
@@ -269,7 +269,7 @@ def compute_projection_mask(dim_idx: int, node_idx_left: int, node_idx_right: in
             if leaf_nr_r == nr_of_leaves_r:  # found all relevant correspondences. abort
                 break
             leaf_pos_r = leaf_positions_r[leaf_nr_r]
-            exp_vect_r = exponents[:dim_idx, leaf_pos_r]
+            exp_vect_r = exponents[leaf_pos_r, :dim_idx]
 
         nr_entries_matched_l += leaf_size_l
 
@@ -407,7 +407,7 @@ def dds_n_dimensional(result_placeholder: ARRAY, generating_points: ARRAY, split
                 v_left = get_array_slice(dim_idx_child, node_idx_l, result_placeholder, split_positions, subtree_sizes)
                 pos_l = get_node_position(dim_idx_child, node_idx_l, split_positions)
                 # look up the "exponent of this sub problem"
-                exponent_l = exponents[dim_idx_par, pos_l]  # ATTENTION: from the "dimension above"
+                exponent_l = exponents[pos_l, dim_idx_par]  # ATTENTION: from the "dimension above"
                 # iterate over all splits to the right (<-> "right" nodes)
                 for node_idx_r in range(node_idx_l + 1, last_child_idx + 1):  # ATTENTION: also include the last idx!
                     project_n_update(dim_idx_child, node_idx_l, node_idx_r, exponent_l, v_left, result_placeholder,

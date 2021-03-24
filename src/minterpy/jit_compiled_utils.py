@@ -8,11 +8,11 @@ from minterpy.global_settings import F_2D, I_2D, FLOAT, F_1D, I_1D, B_TYPE, INT,
 def can_eval_mult(x_multiple, coeffs, exponents, result_placeholder):
     nr_coeffs, nr_polys = coeffs.shape
     r = result_placeholder
-    _, nr_points = x_multiple.shape
+    nr_points, _ = x_multiple.shape
     for i in range(nr_coeffs):  # each monomial
-        exp = exponents[:, i]
+        exp = exponents[i, :]
         for j in range(nr_points):  # evaluated on each point
-            x = x_multiple[:, j]
+            x = x_multiple[j, :]
             monomial_value = np.prod(np.power(x, exp))
             for k in range(nr_polys):  # reuse intermediary results
                 c = coeffs[i, k]
@@ -63,20 +63,20 @@ def eval_newton_polynomials(x, exponents, generating_points, max_exponents, prod
             prod *= (x_i - p_ij)
             # NOTE: shift index by one
             exponent = j + 1  # NOTE: otherwise the result type is float
-            prod_placeholder[i, exponent] = prod
+            prod_placeholder[exponent, i] = prod
 
     # evaluate all Newton polynomials. O(Nm)
-    N = exponents.shape[1]
+    N = exponents.shape[0]
     for j in range(N):
         # the exponents of each monomial ("alpha")
         # are the indices of the products which need to be multiplied
         newt_mon_val = 1.0  # required as multiplicative identity
         for i in range(m):
-            exp = exponents[i, j]
+            exp = exponents[j, i]
             # NOTE: an exponent of 0 should not cause a multiplication
             # (inefficient, numerical instabilities)
             if exp > 0:
-                newt_mon_val *= prod_placeholder[i, exp]
+                newt_mon_val *= prod_placeholder[exp, i]
         monomial_vals_placeholder[j] = newt_mon_val
     # NOTE: results have been stored in the numpy arrays. no need to return anything.
 
@@ -95,17 +95,17 @@ def eval_all_newt_polys(x, exponents, generating_points, max_exponents, prod_pla
         -> will skip the evaluation of some values
     :return: (k, N) the value of each Newton polynomial at each point.
     """
-    dimensionality, nr_points = x.shape
+    nr_points, dimensionality = x.shape
     active_exponents = exponents  # all per default
     for point_nr in range(nr_points):  # evaluate on all given points points
-        x_single = x[:, point_nr]
+        x_single = x[point_nr, :]
         monomial_vals_placeholder = matrix_placeholder[point_nr]  # row of the matrix
         if triangular:  # only evaluate some polynomials to create a triangular output array
             nr_active_polys = point_nr + 1
             # IMPORTANT: initialised empty. set all others to 0!
             monomial_vals_placeholder[nr_active_polys:] = 0.0
             monomial_vals_placeholder = monomial_vals_placeholder[:nr_active_polys]
-            active_exponents = exponents[:, :nr_active_polys]
+            active_exponents = exponents[:nr_active_polys, :]
         eval_newton_polynomials(x_single, active_exponents, generating_points, max_exponents, prod_placeholder,
                                 monomial_vals_placeholder)
 
@@ -113,10 +113,10 @@ def eval_all_newt_polys(x, exponents, generating_points, max_exponents, prod_pla
 @njit(void(F_2D, F_2D, I_2D, F_2D, I_1D, F_2D, F_1D, F_2D), cache=True)
 def evaluate_multiple(x, coefficients, exponents, generating_points, max_exponents, prod_placeholder,
                       monomial_vals_placeholder, results_placeholder):
-    nr_points = x.shape[1]
+    nr_points = x.shape[0]
     nr_polynomials = coefficients.shape[1]
     for point_nr in range(nr_points):
-        x_single = x[:, point_nr]
+        x_single = x[point_nr, :]
         # NOTE: with a fixed single point x to evaluate the polynomial on,
         # the values of the Newton polynomials become fixed (coefficient agnostic)
         # -> precompute all intermediary results (=compute the value of all Newton polynomials)
@@ -129,11 +129,11 @@ def evaluate_multiple(x, coefficients, exponents, generating_points, max_exponen
 
 @njit(void(F_2D, F_2D, I_2D), cache=True)
 def compute_vandermonde_n2c(V_n2c, nodes, exponents):
-    spatial_dimension, num_monomials = exponents.shape
+    num_monomials, spatial_dimension = exponents.shape
     for i in range(num_monomials):
         for j in range(1, num_monomials):
             for d in range(spatial_dimension):
-                V_n2c[i, j] *= nodes[d, i] ** exponents[d, j]
+                V_n2c[i, j] *= nodes[i, d] ** exponents[j, d]
 
 
 @njit(b1(I_1D, I_1D), cache=True)
@@ -153,12 +153,12 @@ def lex_smaller_or_equal(index1: np.ndarray, index2: np.ndarray) -> bool:
 def have_lexicographical_ordering(indices: np.ndarray) -> bool:
     """ tells weather an array of indices is ordered lexicographically
     """
-    spatial_dimension, nr_exponents = indices.shape
+    nr_exponents, spatial_dimension = indices.shape
     if nr_exponents <= 1:
         return True
-    i1 = indices[:, 0]
+    i1 = indices[0, :]
     for n in range(1, nr_exponents):
-        i2 = indices[:, n]
+        i2 = indices[n, :]
         if lex_smaller_or_equal(i2, i1):
             return False
         if np.all(i1 == i2):  # duplicates are not allowed
@@ -174,7 +174,7 @@ def get_match_idx(indices: np.ndarray, index: np.ndarray) -> int:
     exploits the lexicographical order of the indices to abort early -> not testing all indices
     time complexity: O(mN)
     """
-    spatial_dimension, nr_exponents = indices.shape
+    nr_exponents, spatial_dimension = indices.shape
     if nr_exponents == 0:
         return NOT_FOUND
     m = len(index)
@@ -182,7 +182,7 @@ def get_match_idx(indices: np.ndarray, index: np.ndarray) -> int:
         raise ValueError('dimensions do not match.')
     out = NOT_FOUND
     for i in range(nr_exponents):  # O(N)
-        contained_index = indices[:, i]
+        contained_index = indices[i, :]
         if lex_smaller_or_equal(index, contained_index):  # O(m)
             # i is now pointing to the (smallest) index which is lexicographically smaller or equal
             # the two indices are equal iff the contained index is also smaller or equal than the query index
@@ -210,8 +210,8 @@ def all_indices_are_contained(subset_indices: np.ndarray, indices: np.ndarray) -
 
     exploits the lexicographical order of the indices to abort early -> not testing all indices
     """
-    dim, nr_exp = indices.shape
-    dim_subset, nr_exp_subset = subset_indices.shape
+    nr_exp, dim = indices.shape
+    nr_exp_subset, dim_subset = subset_indices.shape
     if nr_exp == 0 or nr_exp_subset == 0:
         raise ValueError('empty index set')
     if dim != dim_subset:
@@ -222,8 +222,8 @@ def all_indices_are_contained(subset_indices: np.ndarray, indices: np.ndarray) -
     # return True when all candidate indices are contained
     match_idx = -1
     for i in range(nr_exp_subset):
-        candidate_index = subset_indices[:, i]
-        indices2search = indices[:, match_idx + 1:]  # start from the next one
+        candidate_index = subset_indices[i, :]
+        indices2search = indices[match_idx + 1:, :]  # start from the next one
         match_idx = get_match_idx(indices2search, candidate_index)
         if match_idx == NOT_FOUND:
             return False
@@ -252,12 +252,12 @@ def insert_single_index_numba(index2insert, indices, indices_out):
 @njit(void(I_2D, I_2D, I_1D), cache=True)
 def fill_match_positions(larger_idx_set, smaller_idx_set, positions):
     search_pos = -1
-    spatial_dimension, nr_exp_smaller = smaller_idx_set.shape
+    nr_exp_smaller, spatial_dimension = smaller_idx_set.shape
     for i in range(nr_exp_smaller):
-        idx1 = smaller_idx_set[:, i]
+        idx1 = smaller_idx_set[i, :]
         while 1:
             search_pos += 1
-            idx2 = larger_idx_set[:, search_pos]
+            idx2 = larger_idx_set[search_pos, :]
             if lex_smaller_or_equal(idx1, idx2) and lex_smaller_or_equal(idx2, idx1):
                 # NOTE: testing for equality directly is faster, but only in the case of equality (<- rare!)
                 #   most of the times the index won't be smaller and the check can be performed with fewer comparisons
@@ -278,10 +278,10 @@ def lp_norm_for_exponents(exp_vect, p):
 
 @njit(INT(I_2D, FLOAT, INT), cache=True)
 def fill_exp_matrix(placeholder, lp_degree, poly_degree):
-    spatial_dimension, max_nr_exp = placeholder.shape
+    max_nr_exp, spatial_dimension = placeholder.shape
     idx_last_dim = spatial_dimension - 1
     # initialise the first exponent (all 0)
-    curr_exp = placeholder[:, 0]  # slice of exponent array (view)
+    curr_exp = placeholder[0, :]  # slice of exponent array (view)
     curr_exp[:] = 0  # assign all values of in this view
     ctr = 0
     for ctr in range(1, max_nr_exp):
@@ -290,7 +290,7 @@ def fill_exp_matrix(placeholder, lp_degree, poly_degree):
         # move to the next position:
         prev_exp = curr_exp
         # duplicate the last entry:
-        curr_exp = placeholder[:, ctr]  # slice of exponent array (view)
+        curr_exp = placeholder[ctr, :]  # slice of exponent array (view)
         curr_exp[:] = prev_exp  # assign all values of in this view
 
         # try to increase the exponent in the current dim
@@ -322,9 +322,9 @@ def compute_grad_c2c(grad_c2c: np.ndarray, exponents: np.ndarray):
     @param grad_c2c: the empty tensor which should hold the result
     @param exponents: matrix of all exponent vectors
     """
-    dimensionality, nr_monomials = exponents.shape
+    nr_monomials, dimensionality = exponents.shape
     for coeff_idx_from in range(nr_monomials):  # O(N)
-        monomial_exponents = exponents[:, coeff_idx_from]
+        monomial_exponents = exponents[coeff_idx_from, :]
         for dim_idx in range(dimensionality):  # derivation in every dimension, O(m)
             monomial_exponent_dim = monomial_exponents[dim_idx]
             if monomial_exponent_dim > 0:
@@ -351,9 +351,9 @@ def compute_grad_x2c(grad_x2c: np.ndarray, exponents: np.ndarray, x2c: np.ndarra
     @param exponents: matrix of all exponent vectors
     @param x2c: the transformation matrix from origin into canonical basis
     """
-    dimensionality, nr_monomials = exponents.shape
+    nr_monomials, dimensionality = exponents.shape
     for coeff_idx_from in range(nr_monomials):  # deriving every monomial, O(N)
-        monomial_exponents = exponents[:, coeff_idx_from]
+        monomial_exponents = exponents[coeff_idx_from, :]
         for dim_idx in range(dimensionality):  # derivation in every dimension, O(m)
             mon_exp_in_dim = monomial_exponents[dim_idx]
             if mon_exp_in_dim > 0:  # use sparsity and avoid unnecessary operations

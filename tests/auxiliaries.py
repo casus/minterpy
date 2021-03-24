@@ -69,9 +69,9 @@ def all_have_shape(array_iter: Iterable[np.ndarray], shape, dimensionality: int 
 
 
 def delete_rnd_exp(exponents):
-    nr_indices = exponents.shape[1]
+    nr_indices = exponents.shape[0]
     rnd_idx = randint(0, nr_indices - 1)
-    exponents = np.delete(exponents, rnd_idx, axis=1)
+    exponents = np.delete(exponents, rnd_idx, axis=0)
     return exponents
 
 

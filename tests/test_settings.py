@@ -48,7 +48,7 @@ TEST_FUNCTIONS = [  # ground truths:
     # lambda x: x[0] + x[1], # TODO fixed 2D
 ]
 
-RUNGE_FCT_VECTORIZED = lambda eval_points: np.apply_along_axis(RUNGE_FCT, 0, eval_points)
+RUNGE_FCT_VECTORIZED = lambda eval_points: np.apply_along_axis(RUNGE_FCT, 1, eval_points)
 
 # TODO
 # TEST_FUNCTIONS_VECTORIZED = [lambda eval_points: np.apply_along_axis(g, 0, eval_points) for g in TEST_FUNCTIONS]

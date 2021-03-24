@@ -64,9 +64,9 @@ def rectify_query_points(x, m):
                 raise ValueError(f'points x given as vector of shape {query_point_shape} (1D). '
                                  f'detected dimensionality of the exponents however is {m}')
             nr_points = 1
-        x = x.reshape(m, nr_points)  # reshape to 2D
+        x = x.reshape(nr_points, m)  # reshape to 2D
     else:
-        m_points, nr_points = x.shape
+        nr_points, m_points = x.shape
         if m != m_points:
             raise ValueError(f'the dimensionality of the input points {m_points} '
                              f'does not match the polynomial dimensionality {m}')
@@ -74,7 +74,7 @@ def rectify_query_points(x, m):
 
 
 def rectify_eval_input(x, coefficients, exponents, verify_input):
-    m, N = exponents.shape
+    N, m = exponents.shape
     if N == 0:
         raise ValueError('at least 1 monomial must be given')
     # NOTE: silently reshaping the input is dangerous,
@@ -178,7 +178,7 @@ def check_domain_fit(points: np.ndarray):
     if not np.allclose(np.minimum(sample_min, -1.0), -1.0):
         raise ValueError(DOMAIN_WARN_MSG2 + f'violated min: {sample_min}')
     check_shape(points, dimensionality=2)
-    m, nr_of_points = points.shape
+    nr_of_points, m = points.shape
     if nr_of_points == 0:
         raise ValueError('at least one point must be given')
     if nr_of_points == 1:

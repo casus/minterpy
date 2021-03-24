@@ -66,7 +66,7 @@ def accuracy_test_fct(spatial_dimension, poly_degree, lp_degree):
     np.testing.assert_almost_equal(vals_interpol, fct_values, decimal=DESIRED_PRECISION)
 
     # Evaluate polynomial on uniformly sampled points
-    pts_uniformly_random = rnd_points(spatial_dimension, NR_SAMPLE_POINTS)
+    pts_uniformly_random = rnd_points(NR_SAMPLE_POINTS, spatial_dimension)
     vals_interpol = newton_poly(pts_uniformly_random)
     vals_true = ground_truth_fct(pts_uniformly_random)
     err = vals_true - vals_interpol
@@ -79,7 +79,7 @@ def accuracy_test_fct(spatial_dimension, poly_degree, lp_degree):
     x = np.arange(-1, 1, step=0.1)
     y = np.arange(-1, 1, step=0.1)
     x, y = np.meshgrid(x, y)
-    equidist_grid = np.stack([x.reshape(-1), y.reshape(-1)])
+    equidist_grid = np.stack([x.reshape(-1), y.reshape(-1)], axis=1)
 
     vals_interpol = newton_poly(equidist_grid)
     vals_true = ground_truth_fct(equidist_grid)

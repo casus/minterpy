@@ -5,7 +5,7 @@ import numpy as np
 
 from minterpy import MultiIndex, Grid, NewtonPolynomial, TransformationNewtonToCanonical
 from minterpy.utils import report_error
-from test_settings import DESIRED_PRECISION
+from tests.test_settings import DESIRED_PRECISION
 from tests.auxiliaries import check_different_settings, rnd_points
 
 
