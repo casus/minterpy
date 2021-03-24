@@ -23,7 +23,7 @@ class MultiIndex(object):
     def __init__(self, exponents: np.ndarray, lp_degree=None, poly_deg_dtype=None):
         exponents = np.require(exponents, dtype=INT_DTYPE)
         check_shape(exponents, dimensionality=2)
-        if exponents.shape[0] == 0:
+        if exponents.shape[1] == 0:
             raise ValueError(f'the dimensionality of the given exponents is 0. shape: {exponents.shape}')
         if not have_lexicographical_ordering(exponents):
             raise ValueError('the multi_indices must be ordered lexicographically from last to first column')
@@ -107,7 +107,7 @@ class MultiIndex(object):
 
     @property
     def spatial_dimension(self):
-        return self._exponents.shape[0]
+        return self._exponents.shape[1]
 
     def __str__(self):
         return "\n".join(["MultiIndex", str(self._exponents)])
@@ -117,7 +117,7 @@ class MultiIndex(object):
 
     def __len__(self):
         # returns the number of multi_indices
-        return self._exponents.shape[-1]
+        return self._exponents.shape[0]
 
     def union(self):
         raise NotImplementedError("MultiIndex.union() is not implemented yet.")
@@ -172,6 +172,9 @@ class MultiIndex(object):
                 # make complete again!
                 _exponents_completed = make_complete(_exponents_completed)
             new_instance._exponents_completed = _exponents_completed
+            #also set the exponents of the new_instance
+            #TODO avoid redundancy. why store both _exponents and _exponents_completed?
+            #new_instance._exponents = _exponents_completed
         return new_instance
 
     def add_exponents(self, vectors: np.ndarray) -> 'MultiIndex':

@@ -17,7 +17,7 @@ __all__ = ['Grid']
 
 
 def _gen_unisolvent_nodes(multi_index, generating_points):
-    return np.take_along_axis(generating_points, multi_index.exponents, axis=-1)
+    return np.take_along_axis(generating_points, multi_index.exponents.T, axis=-1).T
 
 
 def get_points_from_values(spatial_dimension: int, generating_values: np.ndarray):
@@ -160,7 +160,6 @@ class Grid(object):
             raise ValueError(f'trying to add point with exponent {np.max(exponents)} '
                              f'but the grid is only of degree {self.poly_degree}')
 
-        exponents = exponents.reshape(self.spatial_dimension, -1)
         multi_indices_old = self.multi_index
         multi_indices_new = multi_indices_old.add_exponents(exponents)
         # ATTENTION: TODO the indices must be complete in order to build a multi index tree (e.g. for the DDS scheme)!

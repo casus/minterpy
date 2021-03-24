@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 import scipy.linalg
 
-from auxiliaries import check_transformation_is_inverse, get_grid
+from tests.auxiliaries import check_transformation_is_inverse, get_grid
 from minterpy import MultiIndex, Grid, NewtonPolynomial, \
     TransformationNewtonToCanonical, TransformationCanonicalToNewton, TransformationLagrangeToNewton, \
     TransformationNewtonToLagrange, LagrangePolynomial, TransformationABC
@@ -111,10 +111,10 @@ def lagrange_n_newton_matrix_test_complete(spatial_dimension, poly_degree, lp_de
 def lagrange_n_newton_matrix_test_incomplete(spatial_dimension, poly_degree, lp_degree):
     multi_index = MultiIndex.from_degree(spatial_dimension, poly_degree, lp_degree)
     exponents = multi_index.exponents
-    m, nr_exponents = exponents.shape
+    nr_exponents, m = exponents.shape
 
     for idx in range(nr_exponents):
-        exponents_incomplete = np.delete(exponents, idx, axis=1)
+        exponents_incomplete = np.delete(exponents, idx, axis=0)
         multi_index_incomplete = MultiIndex(exponents_incomplete)
         if multi_index_incomplete.is_complete:  # sometimes deleting indices does not create "holes"
             continue
@@ -206,7 +206,7 @@ def check_separate_idx_transformation(spatial_dimension, poly_degree, lp_degree)
     # choose the highest possible exponent in order to introduce a "hole"
     # and thereby making the exponents incomplete (if possible)
     max_exp = multi_index_grid.poly_degree
-    single_idx = np.zeros((spatial_dimension, 1), dtype=INT_DTYPE) + max_exp
+    single_idx = np.zeros((1, spatial_dimension), dtype=INT_DTYPE) + max_exp
     multi_index = MultiIndex(single_idx)
     # this way there are enough generating values in the grid to represent the single exponent vector
 
@@ -228,12 +228,12 @@ def check_separate_idx_transformation(spatial_dimension, poly_degree, lp_degree)
     # this polynomial should be 0 on all grid points (basis) except the "active" point
     pt_position = lagr_poly.index_correspondence
     grid_nodes = grid.unisolvent_nodes
-    base_nodes = np.delete(grid_nodes, pt_position, axis=1)
+    base_nodes = np.delete(grid_nodes, pt_position, axis=0)
     vals_on_grid_pts = newt_poly(base_nodes)
     np.testing.assert_allclose(vals_on_grid_pts, 0.0)
 
     # only on the node corresponding to the "active" Lagrange polynomial, the overall polynomial should be 1
-    active_pt = grid_nodes[:, pt_position]
+    active_pt = grid_nodes[pt_position, :]
     val_on_active_pt = newt_poly(active_pt)
     np.testing.assert_allclose(val_on_active_pt, 1.0)
 

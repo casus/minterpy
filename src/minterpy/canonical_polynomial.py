@@ -48,9 +48,9 @@ def _generic_canonical_add(mi1, c1, mi2, c2):
     -----
     - there is no check if the shapes of the passed arrays match. This lies in the actual canonical_add function.
     """
-    dim1, len1 = mi1.shape
+    len1, dim1 = mi1.shape
     # print("len1,dim1",len1,dim1)
-    dim2, len2 = mi2.shape  # assume m1 and m2 are same dimension -> expand_dim of the mi with smaller dim
+    len2, dim2 = mi2.shape  # assume m1 and m2 are same dimension -> expand_dim of the mi with smaller dim
     # print("len2,dim2",len2,dim2)
 
     mi1r = mi1.reshape(dim1, len1, 1)
@@ -220,9 +220,9 @@ def can_eval(x, coefficients, exponents, verify_input: bool = False):
 
     Parameters
     ----------
-    x: (m, k) the k points to evaluate on with dimensionality m.
+    x: (k, m) the k points to evaluate on with dimensionality m.
     coefficients: (N, p) the coeffs of each polynomial in canonical form (basis).
-    exponents: (m, N) a multi index "alpha" corresponding to the exponents of each monomial
+    exponents: (N, m) a multi index "alpha" corresponding to the exponents of each monomial
     verify_input: weather the data types of the input should be checked. turned off by default for speed.
 
     Returns

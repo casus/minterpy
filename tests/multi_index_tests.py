@@ -11,7 +11,7 @@ from minterpy.jit_compiled_utils import lex_smaller_or_equal, have_lexicographic
 from minterpy.multi_index_utils import _gen_multi_index_exponents_recur, is_lexicographically_complete, \
     make_derivable, make_complete, _gen_multi_index_exponents, find_match_between, _get_poly_degree, \
     insert_lexicographically
-from test_settings import TIME_FORMAT_STR
+from tests.test_settings import TIME_FORMAT_STR
 from tests.auxiliaries import check_different_settings
 
 random.seed(42)  # for reproducible results
@@ -36,9 +36,9 @@ def get_lex_bigger(index, bigger_by_1=False):
 
 
 def get_rnd_exp_vect(exponent_matrix):
-    m, nr_exp = exponent_matrix.shape
+    nr_exp, m = exponent_matrix.shape
     rnd_idx = random.randint(0, nr_exp - 1)
-    exp_vect = exponent_matrix[:, rnd_idx]
+    exp_vect = exponent_matrix[rnd_idx, :]
     return rnd_idx, exp_vect
 
 
@@ -48,13 +48,13 @@ def switch_positions(exponent_matrix):
     rnd_idx2 = rnd_idx1
     while rnd_idx2 == rnd_idx1:
         rnd_idx2, exp_vect2 = get_rnd_exp_vect(exponent_matrix)
-    out[:, rnd_idx2] = exp_vect1
-    out[:, rnd_idx1] = exp_vect2
+    out[rnd_idx2, :] = exp_vect1
+    out[rnd_idx1, :] = exp_vect2
     return out
 
 
 def from_exponent_construction(spatial_dimension, poly_degree, lp_degree):
-    gamma_placeholder = np.zeros((spatial_dimension, 1))
+    gamma_placeholder = np.zeros((1, spatial_dimension))
     exponents = _gen_multi_index_exponents_recur(spatial_dimension, poly_degree, gamma_placeholder, gamma_placeholder,
                                                  lp_degree)
     multi_index = MultiIndex(exponents, lp_degree=lp_degree)
@@ -71,7 +71,7 @@ def from_degree_construction(spatial_dimension, poly_degree, lp_degree):
     print("Indices generated in", TIME_FORMAT_STR.format(time.time() - t1), '(iterative)')
     assert type(multi_index) is MultiIndex
     exponents = multi_index.exponents
-    m, nr_exponents = exponents.shape
+    nr_exponents, m = exponents.shape
     assert m == spatial_dimension
     assert np.min(exponents) == 0
     assert np.max(exponents) == poly_degree
@@ -87,14 +87,14 @@ def from_degree_construction(spatial_dimension, poly_degree, lp_degree):
     # old recursive implementation:
     exponents2 = _gen_multi_index_exponents(spatial_dimension, poly_degree, lp_degree)
     print("Indices generated in", TIME_FORMAT_STR.format(time.time() - t1), '(recursive)')
-    nr_exponents2 = exponents2.shape[1]
+    nr_exponents2 = exponents2.shape[0]
     if nr_exponents2 > nr_exponents:
         raise AssertionError()
     if nr_exponents2 == nr_exponents:
         np.testing.assert_equal(exponents, exponents2)
     else:
         match_positions = find_match_between(exponents2, exponents)
-        selected_exponents = exponents[:, match_positions]
+        selected_exponents = exponents[match_positions, :]
         np.testing.assert_equal(selected_exponents, exponents2)
 
 
@@ -103,10 +103,10 @@ def lex_smaller_or_equal_test(spatial_dimension, poly_degree, lp_degree):
     multi_index = MultiIndex.from_degree(spatial_dimension, poly_degree, lp_degree)
     print("Indices generated in", TIME_FORMAT_STR.format(time.time() - t1))
     exponents = multi_index.exponents
-    m, nr_exponents = exponents.shape
+    nr_exponents, m = exponents.shape
 
     for idx in range(nr_exponents):
-        exp_vect = exponents[:, idx]
+        exp_vect = exponents[idx, :]
         assert lex_smaller_or_equal(exp_vect, exp_vect)
         bigger_exponent_vector = get_lex_bigger(exp_vect)
         assert lex_smaller_or_equal(exp_vect, bigger_exponent_vector)
@@ -118,19 +118,19 @@ def index_is_contained_test(spatial_dimension, poly_degree, lp_degree):
     multi_index = MultiIndex.from_degree(spatial_dimension, poly_degree, lp_degree)
     print("Indices generated in", TIME_FORMAT_STR.format(time.time() - t1))
     exponents = multi_index.exponents
-    m, nr_exponents = exponents.shape
+    nr_exponents, m = exponents.shape
     assert m == spatial_dimension
     for i in range(nr_exponents):
-        exponent_vector = exponents[:, i]
+        exponent_vector = exponents[i, :]
         assert index_is_contained(exponents, exponent_vector)
 
-    largest_exponent_vector = exponents[:, -1]  # last / biggest exponent vector
+    largest_exponent_vector = exponents[-1, :]  # last / biggest exponent vector
     bigger_exponent_vector = get_lex_bigger(largest_exponent_vector)
     assert not index_is_contained(exponents, bigger_exponent_vector)
 
     for i in range(nr_exponents):
-        exponent_vector = exponents[:, 0]
-        exponents = np.delete(exponents, 0, axis=1)
+        exponent_vector = exponents[0, :]
+        exponents = np.delete(exponents, 0, axis=0)
         assert not index_is_contained(exponents, exponent_vector)
 
 
@@ -139,15 +139,15 @@ def index_is_complete_test(spatial_dimension, poly_degree, lp_degree):
     multi_index = MultiIndex.from_degree(spatial_dimension, poly_degree, lp_degree)
     print("Indices generated in", TIME_FORMAT_STR.format(time.time() - t1))
     exponents_orig = multi_index.exponents
-    m, nr_exponents = exponents_orig.shape
+    nr_exponents, m = exponents_orig.shape
     assert is_lexicographically_complete(exponents_orig)
     assert multi_index.is_complete
 
-    exponents = np.delete(exponents_orig, 0, axis=1)  # deleting the smallest vector destroys completeness
+    exponents = np.delete(exponents_orig, 0, axis=0)  # deleting the smallest vector destroys completeness
     assert not is_lexicographically_complete(exponents)
 
-    largest_exponent_vector = exponents_orig[:, -1]  # last / biggest exponent vector
-    exponents = np.delete(exponents_orig, -1, axis=1)  # deleting the biggest vector maintains completeness
+    largest_exponent_vector = exponents_orig[-1, :]  # last / biggest exponent vector
+    exponents = np.delete(exponents_orig, -1, axis=0)  # deleting the biggest vector maintains completeness
     assert is_lexicographically_complete(exponents)
 
     bigger_exponent_vector = largest_exponent_vector.copy()  # independent copy!
@@ -166,12 +166,12 @@ def insert_indices_test(spatial_dimension, poly_degree, lp_degree):
     multi_index = MultiIndex.from_degree(spatial_dimension, poly_degree, lp_degree)
     print("Indices generated in", TIME_FORMAT_STR.format(time.time() - t1))
     exponents = multi_index.exponents
-    m, nr_exponents = exponents.shape
+    nr_exponents, m = exponents.shape
 
     for idx in range(nr_exponents):
-        exp_vect = exponents[:, idx]
+        exp_vect = exponents[idx, :]
         exponents2 = insert_lexicographically(exponents, exp_vect)
-        m2, nr_exponents_new = exponents2.shape
+        nr_exponents_new, m2 = exponents2.shape
         assert nr_exponents_new == nr_exponents, \
             'inserting an already contained index should not change the index set shape'
         assert np.all(exponents == exponents2), \
@@ -179,23 +179,23 @@ def insert_indices_test(spatial_dimension, poly_degree, lp_degree):
         assert exponents is exponents2, \
             'inserting an already contained index should not change the index set object'
 
-        incomplete_exponents = np.delete(exponents, idx, axis=1)
+        incomplete_exponents = np.delete(exponents, idx, axis=0)
         restored_exponents = insert_lexicographically(exponents, exp_vect)
-        m2, nr_exponents_new = restored_exponents.shape
+        nr_exponents_new, m2 = restored_exponents.shape
         assert nr_exponents_new == nr_exponents, 'insertion did not work. wrong length'
         assert m2 == m
-        assert np.all(exp_vect == restored_exponents[:, idx]), 'the index got inserted at the wrong position'
+        assert np.all(exp_vect == restored_exponents[idx, :]), 'the index got inserted at the wrong position'
         assert np.all(exponents == restored_exponents), 'the indices should be identical'
 
     # bigger indices should be inserted at the end
-    largest_exponent_vector = exponents[:, -1]  # last / biggest exponent vector
+    largest_exponent_vector = exponents[-1, :]  # last / biggest exponent vector
     bigger_exponent_vector = get_lex_bigger(largest_exponent_vector)
     enlarged_exponents = insert_lexicographically(exponents, bigger_exponent_vector)
-    m2, nr_exponents_new = enlarged_exponents.shape
+    nr_exponents_new, m2 = enlarged_exponents.shape
     assert nr_exponents_new == nr_exponents + 1, 'insertion did not work. wrong length'
     assert m2 == m
-    assert np.all(bigger_exponent_vector == enlarged_exponents[:, -1]), 'the index got inserted at the wrong position'
-    assert np.all(exponents == enlarged_exponents[:, :-1]), 'the previous indices should be identical'
+    assert np.all(bigger_exponent_vector == enlarged_exponents[-1, :]), 'the index got inserted at the wrong position'
+    assert np.all(exponents == enlarged_exponents[:-1, :]), 'the previous indices should be identical'
 
 
 def completion_test(spatial_dimension, poly_degree, lp_degree):
@@ -204,13 +204,13 @@ def completion_test(spatial_dimension, poly_degree, lp_degree):
     print("Indices generated in", TIME_FORMAT_STR.format(time.time() - t1))
 
     exp_orig = multi_index.exponents
-    m, nr_exp_orig = exp_orig.shape
+    nr_exp_orig, m = exp_orig.shape
     assert multi_index.is_complete, 'indices constructed from a given polynomial degree should be complete'
     assert is_lexicographically_complete(
         exp_orig), 'indices constructed from a given polynomial degree should be complete'
 
     def assert_completion(completed_exponents):
-        m2, nr_exponents_new = completed_exponents.shape
+        nr_exponents_new, m2 = completed_exponents.shape
         assert have_lexicographical_ordering(completed_exponents)
         assert is_lexicographically_complete(completed_exponents)
         assert MultiIndex(completed_exponents).is_complete
@@ -224,8 +224,8 @@ def completion_test(spatial_dimension, poly_degree, lp_degree):
     assert multi_index_completed is multi_index, 'completing already complete indices should return the same object!'
 
     for idx in range(nr_exp_orig):
-        exp_vect = exp_orig[:, idx]
-        incomplete_exponents = np.delete(exp_orig, idx, axis=1)
+        exp_vect = exp_orig[idx, :]
+        incomplete_exponents = np.delete(exp_orig, idx, axis=0)
 
         # completion should be identical to "make derivable" after just deleting a single exponent vector
         completed_exponents1 = make_derivable(incomplete_exponents)
@@ -235,9 +235,9 @@ def completion_test(spatial_dimension, poly_degree, lp_degree):
             # TODO test: 'completing already complete indices should return the same object!'
             continue  # only test completing incomplete exponent sets
 
-        assert np.all(exp_vect == completed_exponents1[:, idx]), 'the index got inserted at the wrong position'
+        assert np.all(exp_vect == completed_exponents1[idx, :]), 'the index got inserted at the wrong position'
         assert_completion(completed_exponents1, )
-        assert np.all(exp_vect == completed_exponents2[:, idx]), 'the index got inserted at the wrong position'
+        assert np.all(exp_vect == completed_exponents2[idx, :]), 'the index got inserted at the wrong position'
         assert_completion(completed_exponents2)
 
         # complete index sets with multiple missing exponents:
@@ -255,15 +255,15 @@ def completion_test(spatial_dimension, poly_degree, lp_degree):
 def check_all_contained(spatial_dimension, poly_degree, lp_degree):
     multi_index = MultiIndex.from_degree(spatial_dimension, poly_degree, lp_degree)
     exponents = multi_index.exponents
-    m, nr_exponents = exponents.shape
+    nr_exponents, m = exponents.shape
 
     for idx in range(nr_exponents):
-        incomplete_exponents = np.delete(exponents, idx, axis=1)
+        incomplete_exponents = np.delete(exponents, idx, axis=0)
         assert not all_indices_are_contained(exponents, incomplete_exponents)
         assert all_indices_are_contained(incomplete_exponents, exponents)
 
     # when adding indices, not all indices are contained
-    largest_exponent_vector = exponents[:, -1]  # last / biggest exponent vector
+    largest_exponent_vector = exponents[-1, :]  # last / biggest exponent vector
     bigger_exponent_vector = get_lex_bigger(largest_exponent_vector)
     enlarged_exponents = insert_lexicographically(exponents, bigger_exponent_vector)
     assert not all_indices_are_contained(enlarged_exponents, exponents)
@@ -311,12 +311,14 @@ class IndexHelperFctTest(unittest.TestCase):
     def test_have_lexicographical_ordering(self):
         exponents = np.array([[0, 0], [0, 1]])
         assert have_lexicographical_ordering(exponents)
+
+        _,dim = exponents.shape
         # appending a bigger index at the end maintains ordering:
         NR_TRIALS = 10
         for i in range(NR_TRIALS):
-            largest_exponent_vector = exponents[:, -1]  # last / biggest exponent vector
-            bigger_exponent_vector = get_lex_bigger(largest_exponent_vector).reshape(-1, 1)
-            exponents = np.append(exponents, bigger_exponent_vector, axis=1)
+            largest_exponent_vector = exponents[-1, :]  # last / biggest exponent vector
+            bigger_exponent_vector = get_lex_bigger(largest_exponent_vector)
+            exponents = np.append(exponents, bigger_exponent_vector).reshape(-1,dim)
             assert have_lexicographical_ordering(exponents)
 
             # switching the position of indices will destroy the ordering
@@ -324,7 +326,7 @@ class IndexHelperFctTest(unittest.TestCase):
             assert not have_lexicographical_ordering(switched_exponents)
 
             # adding duplicates will destroy the ordering:
-            duplicate_exponents = np.append(exponents, exponents[:, -1].reshape(-1, 1), axis=1)
+            duplicate_exponents = np.append(exponents, exponents[-1, :]).reshape(-1, dim)
             assert not have_lexicographical_ordering(duplicate_exponents)
 
 

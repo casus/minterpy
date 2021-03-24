@@ -143,7 +143,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
             check_shape(multi_index, dimensionality=2)
             self.multi_index = MultiIndex(multi_index)
 
-        spatial_dimension, nr_monomials = self.multi_index.exponents.shape
+        nr_monomials, spatial_dimension = self.multi_index.exponents.shape
         self.coeffs = coeffs  # calls the setter method and checks the input shape
 
         if internal_domain is not None:

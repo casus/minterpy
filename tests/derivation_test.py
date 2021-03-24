@@ -3,7 +3,7 @@ from itertools import product
 
 import numpy as np
 
-from auxiliaries import all_are_close, check_different_settings, get_derivator, almost_equal, \
+from tests.auxiliaries import all_are_close, check_different_settings, get_derivator, almost_equal, \
     get_multi_index, rnd_points
 from minterpy import LagrangePolynomial, CanonicalPolynomial, NewtonPolynomial, get_transformation, compute_grad_c2c, \
     compute_grad_x2c
@@ -25,15 +25,17 @@ DO_NUMERICAL_TESTS = False
 def test_canonical_gradient():
     print('\ntesting gradient construction...')
     # ATTENTION: the exponent vectors of all derivatives have to be included already!
-    exponents = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 1], [0, 1, 1], [0, 0, 2]]).T
+    exponents = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 1], [0, 1, 1], [0, 0, 2]])
     coeffs = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
-    assert exponents.shape == (3, 5)
+    assert exponents.shape == (5, 3)
     assert coeffs.shape == (5,)
 
     grad = derive_gradient_canonical(coeffs, exponents)
-    grad_expected = np.array([[0.0, 0.0, 0.0, 0.0, 0.0],
-                              [2.0, 0.0, 4.0, 0.0, 0.0],
-                              [3.0, 4.0, 10.0, 0.0, 0.0]])
+    grad_expected = np.array([[ 0.,  2.,  3.],
+                              [ 0.,  0.,  4.],
+                              [ 0.,  4., 10.],
+                              [ 0.,  0.,  0.],
+                              [ 0.,  0.,  0.]])
     assert grad.shape == exponents.shape, f'unexpected gradient shape: {grad.shape}'
     almost_equal(grad, grad_expected), f"unexpected gradient: {grad}"
     print('tests passed!')
@@ -43,7 +45,7 @@ def check_grad_basis_transformations(spatial_dimension, poly_degree, lp_degree):
     # compute the 'base' gradient operator (canonical basis -> "c2c")
     multi_index = get_multi_index(spatial_dimension, poly_degree, lp_degree)
     exponents = multi_index.exponents
-    dimensionality, nr_monomials = exponents.shape
+    nr_monomials, dimensionality = exponents.shape
     assert is_lexicographically_complete(exponents)
 
     # Expected shape:
@@ -75,7 +77,7 @@ def check_equality_to_canonical_grad_op(spatial_dimension, poly_degree, lp_degre
     # tests the basic canonical 2 canonical gradient operator computation
     multi_index = get_multi_index(spatial_dimension, poly_degree, lp_degree)
     exponents = multi_index.exponents
-    dimensionality, nr_monomials = exponents.shape
+    nr_monomials, dimensionality = exponents.shape
     assert is_lexicographically_complete(exponents)
 
     # Expected shape:
@@ -113,8 +115,8 @@ def check_gradient_analytical(spatial_dimension, poly_degree, lp_degree):
     f = lambda x: x.T @ A @ x + b @ x + c
     fx = lambda x: 2 * x.T @ A + b
     # evaluate f as well as its derivative fx at the Chebyshev nodes of our polynomial:
-    f_vals = np.apply_along_axis(f, 0, unisolvent_nodes)
-    fx_vals = np.apply_along_axis(fx, 0, unisolvent_nodes).squeeze()
+    f_vals = np.apply_along_axis(f, 1, unisolvent_nodes)
+    fx_vals = np.apply_along_axis(fx, 1, unisolvent_nodes).squeeze()
     # .reshape((-1, m),)
 
     # set the coefficients of the polynomial which should be derived:
@@ -123,7 +125,7 @@ def check_gradient_analytical(spatial_dimension, poly_degree, lp_degree):
 
     # compute the gradient
     grad_lagrange = derivator.get_gradient_poly()
-    coeffs_grad_lagr = grad_lagrange.coeffs.T.squeeze()
+    coeffs_grad_lagr = grad_lagrange.coeffs.squeeze()
     # the lagrange coefficients of the gradient polynomial (= values of the gradient at the unisolvent nodes)
     # should be equal to the values of the analytical derivative
     almost_equal(fx_vals, coeffs_grad_lagr)
@@ -175,8 +177,8 @@ class DerivatorTest(unittest.TestCase):
     def test_partial_derivation_canonical(self):
         print('\ntesting partial derivation...')
         # ATTENTION: the exponent vectors of all derivatives have to be included already! (completeness!)
-        exponents = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 1], [0, 1, 1], [0, 0, 2]]).T
-        check_shape(exponents, (3, 5))
+        exponents = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 1], [0, 1, 1], [0, 0, 2]])
+        check_shape(exponents, (5, 3))
         assert is_lexicographically_complete(exponents)
         coeffs = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         check_shape(coeffs, (5,))

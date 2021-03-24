@@ -36,14 +36,14 @@ def partial_derivative_canonical(dim_idx: int, coeffs_canonical: np.ndarray, exp
     """
     coeffs_canonical_deriv = np.zeros(coeffs_canonical.shape)
     for monomial_idx, coeff in enumerate(coeffs_canonical):
-        monomial_exponents = exponents[:, monomial_idx]
+        monomial_exponents = exponents[monomial_idx, :]
         if monomial_exponents[dim_idx] > 0:
             mon_exponents_derived = monomial_exponents.copy()
             mon_exponents_derived[dim_idx] -= 1
             # "gradient exponential mapping"
             new_coeff_idx = get_match_idx(exponents, mon_exponents_derived)
             # multiply with exponent
-            coeffs_canonical_deriv[new_coeff_idx] = coeff * exponents[dim_idx, monomial_idx]
+            coeffs_canonical_deriv[new_coeff_idx] = coeff * exponents[monomial_idx, dim_idx]
     return coeffs_canonical_deriv
 
 
@@ -55,14 +55,14 @@ def derive_gradient_canonical(coeffs_canonical: np.ndarray, exponents: np.ndarra
     :param exponents: the respective exponent vectors of all monomials
     :return: the gradient in canonical form
     """
-    dimensionality, nr_monomials = exponents.shape
+    nr_monomials, dimensionality = exponents.shape
     nr_coefficients = len(coeffs_canonical)
     assert nr_monomials == nr_coefficients, 'coefficient and exponent shapes do not match: ' \
                                             f'{coeffs_canonical.shape}, {exponents.shape}'
-    gradient = np.empty((dimensionality, nr_monomials))
+    gradient = np.empty((nr_monomials, dimensionality))
     for dim_idx in range(dimensionality):
         coeffs_canonical_deriv = partial_derivative_canonical(dim_idx, coeffs_canonical, exponents)
-        gradient[dim_idx, :] = coeffs_canonical_deriv
+        gradient[:, dim_idx] = coeffs_canonical_deriv
     return gradient
 
 
@@ -142,7 +142,7 @@ def _get_gradient_operator(exponents: np.ndarray, x2c: Optional[np.ndarray] = No
             <-> exponents/multi indices have to be "complete"!
     @return: the tensor of the m partial derivative operators from Lagrange basis to Lagrange basis
     """
-    dimensionality, nr_monomials = exponents.shape
+    nr_monomials, dimensionality = exponents.shape
     # gradient operation tensor from basis x to canonical basis
     grad_x2c = np.zeros((dimensionality, nr_monomials, nr_monomials))
     if x2c is None:  # no transformation -> origin basis is canonical

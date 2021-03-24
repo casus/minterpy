@@ -97,15 +97,15 @@ def eval_newt_polys_on(x: np.ndarray, exponents: np.ndarray, generating_points: 
         -------
         (k, N) the value of each Newton polynomial on each point
     """
-    m, N = exponents.shape
+    N, m = exponents.shape
     nr_points, x = rectify_query_points(x, m)  # also working for 1D array, reshape into required shape
     if verify_input:
         check_dtype(x, FLOAT_DTYPE)
         check_dtype(exponents, INT_DTYPE)
 
     result_placeholder = np.empty((nr_points, N), dtype=FLOAT_DTYPE)
-    max_exponents = np.max(exponents, axis=1)
-    prod_placeholder = np.empty((m, np.max(max_exponents) + 1), dtype=FLOAT_DTYPE)
+    max_exponents = np.max(exponents, axis=0)
+    prod_placeholder = np.empty((np.max(max_exponents) + 1, m), dtype=FLOAT_DTYPE)
     eval_all_newt_polys(x, exponents, generating_points, max_exponents, prod_placeholder, result_placeholder,
                         triangular)
     return result_placeholder
@@ -172,10 +172,10 @@ def newt_eval(x, coefficients, exponents, generating_points, verify_input: bool 
         if generating_points.dtype != FLOAT_DTYPE:
             raise TypeError(f'grid values: expected dtype {FLOAT_DTYPE} got {generating_points.dtype}')
 
-    max_exponents = np.max(exponents, axis=1)
+    max_exponents = np.max(exponents, axis=0)
     # initialise arrays required for computing and storing the intermediary results:
     # will be reused in the different runs -> memory efficiency
-    prod_placeholder = np.empty((m, np.max(max_exponents) + 1), dtype=FLOAT_DTYPE)
+    prod_placeholder = np.empty((np.max(max_exponents) + 1, m), dtype=FLOAT_DTYPE)
     monomial_vals_placeholder = np.empty(N, dtype=FLOAT_DTYPE)
     results_placeholder = np.empty((nr_points, nr_polynomials), dtype=FLOAT_DTYPE)
     evaluate_multiple(x, coefficients, exponents, generating_points, max_exponents,

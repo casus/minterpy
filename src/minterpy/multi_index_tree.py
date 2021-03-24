@@ -24,7 +24,7 @@ class MultiIndexTree:
         self.grid = grid
 
         exponents = multi_index.exponents
-        spatial_dimension, nr_exponents = exponents.shape
+        nr_exponents, spatial_dimension = exponents.shape
         # NOTE: the tree structure ("splitting") depends on the exponents
         # in each dimension of the sorted multi index array
         # pre-compute and store where the splits appear in the exponent array

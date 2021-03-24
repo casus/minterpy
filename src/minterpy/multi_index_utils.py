@@ -11,7 +11,7 @@ from minterpy.utils import lp_norm
 
 
 def _get_poly_degree(exponents, lp):
-    norms = lp_norm(exponents, lp, axis=0)
+    norms = lp_norm(exponents, lp, axis=1)
     return norms.max()
 
 
@@ -66,7 +66,7 @@ def get_exponent_matrix(spatial_dimension: int, poly_degree: int, lp_degree: Uni
     nr_expected_exponents = int(nr_expected_exponents)
     if nr_expected_exponents > 1e6:
         raise ValueError(f'trying to generate exponent matrix with {max_nr_exp} entries.')
-    exponents = np.empty((m, nr_expected_exponents), dtype=INT_DTYPE)
+    exponents = np.empty((nr_expected_exponents, m), dtype=INT_DTYPE)
     nr_filled_exp = fill_exp_matrix(exponents, p, n)
 
     # NOTE: validity checked by tests:
@@ -74,7 +74,7 @@ def get_exponent_matrix(spatial_dimension: int, poly_degree: int, lp_degree: Uni
     #     raise ValueError('potentially not enough memory has been allocated to fit all valid exponent vectors! '
     #                      'check increasing the `incr_factor`')
     # just use relevant part:
-    out = exponents[:, :nr_filled_exp]
+    out = exponents[:nr_filled_exp, :]
     #  NOTE: since tiny_array is a view onto huge_array, so long as a reference to tiny_array exists the full
     #  big memory allocation will remain. creating an independent copy however will take up resources!
     #  cf. http://numpy-discussion.10968.n7.nabble.com/Numpy-s-policy-for-releasing-memory-td1533.html
@@ -109,22 +109,22 @@ def _gen_multi_index_exponents_recur(m, n, gamma, gamma2, lp_degree):
     # NOTE: these (and only these) copy operations are required! (tested)
     gamma2 = gamma2.copy()
     gamma0 = gamma.copy()
-    gamma0[m - 1] += 1
+    gamma0[0, m - 1] += 1
 
     out = []
     norm = NORM_FCT(gamma0.reshape(-1), lp_degree)
     if norm < n and m > 1:
         o1 = _gen_multi_index_exponents_recur(m - 1, n, gamma, gamma, lp_degree)
         o2 = _gen_multi_index_exponents_recur(m, n, gamma0, gamma0, lp_degree)
-        out = np.concatenate([o1, o2], axis=-1)
+        out = np.concatenate([o1, o2], axis=0)
     elif norm < n and m == 1:
         out = np.concatenate([gamma2, _gen_multi_index_exponents_recur(m, n, gamma0, gamma0, lp_degree)],
-                             axis=-1)
+                             axis=0)
     elif norm == n and m > 1:
         out = np.concatenate(
-            [_gen_multi_index_exponents_recur(m - 1, n, gamma, gamma, lp_degree), gamma0], axis=-1)
+            [_gen_multi_index_exponents_recur(m - 1, n, gamma, gamma, lp_degree), gamma0], axis=0)
     elif norm == n and m == 1:
-        out = np.concatenate([gamma2, gamma0], axis=-1)
+        out = np.concatenate([gamma2, gamma0], axis=0)
     elif norm > n:
         norm_ = NORM_FCT(gamma.reshape(-1), lp_degree)
         if norm_ < n and m > 1:
@@ -134,7 +134,7 @@ def _gen_multi_index_exponents_recur(m, n, gamma, gamma2, lp_degree):
                 if NORM_FCT(gamma0.reshape(-1), lp_degree) <= n:
                     gamma2 = np.concatenate(
                         [gamma2, _gen_multi_index_exponents_recur(j, n, gamma0, gamma0, lp_degree)],
-                        axis=-1)
+                        axis=0)
             out = gamma2
         elif m == 1:
             out = gamma2
@@ -148,7 +148,7 @@ def _gen_multi_index_exponents(spatial_dimension, poly_degree, lp_degree):
     creates the array of exponents for the MultiIndex class
     DEPRECATED: reference implementations for tests TODO remove
     """
-    gamma_placeholder = np.zeros((spatial_dimension, 1), dtype=INT_DTYPE)
+    gamma_placeholder = np.zeros((1, spatial_dimension), dtype=INT_DTYPE)
     exponents = _gen_multi_index_exponents_recur(spatial_dimension, poly_degree, gamma_placeholder, gamma_placeholder,
                                                  lp_degree)
     return exponents
@@ -165,7 +165,7 @@ def _expand_dim(exps, target_dim):
     target_dim : np.int
         Dimension up to the exponents shall be expanded to. Needs to be bigger or equal than the current dimension of exps.
     """
-    dim, mi_len = exps.shape
+    mi_len, dim = exps.shape
     exps_dtype = exps.dtype
     if target_dim < dim:
         # TODO maybe build a reduce function which removes dims where all exps are 0
@@ -173,8 +173,8 @@ def _expand_dim(exps, target_dim):
     if target_dim == dim:
         return exps
     num_expand_dim = target_dim - dim
-    new_dim_exps = np.zeros((num_expand_dim, mi_len), dtype=exps_dtype)
-    return np.concatenate((exps, new_dim_exps), axis=0)
+    new_dim_exps = np.zeros((mi_len, num_expand_dim), dtype=exps_dtype)
+    return np.concatenate((exps, new_dim_exps), axis=1)
 
 
 def iterate_indices(indices: Union[np.ndarray, Iterable[np.ndarray]]) -> Iterable[np.ndarray]:
@@ -183,9 +183,9 @@ def iterate_indices(indices: Union[np.ndarray, Iterable[np.ndarray]]) -> Iterabl
             yield indices
         else:
             # yield the columns of the index matrix
-            spatial_dimension, nr_exponents = indices.shape
+            nr_exponents, spatial_dimension = indices.shape
             for i in range(nr_exponents):
-                yield indices[:, i]
+                yield indices[i, :]
     else:  # already iterable as is:
         yield from indices
 
@@ -217,12 +217,12 @@ def gen_missing_derivatives(indices: np.ndarray) -> Iterable[np.ndarray]:
     ATTENTION: the input indices must have lexicographical ordering
     ATTENTION: duplicate partial derivatives will be generated
     """
-    spatial_dimension, nr_exponents = indices.shape
+    nr_exponents, spatial_dimension = indices.shape
     for n in reversed(range(nr_exponents)):  # start with the lexicographically biggest index
-        exp_vect = indices[:, n]
+        exp_vect = indices[n, :]
         for deriv_vect in gen_partial_derivatives(exp_vect):  # all vectors "smaller by 1"
             # NOTE: looking for the index starting from the last index would be faster TODO
-            indices2search = indices[:, :n]
+            indices2search = indices[:n, :]
             if not index_is_contained(indices2search, deriv_vect):
                 yield deriv_vect
 
@@ -269,8 +269,8 @@ def to_index_list(indices: Union[np.ndarray, Iterable[np.ndarray]]) -> List[np.n
 
 
 def to_index_array(list_of_indices: List[np.ndarray]) -> np.ndarray:
-    # NOTE: transposed shape used: (m, N)
-    index_array = np.array(list_of_indices, dtype=INT_DTYPE).T
+    # NOTE: shape is: (N, m)
+    index_array = np.array(list_of_indices, dtype=INT_DTYPE)
     return index_array
 
 
@@ -300,17 +300,17 @@ def insert_lexicographically(indices: Union[List[np.ndarray], np.ndarray],
     if type(indices) is list:
         nr_exponents = len(indices)
     else:
-        m, nr_exponents = indices.shape
+        nr_exponents, m = indices.shape
     list_of_indices = None  # avoid creating a list when there is no index to insert
     for i, index2insert in enumerate(iterate_indices(indices2insert)):
         if i == 0:  # initialise list
             list_of_indices = to_index_list(indices)
         list_insert_single(list_of_indices, index2insert)
-    if list_of_indices is None or len(indices) == nr_exponents:
+    if list_of_indices is None or len(list_of_indices) == nr_exponents: # len(list_of_indices) or len(indices)
         # no index has been inserted.
         # ATTENTION: return the previous array in order to easily compare for equality!
         return indices
-    index_array = to_index_array(list_of_indices)
+    index_array = to_index_array(list_of_indices).reshape(-1,m)
     return index_array
 
 
@@ -327,9 +327,9 @@ def make_derivable(indices: np.ndarray) -> np.ndarray:
     """ inserts all missing multi index vectors "smaller by one"
     """
     list_of_indices = []
-    spatial_dimension, nr_exponents = indices.shape
+    nr_exponents, spatial_dimension = indices.shape
     for i in reversed(range(nr_exponents)):  # start with the biggest multi index
-        contained_exponent_vector = indices[:, i]
+        contained_exponent_vector = indices[i, :]
         list_insert_single(list_of_indices, contained_exponent_vector)
         insert_partial_derivatives(list_of_indices, contained_exponent_vector)
     index_array = to_index_array(list_of_indices)
@@ -363,7 +363,7 @@ def find_match_between(smaller_idx_set: np.ndarray, larger_idx_set: np.ndarray) 
     NOTE: the smaller set is required to be a subset of the larger set
     NOTE: this function is required for 'rebasing' a polynomial onto complete multi indices (map the coefficients)
     """
-    spatial_dimension, nr_exp_smaller = smaller_idx_set.shape
+    nr_exp_smaller, spatial_dimension = smaller_idx_set.shape
     positions = np.empty(nr_exp_smaller, dtype=INT_DTYPE)
     fill_match_positions(larger_idx_set, smaller_idx_set, positions)
     return positions

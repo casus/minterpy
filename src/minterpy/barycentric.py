@@ -57,16 +57,16 @@ def compute_n2l_factorised(exponents: ARRAY, generating_points: ARRAY, unisolven
     max_problem_size = np.max(leaf_sizes)
     # compute the N2L transformation matrix piece for the first leaf node (<- is of biggest size!)
     # ATTENTION: only works for multi indices (exponents) which start with the 0 vector!
-    leaf_points = unisolvent_nodes[:, :max_problem_size]
-    leaf_exponents = exponents[:, :max_problem_size]
+    leaf_points = unisolvent_nodes[:max_problem_size, :]
+    leaf_exponents = exponents[:max_problem_size, :]
     # NOTE: the first solution piece is always quadratic ("same nodes as polys")
     first_n2l_piece = eval_newt_polys_on(leaf_points, leaf_exponents, generating_points, verify_input=DEBUG,
                                          triangular=True)
 
     # compute the correction factors for all leaf node combinations:
     # = the first value of each triangular transformation matrix piece
-    leaf_exponents = exponents[:, leaf_positions]
-    leaf_points = unisolvent_nodes[:, leaf_positions]
+    leaf_exponents = exponents[leaf_positions, :]
+    leaf_points = unisolvent_nodes[leaf_positions, :]
     # NOTE: this matrix will be triangular (1/2 of the values are 0)
     # TODO  find more memory efficient format?!
     leaf_factors = eval_newt_polys_on(leaf_points, leaf_exponents, generating_points, verify_input=DEBUG,
