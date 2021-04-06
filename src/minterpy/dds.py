@@ -103,7 +103,7 @@ def compile_subtree_sizes(nr_exponents: int, splits: TYPED_LIST) -> TYPED_LIST:
     return sizes
 
 
-# @njit(cache=True)
+@njit(cache=True)
 def compute_child_amounts(nr_exponents, split_row_par: ARRAY, split_row_child: ARRAY) -> ARRAY:
     """
     :param split_row_par: the split positions of the nodes in a particular dimension ("parents")
@@ -139,20 +139,25 @@ def compute_child_amounts(nr_exponents, split_row_par: ARRAY, split_row_child: A
     return child_amounts
 
 
-# @njit(cache=True)
-def compile_child_amounts(nr_exponents: int, splits: TYPED_LIST) -> TYPED_LIST:
+@njit(cache=True)
+def compile_child_amounts(nr_exponents: int, splits: TYPED_LIST, sizes:TYPED_LIST) -> TYPED_LIST:
     # independent in each dimension
     nr_dims = len(splits)
     amounts = List()  # use Numba typed list
-    split_row_par = splits[-1]
-    for dim_idx in range(nr_dims - 2, -1, -1):
-        split_row_child = splits[dim_idx]
+    # TODO rename
+    # TODO
+    # NOTE: the leaf nodes have no direct children -> they have a size of 0 (unused)
+    nr_of_leaves = len(splits[0])
+    # amounts.append(np.zeros(nr_of_leaves, dtype=INT_DTYPE))
+    amounts.append(sizes[0])
+
+    split_row_child = splits[0]
+    for dim_idx_par in range(1, nr_dims):
+        split_row_par = splits[dim_idx_par]
         child_amounts = compute_child_amounts(nr_exponents, split_row_par, split_row_child)
         amounts.append(child_amounts)
-        split_row_par = split_row_child
-    # NOTE: the leaf nodes have no direct children, they have a size of 1
-    nr_of_leaves = len(splits[0])
-    amounts.append(np.ones(nr_of_leaves,dtype=INT_DTYPE))
+        split_row_child = split_row_par
+
     return amounts
 
 

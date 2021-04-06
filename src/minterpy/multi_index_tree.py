@@ -5,7 +5,9 @@ from typing import Optional
 import numpy as np
 
 from minterpy.barycentric import transform_barycentric_factorised, compute_l2n_factorised, compute_n2l_factorised
-from minterpy.dds import dds_n_dimensional, compile_splits, compile_subtree_sizes, precompute_masks,compile_child_amounts
+from minterpy.barycentric2 import barycentric_dds
+from minterpy.dds import dds_n_dimensional, compile_splits, compile_subtree_sizes, precompute_masks, \
+    compile_child_amounts
 from minterpy.global_settings import ARRAY, FLOAT_DTYPE, ARRAY_DICT
 from minterpy.verification import check_type_n_values, check_shape
 
@@ -30,6 +32,7 @@ class MultiIndexTree:
         # pre-compute and store where the splits appear in the exponent array
         # this implicitly defines the "nodes" of the tree
         # TODO compute on demand? NOTE: tree is being constructed only on demand (DDS)
+        # TODO reverse order of all (NOTE: then the "dim_idx" will be counter intuitive: 0 for highest dimension...)
         self.split_positions = compile_splits(exponents)
         # also store the size of all nodes = how many exponent entries belong to this split
         # in combination with the positions of all appearing splits
@@ -37,8 +40,9 @@ class MultiIndexTree:
         # (position and amount of children etc.)
         self.subtree_sizes = compile_subtree_sizes(nr_exponents, self.split_positions)
 
-        child_amounts = compile_child_amounts(nr_exponents,self.split_positions)
+        child_amounts = compile_child_amounts(nr_exponents, self.split_positions, self.subtree_sizes)
 
+        x = barycentric_dds(grid.generating_points, self.split_positions, self.subtree_sizes, child_amounts)
         # TODO improvement: also "pre-compute" more of the recursion through the tree,
         #  avoid computing the node indices each time
         self._stored_masks: Optional[ARRAY_DICT] = None

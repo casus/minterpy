@@ -36,4 +36,5 @@ ARRAY = np.ndarray
 TYPED_LIST = numba.typed.List
 INT_TUPLE = Tuple[int, int]
 ARRAY_DICT = Dict[Tuple[int, int, int], Optional[ARRAY]]
+TRAFO_DICT = Dict[Tuple[int, int], ARRAY]
 INT_SET = Set[int]
