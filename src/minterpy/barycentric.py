@@ -16,6 +16,12 @@ this allows a very efficient computation and compact storage of the transformati
 
 in the following, this compact format is called "factorised"
 a factorised transformation can be stored as just numpy arrays!
+
+TODO additional idea for optimising the transformations:
+make use of the nested factorised format
+precompute intermediary results of transforming each vector slice (matrix multiplication)
+during a transformation only once.
+then just use multiples of these results instead of performing actual matrix multiplications
 """
 
 import numpy as np

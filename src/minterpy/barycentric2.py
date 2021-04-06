@@ -3,14 +3,13 @@
 
 TODO also update the N2L version
 
-TODO factorise transformation! speedup.
-precompute intermediary results of each vector slice transformed.
-then just use multiples of these results instead of performing matrix multiplications
+
 """
 
 import numpy as np
 from numba import njit
 
+from minterpy.barycentric import merge_matrix_pieces
 from minterpy.dds import dds_1_dimensional, get_direct_child_idxs, get_leaf_idxs
 from minterpy.global_settings import ARRAY, TYPED_LIST, INT_DTYPE, FLOAT_DTYPE, TRAFO_DICT
 
@@ -120,7 +119,7 @@ def barycentric_dds(generating_points: ARRAY, split_positions: TYPED_LIST,
         # NOTE: due to the lexicographical ordering the first node is always the largest
         max_problem_size = child_amounts[dim_idx_child][0]
         dds_solution_max = np.eye(max_problem_size, dtype=FLOAT_DTYPE)
-        gen_vals = generating_points[dim_idx_par]  # ATTENTION: different in each dimension!
+        gen_vals = generating_points[dim_idx_child]  # ATTENTION: different in each dimension!
         # TODO optimise 1D dds for diagonal input <-> output!
         dds_1_dimensional(gen_vals, dds_solution_max)
 
@@ -145,14 +144,14 @@ def barycentric_dds(generating_points: ARRAY, split_positions: TYPED_LIST,
                         idx_r_abs = first_child_idx_r + idx_r_rel
                         node_size_r = child_amounts[dim_idx_child][idx_r_abs]
                         factor = factors[idx_r_rel, idx_l_rel]
-                        curr_solution = dds_solution_max[:node_size_l, :node_size_r] * factor
+                        curr_solution = dds_solution_max[:node_size_r, :node_size_l] * factor
                         curr_solutions[idx_l_abs, idx_r_abs] = curr_solution
 
     # return only the result of the last iteration
-    return curr_solution
+    return curr_solutions
 
 
-@njit(cache=True)
+# @njit(cache=True)
 def transform_barycentric_dict(coeffs_in: ARRAY, coeffs_out: ARRAY, trafo_dict: TRAFO_DICT,
                                leaf_positions: ARRAY) -> None:
     """ performs a "piecewise" transformation (barycentric)
@@ -164,9 +163,9 @@ def transform_barycentric_dict(coeffs_in: ARRAY, coeffs_out: ARRAY, trafo_dict: 
 
     transform and sum up the respective parts (slices) of the coefficients
     """
-    for (leaf_id_l, leaf_id_r), matrix_piece, in trafo_dict.items():
-        start_pos_in = leaf_positions[leaf_id_l]
-        start_pos_out = leaf_positions[leaf_id_r]
+    for (leaf_idx_l, leaf_idx_r), matrix_piece, in trafo_dict.items():
+        start_pos_in = leaf_positions[leaf_idx_l]
+        start_pos_out = leaf_positions[leaf_idx_r]
 
         # NOTE: the size of the required slices of the coefficient vectors
         # are implicitly encoded in the size of each transformation matrix piece!
@@ -181,4 +180,30 @@ def transform_barycentric_dict(coeffs_in: ARRAY, coeffs_out: ARRAY, trafo_dict: 
         end_pos_out = start_pos_out + size_out
         slice_out = coeffs_out[start_pos_out:end_pos_out]
         slice_out[:] += coeff_slice_transformed  # sum up
+
+
+def merge_trafo_dict(trafo_dict,leaf_positions, leaf_sizes)->ARRAY:
+    first_leaf_solution = trafo_dict[0,0]
+    nr_leaves = len(leaf_positions)
+    leaf_factors = np.empty((nr_leaves,nr_leaves),dtype=FLOAT_DTYPE)
+    for (leaf_idx_l, leaf_idx_r), matrix_piece, in trafo_dict.items():
+        factor = matrix_piece[0,0]
+        leaf_factors[leaf_idx_l,leaf_idx_r] = factor
+
+    expected_size = leaf_positions[-1] + leaf_sizes[-1]
+    combined_matrix = np.zeros((expected_size, expected_size), dtype=FLOAT_DTYPE)
+    for (leaf_idx_l, leaf_idx_r), matrix_piece, in trafo_dict.items():
+        start_pos_in = leaf_positions[leaf_idx_l]
+        start_pos_out = leaf_positions[leaf_idx_r]
+
+        # NOTE: the size of the required slices of the coefficient vectors
+        # are implicitly encoded in the size of each transformation matrix piece!
+        size_out, size_in = matrix_piece.shape
+        end_pos_in = start_pos_in + size_in
+        end_pos_out = start_pos_out + size_out
+
+        window = combined_matrix[start_pos_out:end_pos_out, start_pos_in:end_pos_in]
+        window[:] = matrix_piece
+
+    return combined_matrix
 

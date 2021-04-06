@@ -4,15 +4,16 @@ import unittest
 import numpy as np
 import scipy.linalg
 
+from auxiliaries import check_different_settings, rnd_points, almost_equal, get_transformer, check_is_identity, \
+    check_transformation_is_inverse, get_grid
 from minterpy import MultiIndex, Grid, NewtonPolynomial, \
     TransformationNewtonToCanonical, TransformationCanonicalToNewton, TransformationLagrangeToNewton, \
     TransformationNewtonToLagrange, LagrangePolynomial, TransformationABC
 from minterpy.barycentric import merge_matrix_pieces
+from minterpy.barycentric2 import merge_trafo_dict
 from minterpy.global_settings import FLOAT_DTYPE, INT_DTYPE
 from minterpy.transformation_utils import build_l2n_matrix_dds
 from minterpy.utils import report_error
-from auxiliaries import check_different_settings, rnd_points, almost_equal, get_transformer, check_is_identity, \
-    check_transformation_is_inverse, get_grid
 
 
 def check_l2n_matrix(l2n_matrix, grid):
@@ -157,7 +158,8 @@ def check_l2n_barycentric(spatial_dimension, poly_degree, lp_degree):
     # n2l_regular = n2l_transformer.transformation
     # l2n_regular = np.linalg.inv(n2l_regular)
     l2n_regular = build_l2n_matrix_dds(grid)
-    l2n_barycentric = merge_matrix_pieces(*tree.l2n_trafo)
+    # l2n_barycentric = merge_matrix_pieces(*tree.l2n_trafo)
+    l2n_barycentric = merge_trafo_dict(tree.trafo_dict, tree.split_positions[0], tree.subtree_sizes[0])
     almost_equal(l2n_regular, l2n_barycentric)
 
     coeffs_lagr_true = rnd_points(nr_coefficients)  # \in [-1; 1]
