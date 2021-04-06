@@ -35,7 +35,7 @@ __email__ = "jannik@michelfe.it"
 __status__ = "Development"
 
 
-# functions for the L2N transformation:
+# functions for the N2L transformation:
 
 
 def compute_n2l_factorised(exponents: ARRAY, generating_points: ARRAY, unisolvent_nodes: ARRAY, leaf_positions: ARRAY,
@@ -75,7 +75,7 @@ def compute_n2l_factorised(exponents: ARRAY, generating_points: ARRAY, unisolven
     return first_n2l_piece, leaf_factors, leaf_positions, leaf_sizes
 
 
-# functions for the N2L transformation:
+# functions for the L2N transformation:
 
 @njit(cache=True)
 def get_leaf_array_slice(dim_idx: int, node_idx: int, array: ARRAY, split_positions: TYPED_LIST,
