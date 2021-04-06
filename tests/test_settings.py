@@ -17,7 +17,7 @@ np.random.seed(42)
 
 DESIRED_PRECISION = 10  # decimals of maximally allowed errors
 NR_SAMPLE_POINTS = 1000  # TODO dependent on m?
-MIN_DEGREE = 1
+MIN_DEGREE = 3
 MAX_DEGREE = 4
 ONLY_UNEVEN_DEGREES = False  # test only uneven interpolation total_degrees (result in more symmetrical grid)
 DEGREE_STEP = 1
@@ -28,7 +28,7 @@ else:
     DEGREE_STEP = 1
 DEGREES2TEST = range(MIN_DEGREE, MAX_DEGREE + 1, DEGREE_STEP)
 
-MIN_DIMENSION = 1
+MIN_DIMENSION = 3
 MAX_DIMENSION = 3
 DIMENSIONS2TEST = range(MIN_DIMENSION, MAX_DIMENSION + 1)
 

@@ -4,15 +4,15 @@ import unittest
 import numpy as np
 import scipy.linalg
 
-from tests.auxiliaries import check_transformation_is_inverse, get_grid
 from minterpy import MultiIndex, Grid, NewtonPolynomial, \
     TransformationNewtonToCanonical, TransformationCanonicalToNewton, TransformationLagrangeToNewton, \
     TransformationNewtonToLagrange, LagrangePolynomial, TransformationABC
-from minterpy.barycentric import merge_matrix_pieces, compute_matrix_pieces
+from minterpy.barycentric import merge_matrix_pieces
 from minterpy.global_settings import FLOAT_DTYPE, INT_DTYPE
 from minterpy.transformation_utils import build_l2n_matrix_dds
 from minterpy.utils import report_error
-from tests.auxiliaries import check_different_settings, rnd_points, almost_equal, get_transformer, check_is_identity
+from auxiliaries import check_different_settings, rnd_points, almost_equal, get_transformer, check_is_identity, \
+    check_transformation_is_inverse, get_grid
 
 
 def check_l2n_matrix(l2n_matrix, grid):

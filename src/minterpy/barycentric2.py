@@ -1,29 +1,14 @@
 #!/usr/bin/env python
-""" functions required for the barycentric transformations
+""" TODO
 
-utilises the special properties of the transformations to compute and store them in a very compact format.
-this can be done very efficiently, enabling transformations for very large (e.g. high dimensional) problems.
+TODO also update the N2L version
 
-special property:
-the full transformation matrices are of nested lower triangular form and hence sparse.
-the smallest possible triangular matrix pieces are determined by the leaves of the multi index tree.
-each combination of 2 leaves corresponds to such an "atomic" matrix piece (some of them are all 0).
-the largest of these pieces corresponds to the first node (has size n = polynomial degree).
-additionally all the atomic pieces are just multiples of each other (and with different size).
-this allows a very efficient computation and compact storage of the transformations:
-    - solve the largest leaf sub-problem (1D)
-    - compute all factors for the leaf node combinations
-
-in the following, this compact format is called "factorised"
-a factorised transformation can be stored as just numpy arrays!
 """
 
 import numpy as np
-from numba import njit
-
 from minterpy.dds import dds_1_dimensional, get_direct_child_idxs, get_leaf_idxs
-from minterpy.global_settings import DEBUG, ARRAY, TYPED_LIST, INT_DTYPE, FLOAT_DTYPE
-from minterpy.utils import eval_newt_polys_on
+from minterpy.global_settings import ARRAY, TYPED_LIST, INT_DTYPE, FLOAT_DTYPE
+from numba import njit
 
 __author__ = "Jannik Michelfeit"
 __copyright__ = "Copyright 2021, minterpy"
@@ -34,48 +19,6 @@ __credits__ = ["Jannik Michelfeit"]
 __email__ = "jannik@michelfe.it"
 __status__ = "Development"
 
-
-# functions for the N2L transformation:
-
-
-def compute_n2l_factorised(exponents: ARRAY, generating_points: ARRAY, unisolvent_nodes: ARRAY, leaf_positions: ARRAY,
-                           leaf_sizes: ARRAY):
-    """ computes the N2L transformation in factorised barycentric format
-
-    NOTE: the Newton to Lagrange transformation is implicitly given by the Newton evaluation
-
-    "piecewise L2N transformation":
-    compute the L2N transformation for the maximal problem size (= polynomial degree) once.
-    NOTE: the topmost entry of this first atomic triangular matrix will be 1.
-    all of the other matrix pieces will only be parts of this solution multiplied by a factor.
-    for computing the factors just "compute" the first entry of each sub matrix (again with Newton evaluation).
-
-    NOTE: JIT compilation not possible, because newt eval fct. cannot be JIT compiled
-
-    :return: all the required data structures for the transformation
-    """
-    max_problem_size = np.max(leaf_sizes)
-    # compute the N2L transformation matrix piece for the first leaf node (<- is of biggest size!)
-    # ATTENTION: only works for multi indices (exponents) which start with the 0 vector!
-    leaf_points = unisolvent_nodes[:max_problem_size, :]
-    leaf_exponents = exponents[:max_problem_size, :]
-    # NOTE: the first solution piece is always quadratic ("same nodes as polys")
-    first_n2l_piece = eval_newt_polys_on(leaf_points, leaf_exponents, generating_points, verify_input=DEBUG,
-                                         triangular=True)
-
-    # compute the correction factors for all leaf node combinations:
-    # = the first value of each triangular transformation matrix piece
-    leaf_exponents = exponents[leaf_positions, :]
-    leaf_points = unisolvent_nodes[leaf_positions, :]
-    # NOTE: this matrix will be triangular (1/2 of the values are 0)
-    # TODO  find more memory efficient format?!
-    leaf_factors = eval_newt_polys_on(leaf_points, leaf_exponents, generating_points, verify_input=DEBUG,
-                                      triangular=True)
-
-    return first_n2l_piece, leaf_factors, leaf_positions, leaf_sizes
-
-
-# functions for the L2N transformation:
 
 @njit(cache=True)
 def get_leaf_array_slice(dim_idx: int, node_idx: int, array: ARRAY, split_positions: TYPED_LIST,
@@ -114,9 +57,9 @@ def update_leaves(dim_idx: int, node_idx_l: int, node_idx_r: int, exponent_l: in
     v_right[:] = (v_right - v_left) / grid_val_diff  # replaces all values of the view
 
 
-@njit(cache=True)  # TODO
+# @njit(cache=True)  # TODO
 def leaf_node_dds(result_placeholder: ARRAY, generating_points: ARRAY, split_positions: TYPED_LIST,
-                  subtree_sizes: TYPED_LIST) -> None:
+                  subtree_sizes: TYPED_LIST, child_amounts:TYPED_LIST) -> None:
     """ divided difference scheme for multiple dimensions
 
     modified version for a constant leaf node size of 1
@@ -174,20 +117,50 @@ def leaf_node_dds(result_placeholder: ARRAY, generating_points: ARRAY, split_pos
     the previous desired solutions below the diagonal are again all 0, but now each cause a division!
     solution_corrected = solution_corrected / Q_H
     """
+    # intermediary results for every dimension:
+    # finally the first entry will be the triangular
+    triangular_solutions = []
+    # TODO explain top down bottom up
+
+    # starting from the "scalar 1 solution" <-> identity matrix
+    curr_solutions = [np.ones(1, dtype=FLOAT_DTYPE)]
+    triangular_solutions.insert(0,curr_solutions)
+
     dimensionality = len(split_positions)
     # traverse through the "tree" (mimicking recursion)
     # NOTE: in the last dimension the regular (1D DDS can be used)
     for dim_idx_par in range(dimensionality - 1, 0, -1):  # starting from the highest dimension
+        prev_solutions = curr_solutions
+
         dim_idx_child = dim_idx_par - 1
         splits_in_dim = split_positions[dim_idx_par]
-        nr_nodes_in_dim = len(splits_in_dim)
         generating_values = generating_points[dim_idx_par]
+        nr_nodes_in_dim = len(splits_in_dim)
+
+        curr_solutions = []
+        triangular_solutions.insert(0,curr_solutions)
+
+        # perform "1D" DDS! of the maximal appearing size in the current dimension!
+        node_idx_par = 0 # the first node is always the largest due to the lexicographical ordering
+        max_problem_size = child_amounts[dim_idx_par][node_idx_par]
+        dds_solution_max = np.eye(max_problem_size, dtype=FLOAT_DTYPE)
+        if max_problem_size > 1: # DDS only required if problem is larger than 1
+            gen_vals = generating_points[dim_idx_par]  # ATTENTION: different in each dimension!
+            # TODO optimise 1D dds for diagonal input <-> output!
+            dds_1_dimensional(gen_vals, dds_solution_max)
+
         for node_idx_par in range(nr_nodes_in_dim):  # for all parent nodes
+
+            par_solution = prev_solutions[node_idx_par]
             first_child_idx, last_child_idx = get_direct_child_idxs(dim_idx_par, node_idx_par, split_positions,
                                                                     subtree_sizes)
-            if first_child_idx == last_child_idx:
-                # ATTENTION: left and right node must not be equal!
-                continue  # abort when there are no "neighbouring nodes"
+            curr_solution = dds_solution_max
+            node_size = child_amounts[dim_idx_par][node_idx_par]
+            # TODO precompute the amount of (direct) children
+            if node_size == 1:
+                # constant sub-problem -> no DDS required
+            else:
+
             # each split corresponds to set of leaf nodes (= 1D sub-problems)
             for exponent_l, node_idx_l in enumerate(range(first_child_idx, last_child_idx)):
                 # NOTE: the exponents of the sub-problems corresponds to the order of appearance

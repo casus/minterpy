@@ -82,7 +82,7 @@ def compute_sizes(nr_exp_total: int, split_row: ARRAY) -> ARRAY:
     :return: an array with the sizes of all sub problems in this dimension
     """
     split_sizes = []
-    assert split_row[0] == 0  # the first entry (split position) is always 0
+    # assert split_row[0] == 0  # the first entry (split position) is always 0
     prev_pos = 0  # for the case that there is just a single split
     for curr_pos in split_row[1:]:  # the first entry (0) is not required
         split_sizes.append(curr_pos - prev_pos)
@@ -101,6 +101,59 @@ def compile_subtree_sizes(nr_exponents: int, splits: TYPED_LIST) -> TYPED_LIST:
     last_entry = np.array([nr_exponents], dtype=INT_DTYPE)  # the biggest tree has full size
     sizes.append(last_entry)
     return sizes
+
+
+# @njit(cache=True)
+def compute_child_amounts(nr_exponents, split_row_par: ARRAY, split_row_child: ARRAY) -> ARRAY:
+    """
+    :param split_row_par: the split positions of the nodes in a particular dimension ("parents")
+    :param split_row_child: the split positions of the nodes in the next lower dimension ("children")
+    :return: an array with the amount of direct child nodes of each node in a given parent dimension
+    """
+    child_amounts = np.empty(split_row_par.shape, dtype=INT_DTYPE)
+    nr_child_nodes_total = len(split_row_child)
+    child_idx = 0
+    # NOTE: the first entry is always 0
+    # iterate over the END split positions!
+    # ATTENTION: this requires to access the next split position (=start pos of the neighbouring node)
+    for par_idx, split_pos_par in enumerate(split_row_par[1:]):
+        child_ctr = 0  # count the amount of child nodes belonging to this split
+        while split_row_child[child_idx] < split_pos_par:
+            child_idx += 1
+            child_ctr += 1
+            if child_idx == nr_child_nodes_total:
+                break
+
+        child_amounts[par_idx] = child_ctr
+
+    # NOTE: the last split ends at the last position
+    par_idx = -1
+    split_pos_par = nr_exponents
+    child_ctr = 0
+    while split_row_child[child_idx] < split_pos_par:
+        child_idx += 1
+        child_ctr += 1
+        if child_idx == nr_child_nodes_total:
+            break
+    child_amounts[par_idx] = child_ctr
+    return child_amounts
+
+
+# @njit(cache=True)
+def compile_child_amounts(nr_exponents: int, splits: TYPED_LIST) -> TYPED_LIST:
+    # independent in each dimension
+    nr_dims = len(splits)
+    amounts = List()  # use Numba typed list
+    split_row_par = splits[-1]
+    for dim_idx in range(nr_dims - 2, -1, -1):
+        split_row_child = splits[dim_idx]
+        child_amounts = compute_child_amounts(nr_exponents, split_row_par, split_row_child)
+        amounts.append(child_amounts)
+        split_row_par = split_row_child
+    # NOTE: the leaf nodes have no direct children, they have a size of 1
+    nr_of_leaves = len(splits[0])
+    amounts.append(np.ones(nr_of_leaves,dtype=INT_DTYPE))
+    return amounts
 
 
 @njit(cache=True)

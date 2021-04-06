@@ -5,7 +5,7 @@ from typing import Optional
 import numpy as np
 
 from minterpy.barycentric import transform_barycentric_factorised, compute_l2n_factorised, compute_n2l_factorised
-from minterpy.dds import dds_n_dimensional, compile_splits, compile_subtree_sizes, precompute_masks
+from minterpy.dds import dds_n_dimensional, compile_splits, compile_subtree_sizes, precompute_masks,compile_child_amounts
 from minterpy.global_settings import ARRAY, FLOAT_DTYPE, ARRAY_DICT
 from minterpy.verification import check_type_n_values, check_shape
 
@@ -36,6 +36,8 @@ class MultiIndexTree:
         # the sizes fully determine the structure of the multi index tree
         # (position and amount of children etc.)
         self.subtree_sizes = compile_subtree_sizes(nr_exponents, self.split_positions)
+
+        child_amounts = compile_child_amounts(nr_exponents,self.split_positions)
 
         # TODO improvement: also "pre-compute" more of the recursion through the tree,
         #  avoid computing the node indices each time
