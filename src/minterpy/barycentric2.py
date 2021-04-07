@@ -9,9 +9,8 @@ TODO also update the N2L version
 import numpy as np
 from numba import njit
 
-from minterpy.barycentric import merge_matrix_pieces
-from minterpy.dds import dds_1_dimensional, get_direct_child_idxs, get_leaf_idxs
-from minterpy.global_settings import ARRAY, TYPED_LIST, INT_DTYPE, FLOAT_DTYPE, TRAFO_DICT
+from minterpy.dds import dds_1_dimensional, get_direct_child_idxs
+from minterpy.global_settings import ARRAY, TYPED_LIST, FLOAT_DTYPE, TRAFO_DICT
 
 __author__ = "Jannik Michelfeit"
 __copyright__ = "Copyright 2021, minterpy"
@@ -23,7 +22,7 @@ __email__ = "jannik@michelfe.it"
 __status__ = "Development"
 
 
-# @njit(cache=True)  # TODO
+@njit(cache=True)  # TODO
 def barycentric_dds(generating_points: ARRAY, split_positions: TYPED_LIST,
                     subtree_sizes: TYPED_LIST, child_amounts: TYPED_LIST):
     """ divided difference scheme for multiple dimensions
@@ -107,7 +106,7 @@ def barycentric_dds(generating_points: ARRAY, split_positions: TYPED_LIST,
     curr_solutions = {(0, 0): curr_solution}
 
     # traverse through the "tree" (mimicking recursion)
-    for dim_idx_par in range(dimensionality - 1, 0, -1):  # starting from the highest dimension
+    for dim_idx_par in range(dimensionality - 1, 0, -1):  # starting from the highest dimension O(m)
         prev_solutions = curr_solutions
         curr_solutions = dict()
 
@@ -121,7 +120,7 @@ def barycentric_dds(generating_points: ARRAY, split_positions: TYPED_LIST,
         dds_solution_max = np.eye(max_problem_size, dtype=FLOAT_DTYPE)
         gen_vals = generating_points[dim_idx_child]  # ATTENTION: different in each dimension!
         # TODO optimise 1D dds for diagonal input <-> output!
-        dds_1_dimensional(gen_vals, dds_solution_max)
+        dds_1_dimensional(gen_vals, dds_solution_max)  # O(n^2)
 
         # ATTENTION: for all COMBINATIONS of parent nodes (different than is usual DDS)
         for node_idx_par_l in range(nr_nodes_in_dim):
@@ -151,7 +150,7 @@ def barycentric_dds(generating_points: ARRAY, split_positions: TYPED_LIST,
     return curr_solutions
 
 
-# @njit(cache=True)
+@njit(cache=True)
 def transform_barycentric_dict(coeffs_in: ARRAY, coeffs_out: ARRAY, trafo_dict: TRAFO_DICT,
                                leaf_positions: ARRAY) -> None:
     """ performs a "piecewise" transformation (barycentric)
@@ -182,13 +181,8 @@ def transform_barycentric_dict(coeffs_in: ARRAY, coeffs_out: ARRAY, trafo_dict: 
         slice_out[:] += coeff_slice_transformed  # sum up
 
 
-def merge_trafo_dict(trafo_dict,leaf_positions, leaf_sizes)->ARRAY:
-    first_leaf_solution = trafo_dict[0,0]
-    nr_leaves = len(leaf_positions)
-    leaf_factors = np.empty((nr_leaves,nr_leaves),dtype=FLOAT_DTYPE)
-    for (leaf_idx_l, leaf_idx_r), matrix_piece, in trafo_dict.items():
-        factor = matrix_piece[0,0]
-        leaf_factors[leaf_idx_l,leaf_idx_r] = factor
+@njit(cache=True)
+def merge_trafo_dict(trafo_dict, leaf_positions, leaf_sizes) -> ARRAY:
 
     expected_size = leaf_positions[-1] + leaf_sizes[-1]
     combined_matrix = np.zeros((expected_size, expected_size), dtype=FLOAT_DTYPE)
@@ -206,4 +200,3 @@ def merge_trafo_dict(trafo_dict,leaf_positions, leaf_sizes)->ARRAY:
         window[:] = matrix_piece
 
     return combined_matrix
-
