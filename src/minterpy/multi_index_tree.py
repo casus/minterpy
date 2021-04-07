@@ -4,7 +4,7 @@ from typing import Optional
 
 import numpy as np
 
-from minterpy.barycentric import transform_barycentric_factorised, compute_l2n_factorised, compute_n2l_factorised
+from minterpy.barycentric import transform_barycentric_factorised, compute_n2l_factorised
 from minterpy.barycentric2 import barycentric_dds, transform_barycentric_dict
 from minterpy.dds import dds_n_dimensional, compile_splits, compile_subtree_sizes, precompute_masks, \
     compile_child_amounts
@@ -40,10 +40,8 @@ class MultiIndexTree:
         # (position and amount of children etc.)
         self.subtree_sizes = compile_subtree_sizes(nr_exponents, self.split_positions)
 
-        child_amounts = compile_child_amounts(nr_exponents, self.split_positions, self.subtree_sizes)
+        self.child_amounts = compile_child_amounts(nr_exponents, self.split_positions, self.subtree_sizes)
 
-        self.trafo_dict = barycentric_dds(grid.generating_points, self.split_positions, self.subtree_sizes,
-                                          child_amounts)
         # TODO improvement: also "pre-compute" more of the recursion through the tree,
         #  avoid computing the node indices each time
         self._stored_masks: Optional[ARRAY_DICT] = None
@@ -94,7 +92,8 @@ class MultiIndexTree:
             generating_points = self.grid.generating_points
             split_positions = self.split_positions
             subtree_sizes = self.subtree_sizes
-            self._l2n_trafo = compute_l2n_factorised(generating_points, split_positions, subtree_sizes)
+            child_amounts = self.child_amounts
+            self._l2n_trafo = barycentric_dds(generating_points, split_positions, subtree_sizes, child_amounts)
 
         return self._l2n_trafo
 
@@ -111,6 +110,7 @@ class MultiIndexTree:
 
     def lagrange2newton(self, coeffs_lagr: ARRAY) -> ARRAY:  # barycentric transformation
         # TODO support 2D input?
+        # TODO use the most performant transformation implementation depending on
         check_type_n_values(coeffs_lagr)
         check_shape(coeffs_lagr, shape=[len(self.multi_index)])
 
@@ -118,9 +118,8 @@ class MultiIndexTree:
         nr_coeffs = len(coeffs_lagr)
         # initialise the placeholder with 0
         coeffs_newt_placeholder = np.zeros(nr_coeffs, dtype=FLOAT_DTYPE)
-        # transform_barycentric_factorised(coeffs_lagr, coeffs_newt_placeholder, *self.l2n_trafo)
         leaf_positions = self.split_positions[0]
-        transform_barycentric_dict(coeffs_lagr, coeffs_newt_placeholder, self.trafo_dict, leaf_positions)
+        transform_barycentric_dict(coeffs_lagr, coeffs_newt_placeholder, self.l2n_trafo, leaf_positions)
         return coeffs_newt_placeholder
 
     def dds(self, coeffs_lagrange: ARRAY) -> ARRAY:
