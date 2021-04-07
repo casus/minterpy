@@ -22,9 +22,18 @@ __status__ = "Development"
 
 @njit(cache=True)
 def compute_dds_solutions(generating_points: ARRAY, problem_sizes: TYPED_LIST) -> TYPED_LIST:
+    """ performs all 1D DDS schemes required for the L2N transformation
+
+    Returns
+    -------
+    a list of the 1D DDS solutions of maximal required size for each dimension
+    """
     dimensionality = len(problem_sizes)  # TODO rename
     dds_solutions = List()  # use Numba typed list
     for dim_idx in range(dimensionality):
+        # perform "1D" DDS! of the maximal appearing size in the current dimension!
+        # NOTE: due to the lexicographical ordering the first node is always the largest
+        # TODO is the problem size always equal to the degree n?
         max_problem_size = problem_sizes[dim_idx][0]
         dds_solution_max = np.eye(max_problem_size, dtype=FLOAT_DTYPE)
         gen_vals = generating_points[dim_idx]  # ATTENTION: different in each dimension!
@@ -38,13 +47,23 @@ def compute_dds_solutions(generating_points: ARRAY, problem_sizes: TYPED_LIST) -
 @njit(cache=True)
 def expand_solution(prev_solutions: TRAFO_DICT, dds_solution_max: ARRAY, dim_idx_par: int, split_positions: TYPED_LIST,
                     subtree_sizes: TYPED_LIST, problem_sizes: TYPED_LIST) -> TRAFO_DICT:
+    """ computes the DDS solution of the next lower dimension
+
+    Parameters
+    ----------
+    prev_solutions: the previous DDS solution of the higher dimension, composite triangular matrix encoded by a dictionary
+    dds_solution_max: 1D DDS solution of the lower dimension
+    dim_idx_par: the index of the higher dimension
+
+    Returns
+    -------
+
+    a composite triangular matrix representing the DDS solution of the next lower dimension encoded by a dictionary
+    """
     expanded_solutions = dict()  # required Numba numba.typed.Dict
     splits_in_dim = split_positions[dim_idx_par]
     nr_nodes_in_dim = len(splits_in_dim)
     dim_idx_child = dim_idx_par - 1
-    # perform "1D" DDS! of the maximal appearing size in the current dimension!
-    # NOTE: due to the lexicographical ordering the first node is always the largest
-    # TODO precompute and store DDS solutions
 
     # for all COMBINATIONS of parent nodes (NOTE: different than in usual DDS!)
     for node_idx_par_l in range(nr_nodes_in_dim):
@@ -82,16 +101,41 @@ def expand_solution(prev_solutions: TRAFO_DICT, dds_solution_max: ARRAY, dim_idx
 
 @njit(cache=True)
 def barycentric_dds(generating_points: ARRAY, split_positions: TYPED_LIST,
-                    subtree_sizes: TYPED_LIST, problem_sizes: TYPED_LIST) -> TRAFO_DICT:
-    """ divided difference scheme for multiple dimensions
-
-    returns:  the fully expanded nested triangular matrix encoded in a dictionary
-        = a triangular array piece for every leaf node combination
+                    subtree_sizes: TYPED_LIST, problem_sizes: TYPED_LIST, stop_dim_idx: int = 0) -> TRAFO_DICT:
+    """ barycentric divided difference scheme for multiple dimensions
 
     modified version using only the regular 1D DDS function
     This is the core algorithm for the computation of the barycentric L2N transformation
 
-    TODO option for stopping in one dimension
+
+    Parameters
+    ----------
+    generating_points
+    split_positions
+    subtree_sizes
+    problem_sizes
+    stop_dim_idx: the index of the dimension to stop expanding the solution at
+        TODO use to determine the level of "compression".
+        NOTE: dict then needs to be combined with the (remaining) 1D dds results!
+
+    TODO dds_solutions: TYPED_LIST as input param.
+
+
+    Returns
+    -------
+
+    the fully expanded nested triangular matrix encoded in a dictionary
+        = a triangular array piece for every leaf node combination
+    """
+    """ 
+
+    returns: 
+
+
+    TODO nested
+
+     "expand" nested DDS solution
+    TODO explain top down bottom up
 
     TODO remove
 
@@ -148,23 +192,25 @@ def barycentric_dds(generating_points: ARRAY, split_positions: TYPED_LIST,
     the previous desired solutions below the diagonal are again all 0, but now each cause a division!
     solution_corrected = solution_corrected / Q_H
     """
-    # "expand" nested DDS solution
-    # TODO explain top down bottom up
 
-    # starting from the "scalar 1 solution" <-> identity matrix
-
+    if stop_dim_idx < 0:
+        raise ValueError(f'the smallest possible dimension to stop is 0 (requested {stop_dim_idx + 1}).')
     dimensionality = len(split_positions)
     dim_idx_par = dimensionality - 1
+    if stop_dim_idx > dim_idx_par:
+        raise ValueError(f'the highest possible dimension to stop is {dimensionality} (requested {stop_dim_idx + 1}).')
+
     dds_solutions = compute_dds_solutions(generating_points, problem_sizes)
     dds_solution_max = dds_solutions[dim_idx_par]
 
     # IDEA: use a dictionary to represent composite triangular matrices
-    # NOTE: the key consists of the node indices of the direct child nodes in each dimension
+    # NOTE: the key consists of the two node indices in the current dimension each solution belongs to
     # TODO improve performance, lookup
+    # start from the
     curr_solutions = {(0, 0): dds_solution_max}
 
     # traverse through the "tree" (mimicking recursion)
-    for dim_idx_par in range(dimensionality - 1, 0, -1):  # starting from the highest dimension O(m)
+    for dim_idx_par in range(dimensionality - 1, stop_dim_idx, -1):  # starting from the highest dimension O(m)
         prev_solutions = curr_solutions
         dim_idx_child = dim_idx_par - 1
         dds_solution_max = dds_solutions[dim_idx_child]
