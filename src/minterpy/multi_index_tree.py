@@ -7,7 +7,7 @@ import numpy as np
 from minterpy.barycentric import transform_barycentric_factorised, compute_n2l_factorised
 from minterpy.barycentric2 import barycentric_dds, transform_barycentric_dict
 from minterpy.dds import dds_n_dimensional, compile_splits, compile_subtree_sizes, precompute_masks, \
-    compile_child_amounts
+    compile_problem_sizes
 from minterpy.global_settings import ARRAY, FLOAT_DTYPE, ARRAY_DICT
 from minterpy.verification import check_type_n_values, check_shape
 
@@ -40,7 +40,7 @@ class MultiIndexTree:
         # (position and amount of children etc.)
         self.subtree_sizes = compile_subtree_sizes(nr_exponents, self.split_positions)
 
-        self.child_amounts = compile_child_amounts(nr_exponents, self.split_positions, self.subtree_sizes)
+        self.problem_sizes = compile_problem_sizes(nr_exponents, self.split_positions, self.subtree_sizes)
 
         # TODO improvement: also "pre-compute" more of the recursion through the tree,
         #  avoid computing the node indices each time
@@ -92,8 +92,8 @@ class MultiIndexTree:
             generating_points = self.grid.generating_points
             split_positions = self.split_positions
             subtree_sizes = self.subtree_sizes
-            child_amounts = self.child_amounts
-            self._l2n_trafo = barycentric_dds(generating_points, split_positions, subtree_sizes, child_amounts)
+            problem_sizes = self.problem_sizes
+            self._l2n_trafo = barycentric_dds(generating_points, split_positions, subtree_sizes, problem_sizes)
 
         return self._l2n_trafo
 

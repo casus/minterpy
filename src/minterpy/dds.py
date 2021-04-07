@@ -104,13 +104,13 @@ def compile_subtree_sizes(nr_exponents: int, splits: TYPED_LIST) -> TYPED_LIST:
 
 
 @njit(cache=True)
-def compute_child_amounts(nr_exponents, split_row_par: ARRAY, split_row_child: ARRAY) -> ARRAY:
+def compute_problem_sizes(nr_exponents, split_row_par: ARRAY, split_row_child: ARRAY) -> ARRAY:
     """
     :param split_row_par: the split positions of the nodes in a particular dimension ("parents")
     :param split_row_child: the split positions of the nodes in the next lower dimension ("children")
     :return: an array with the amount of direct child nodes of each node in a given parent dimension
     """
-    child_amounts = np.empty(split_row_par.shape, dtype=INT_DTYPE)
+    problem_sizes = np.empty(split_row_par.shape, dtype=INT_DTYPE)
     nr_child_nodes_total = len(split_row_child)
     child_idx = 0
     # NOTE: the first entry is always 0
@@ -124,7 +124,7 @@ def compute_child_amounts(nr_exponents, split_row_par: ARRAY, split_row_child: A
             if child_idx == nr_child_nodes_total:
                 break
 
-        child_amounts[par_idx] = child_ctr
+        problem_sizes[par_idx] = child_ctr
 
     # NOTE: the last split ends at the last position
     par_idx = -1
@@ -135,12 +135,12 @@ def compute_child_amounts(nr_exponents, split_row_par: ARRAY, split_row_child: A
         child_ctr += 1
         if child_idx == nr_child_nodes_total:
             break
-    child_amounts[par_idx] = child_ctr
-    return child_amounts
+    problem_sizes[par_idx] = child_ctr
+    return problem_sizes
 
 
 @njit(cache=True)
-def compile_child_amounts(nr_exponents: int, splits: TYPED_LIST, sizes:TYPED_LIST) -> TYPED_LIST:
+def compile_problem_sizes(nr_exponents: int, splits: TYPED_LIST, sizes:TYPED_LIST) -> TYPED_LIST:
     # independent in each dimension
     nr_dims = len(splits)
     amounts = List()  # use Numba typed list
@@ -154,8 +154,8 @@ def compile_child_amounts(nr_exponents: int, splits: TYPED_LIST, sizes:TYPED_LIS
     split_row_child = splits[0]
     for dim_idx_par in range(1, nr_dims):
         split_row_par = splits[dim_idx_par]
-        child_amounts = compute_child_amounts(nr_exponents, split_row_par, split_row_child)
-        amounts.append(child_amounts)
+        problem_sizes = compute_problem_sizes(nr_exponents, split_row_par, split_row_child)
+        amounts.append(problem_sizes)
         split_row_child = split_row_par
 
     return amounts
