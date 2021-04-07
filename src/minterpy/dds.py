@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 """ functions required for the divided difference scheme in multiple dimensions
 
-this includes the functionality for implicitly creating and traversing a "Multi Index Tree".
-the tree structure is being encoded by numpy arrays for increased performance
+NOTE: the barycentric transformations provide a similar functionality (L2N transformation) but with reduced time complexity!
 
-NOTE: the barycentric transformations provide a similar functionality (L2N transformation)
+this module also includes the functionality for implicitly creating and traversing a "Multi Index Tree".
+the tree structure is being encoded by numpy arrays for increased performance
 """
 
 from typing import Optional
