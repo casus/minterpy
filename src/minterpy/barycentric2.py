@@ -104,9 +104,10 @@ def barycentric_dds(generating_points: ARRAY, split_positions: TYPED_LIST,
                     subtree_sizes: TYPED_LIST, problem_sizes: TYPED_LIST, stop_dim_idx: int = 0) -> TRAFO_DICT:
     """ barycentric divided difference scheme for multiple dimensions
 
-    modified version using only the regular 1D DDS function
+    modified version using only the regular 1D DDS function ("fully barycentric")
+    using a "top-down" approach starting from an initial 1D DDS solution
+    expands the "nested" DDS solution into the full L2N transformation
     This is the core algorithm for the computation of the barycentric L2N transformation
-
 
     Parameters
     ----------
@@ -120,77 +121,11 @@ def barycentric_dds(generating_points: ARRAY, split_positions: TYPED_LIST,
 
     TODO dds_solutions: TYPED_LIST as input param.
 
-
     Returns
     -------
 
     the fully expanded nested triangular matrix encoded in a dictionary
         = a triangular array piece for every leaf node combination
-    """
-    """ 
-
-    returns: 
-
-
-    TODO nested
-
-     "expand" nested DDS solution
-    TODO explain top down bottom up
-
-    TODO remove
-
-
-    -> perform the nD DDS for this special case directly "on the leaf level"
-    this simplifies to computing a factor for every leaf node match (<-> matrix piece in the transformation)
-
-    NOTE: only use case is calling this with the identity matrix?!
-    TODO optimise for this use case
-
-    ATTENTION: what results will be "passed on" is determined by the order of recursion of the dds!
-    this depends on the subtree structure (<-> in which dimensions two leaf nodes are "related")
-    this makes the simplification of the "leaf node level dds" very hard without completely copying the original dds!
-
-    tl;dr idea description:
-
-    from a global perspective the desired solution (Lagrange coefficients) is the identity matrix
-    for each leaf (local perspective) the solution is 1 on the corresponding unisolvent nodes and 0 everywhere else!
-    this property enables some simplifications
-
-    from left to right
-    FIRST push desired solution (Lagrange) of this node to all siblings to the right
-     ("downwards" in the transformation matrix)
-    dive each by "leaf" difference Q_H
-    solution_right = (solution_right - solution_left) / (val_right - val_left)
-    solution_corrected = (solution_expected - correction) / Q_H
-    THEN compute solution with 1D DDS
-
-    referencing the parts of the matrix by selecting two leaf nodes:
-    node 1 corresponds to the selected input (= Lagrange coefficients) <-> "left to right"
-    node 2 corresponds to the selected output (= Newton coefficients) <-> "top to bottom"
-
-    the parts ABOVE the diagonal are all 0 -> no computations required
-
-    for the parts of the matrix ON the diagonal (node 1 = node 2):
-    the desired solution (starting value) is the identity matrix I (with the size of this leaf node)
-    the previous desired solutions ("to the top") are all 0
-    -> the correction of the previous nodes EACH only causes a division
-    solution_corrected_0 = I
-    solution_corrected = solution_corrected / Q_H
-    the value selection is based on the active initial exponents of the leaf nodes
-
-    all parts BELOW the diagonal (node 1 left of node 2 in the tree)
-    the size is (size node 2, size node 1)
-    the desired solution (starting value) is all 0
-    the previous desired solutions ("to the top") are all 0 above the diagonal
-    -> these values cause no correction. the desired solutions stay all 0
-    solution_corrected = (0 - 0) / Q_H = 0
-    NOTE: this corresponds to results not passing "left-right splits in the tree"
-    <-> independence of sub-problems to the right (= towards the "bottom" of the matrix)
-    the previous desired solutions on the diagonal are equal to the identity I
-    -> cause a correction and a division
-    solution_corrected = (0 - I) / Q_H =  - I / Q_H
-    the previous desired solutions below the diagonal are again all 0, but now each cause a division!
-    solution_corrected = solution_corrected / Q_H
     """
 
     if stop_dim_idx < 0:
@@ -231,7 +166,11 @@ def transform_barycentric_dict(coeffs_in: ARRAY, coeffs_out: ARRAY, trafo_dict: 
     NOTE: this format includes a lot of redundancies,
         because the matrix pieces are actually just multiples of each other!
 
-    transform and sum up the respective parts (slices) of the coefficients
+    NOTE: depending on the problem size it might be more performant
+        to use a different implementation of this transformation!
+        (e.g. regular DDS or leaf level DDS (factorised format)
+
+    transforms and sums up the respective parts (slices) of the coefficients
     """
     for (leaf_idx_l, leaf_idx_r), matrix_piece, in trafo_dict.items():
         start_pos_in = leaf_positions[leaf_idx_l]
