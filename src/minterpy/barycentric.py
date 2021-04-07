@@ -58,6 +58,12 @@ def compute_n2l_factorised(exponents: ARRAY, generating_points: ARRAY, unisolven
 
     NOTE: JIT compilation not possible, because newt eval fct. cannot be JIT compiled
 
+
+    TODO also incorporate the latest improvements of the barycentric L2N transformation:
+        evaluate just in one dimension then pass the results to all nodes in the tree "below"
+        -> expand the result until the full transformation has been computed
+
+
     :return: all the required data structures for the transformation
     """
     max_problem_size = np.max(leaf_sizes)
