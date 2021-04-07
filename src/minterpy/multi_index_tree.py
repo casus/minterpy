@@ -4,8 +4,8 @@ from typing import Optional
 
 import numpy as np
 
-from minterpy.barycentric import transform_barycentric_factorised, compute_n2l_factorised
-from minterpy.barycentric2 import barycentric_dds, transform_barycentric_dict
+from minterpy.barycentric import transform_barycentric_factorised, transform_barycentric_dict
+from minterpy.barycentric_precomp import barycentric_dds, compute_n2l_factorised
 from minterpy.dds import dds_n_dimensional, compile_splits, compile_subtree_sizes, precompute_masks, \
     compile_problem_sizes
 from minterpy.global_settings import ARRAY, FLOAT_DTYPE, ARRAY_DICT

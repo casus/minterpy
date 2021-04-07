@@ -9,8 +9,7 @@ from auxiliaries import check_different_settings, rnd_points, almost_equal, get_
 from minterpy import MultiIndex, Grid, NewtonPolynomial, \
     TransformationNewtonToCanonical, TransformationCanonicalToNewton, TransformationLagrangeToNewton, \
     TransformationNewtonToLagrange, LagrangePolynomial, TransformationABC
-from minterpy.barycentric import merge_matrix_pieces
-from minterpy.barycentric2 import merge_trafo_dict
+from minterpy.barycentric import merge_matrix_pieces, merge_trafo_dict
 from minterpy.global_settings import FLOAT_DTYPE, INT_DTYPE
 from minterpy.transformation_utils import build_l2n_matrix_dds
 from minterpy.utils import report_error
