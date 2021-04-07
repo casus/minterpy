@@ -4,8 +4,7 @@
 this includes the functionality for implicitly creating and traversing a "Multi Index Tree".
 the tree structure is being encoded by numpy arrays for increased performance
 
-NOTE: TODO this module is redundant. the functionality it provides (L2N transformation)
- is already handled by the barycentric transformation
+NOTE: the barycentric transformations provide a similar functionality (L2N transformation)
 """
 
 from typing import Optional
