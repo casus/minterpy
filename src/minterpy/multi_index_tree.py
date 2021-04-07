@@ -32,7 +32,8 @@ class MultiIndexTree:
         # pre-compute and store where the splits appear in the exponent array
         # this implicitly defines the "nodes" of the tree
         # TODO compute on demand? NOTE: tree is being constructed only on demand (DDS)
-        # TODO reverse order of all (NOTE: then the "dim_idx" will be counter intuitive: 0 for highest dimension...)
+        # TODO reverse the dim order of all
+        #  (NOTE: then the "dim_idx" will then be counter intuitive: 0 for highest dimension...)
         self.split_positions = compile_splits(exponents)
         # also store the size of all nodes = how many exponent entries belong to this split
         # in combination with the positions of all appearing splits
@@ -45,7 +46,6 @@ class MultiIndexTree:
         # TODO improvement: also "pre-compute" more of the recursion through the tree,
         #  avoid computing the node indices each time
         self._stored_masks: Optional[ARRAY_DICT] = None
-        # TODO support min_dim, min_size options
         self._leaf_matches = None
         self._n2l_trafo = None
         self._l2n_trafo = None
@@ -110,7 +110,6 @@ class MultiIndexTree:
 
     def lagrange2newton(self, coeffs_lagr: ARRAY) -> ARRAY:  # barycentric transformation
         # TODO support 2D input?
-        # TODO use the most performant transformation implementation depending on
         check_type_n_values(coeffs_lagr)
         check_shape(coeffs_lagr, shape=[len(self.multi_index)])
 

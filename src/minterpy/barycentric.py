@@ -2,21 +2,9 @@
 """ functions required for performing (precomputed) barycentric transformations
     and for converting different transformation formats
 
-utilises the special properties of the transformations to compute and store them in a very compact format.
-this can be done very efficiently, enabling transformations for very large (e.g. high dimensional) problems.
-
-special property:
-the full transformation matrices are of nested lower triangular form and hence sparse.
-the smallest possible triangular matrix pieces are determined by the leaves of the multi index tree.
-each combination of 2 leaves corresponds to such an "atomic" matrix piece (some of them are all 0).
-the largest of these pieces corresponds to the first node (has size n = polynomial degree).
-additionally all the atomic pieces are just multiples of each other (and with different size).
-this allows a very efficient computation and compact storage of the transformations:
-    - solve the largest leaf sub-problem (1D)
-    - compute all factors for the leaf node combinations
-
-in the following, this compact format is called "factorised"
-a factorised transformation can be stored as just numpy arrays!
+TODO use the most performant transformation implementation depending on
+NOTE: TODO the performance of each of the different formats needs to be balanced
+benchmark against each other. and select the appropriate transformation. memory and time requirements?
 
 TODO additional idea for optimising the transformations:
 make use of the nested factorised format
@@ -24,6 +12,7 @@ precompute intermediary results of transforming each vector slice (matrix multip
 during a transformation only once.
 then just use multiples of these results instead of performing actual matrix multiplications
 """
+
 __author__ = "Jannik Michelfeit"
 __copyright__ = "Copyright 2021, minterpy"
 __credits__ = ["Jannik Michelfeit"]
@@ -81,8 +70,6 @@ def transform_barycentric_dict(coeffs_in: ARRAY, coeffs_out: ARRAY, trafo_dict: 
 def transform_barycentric_factorised(coeffs_in: ARRAY, coeffs_out_placeholder: ARRAY, first_leaf_solution: ARRAY,
                                      leaf_factors: ARRAY, leaf_positions: ARRAY, leaf_sizes: ARRAY) -> None:
     """ performs a "piecewise" barycentric transformation
-
-    # TODO benchmark against the transformation in the piecewise storage format. memory and time requirements?
 
     uses an optimised format of storing the transformations:
         just based on a factor for each combination of leaf problems and a single solution 1D problem

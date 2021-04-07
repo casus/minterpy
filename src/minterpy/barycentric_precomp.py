@@ -1,27 +1,11 @@
 #!/usr/bin/env python
 """ functions required for precomputing the barycentric transformations
 
-utilises the special properties of the transformations to compute and store them in a very compact format.
+utilises the special properties of the transformations to compute and store them in a very compact (barycentric) format.
 this can be done very efficiently, enabling transformations for very large (e.g. high dimensional) problems.
 
-special property:
-the full transformation matrices are of nested lower triangular form and hence sparse.
-the smallest possible triangular matrix pieces are determined by the leaves of the multi index tree.
-each combination of 2 leaves corresponds to such an "atomic" matrix piece (some of them are all 0).
-the largest of these pieces corresponds to the first node (has size n = polynomial degree).
-additionally all the atomic pieces are just multiples of each other (and with different size).
-this allows a very efficient computation and compact storage of the transformations:
-    - solve the largest leaf sub-problem (1D)
-    - compute all factors for the leaf node combinations
-
-in the following, this compact format is called "factorised"
-a factorised transformation can be stored as just numpy arrays!
-
-TODO additional idea for optimising the transformations:
-make use of the nested factorised format
-precompute intermediary results of transforming each vector slice (matrix multiplication)
-during a transformation only once.
-then just use multiples of these results instead of performing actual matrix multiplications
+due to the nested (recursive) structure of the transformations
+there are different formats for storing (and computing) these transformations
 """
 
 import numpy as np
@@ -29,7 +13,8 @@ from numba import njit
 from numba.typed import List
 
 from minterpy.dds import dds_1_dimensional, get_direct_child_idxs, get_leaf_idxs
-from minterpy.global_settings import ARRAY, TYPED_LIST, FLOAT_DTYPE, TRAFO_DICT,DEBUG
+from minterpy.global_settings import ARRAY, TYPED_LIST, FLOAT_DTYPE, TRAFO_DICT, DEBUG
+from minterpy.utils import eval_newt_polys_on
 
 __author__ = "Jannik Michelfeit"
 __copyright__ = "Copyright 2021, minterpy"
@@ -39,8 +24,6 @@ __credits__ = ["Jannik Michelfeit"]
 # __maintainer__ =
 __email__ = "jannik@michelfe.it"
 __status__ = "Development"
-
-from minterpy.utils import eval_newt_polys_on
 
 
 # functions for the L2N transformation:
@@ -182,7 +165,6 @@ def barycentric_dds(generating_points: ARRAY, split_positions: TYPED_LIST,
     return curr_solutions
 
 
-
 @njit(cache=True)
 def get_leaf_array_slice(dim_idx: int, node_idx: int, array: ARRAY, split_positions: TYPED_LIST,
                          subtree_sizes: TYPED_LIST) -> ARRAY:
@@ -226,7 +208,6 @@ def leaf_node_dds(result_placeholder: ARRAY, generating_points: ARRAY, split_pos
     """ divided difference scheme for multiple dimensions
 
     modified version for a constant leaf node size of 1
-    This is the core algorithm for the computation of the barycentric L2N transformation
 
     -> perform the nD DDS for this special case directly "on the leaf level"
     this simplifies to computing a factor for every leaf node match (<-> matrix piece in the transformation)
@@ -236,49 +217,6 @@ def leaf_node_dds(result_placeholder: ARRAY, generating_points: ARRAY, split_pos
 
     ATTENTION: what results will be "passed on" is determined by the order of recursion of the dds!
     this depends on the subtree structure (<-> in which dimensions two leaf nodes are "related")
-    this makes the simplification of the "leaf node level dds" very hard without completely copying the original dds!
-
-    tl;dr idea description:
-
-    from a global perspective the desired solution (Lagrange coefficients) is the identity matrix
-    for each leaf (local perspective) the solution is 1 on the corresponding unisolvent nodes and 0 everywhere else!
-    this property enables some simplifications
-
-    from left to right
-    FIRST push desired solution (Lagrange) of this node to all siblings to the right
-     ("downwards" in the transformation matrix)
-    dive each by "leaf" difference Q_H
-    solution_right = (solution_right - solution_left) / (val_right - val_left)
-    solution_corrected = (solution_expected - correction) / Q_H
-    THEN compute solution with 1D DDS
-
-    referencing the parts of the matrix by selecting two leaf nodes:
-    node 1 corresponds to the selected input (= Lagrange coefficients) <-> "left to right"
-    node 2 corresponds to the selected output (= Newton coefficients) <-> "top to bottom"
-
-    the parts ABOVE the diagonal are all 0 -> no computations required
-
-    for the parts of the matrix ON the diagonal (node 1 = node 2):
-    the desired solution (starting value) is the identity matrix I (with the size of this leaf node)
-    the previous desired solutions ("to the top") are all 0
-    -> the correction of the previous nodes EACH only causes a division
-    solution_corrected_0 = I
-    solution_corrected = solution_corrected / Q_H
-    the value selection is based on the active initial exponents of the leaf nodes
-
-    all parts BELOW the diagonal (node 1 left of node 2 in the tree)
-    the size is (size node 2, size node 1)
-    the desired solution (starting value) is all 0
-    the previous desired solutions ("to the top") are all 0 above the diagonal
-    -> these values cause no correction. the desired solutions stay all 0
-    solution_corrected = (0 - 0) / Q_H = 0
-    NOTE: this corresponds to results not passing "left-right splits in the tree"
-    <-> independence of sub-problems to the right (= towards the "bottom" of the matrix)
-    the previous desired solutions on the diagonal are equal to the identity I
-    -> cause a correction and a division
-    solution_corrected = (0 - I) / Q_H =  - I / Q_H
-    the previous desired solutions below the diagonal are again all 0, but now each cause a division!
-    solution_corrected = solution_corrected / Q_H
     """
     dimensionality = len(split_positions)
     # traverse through the "tree" (mimicking recursion)
@@ -311,17 +249,29 @@ def leaf_node_dds(result_placeholder: ARRAY, generating_points: ARRAY, split_pos
 
 @njit(cache=True)
 def compute_l2n_factorised(generating_points: ARRAY, split_positions: TYPED_LIST, subtree_sizes: TYPED_LIST):
-    """ computes the L2N transformation in compact barycentric format (factorised)
+    """ computes the L2N transformation in factorised barycentric format
 
-    "piecewise leaf level DDS":
-    solve the 1D DDS for the maximal problem size (degree) once
-    all of the matrix pieces will only be parts of this solution multiplied by a factor ...
-    which can be determined by performing a DDS on the leaf level
+    legacy version. is not exploiting the full nested structure of the nD DDS problem!
+
+    special property:
+    the full transformation matrices are of nested lower triangular form and hence sparse.
+    the smallest possible triangular matrix pieces are determined by the leaves of the multi index tree.
+    each combination of 2 leaves corresponds to such an "atomic" matrix piece (some of them are all 0).
+    the largest of these pieces corresponds to the first node (has size n = polynomial degree).
+    additionally all the atomic pieces are just multiples of each other (and with different size).
+    this allows a very efficient computation and compact storage of the transformations:
+        - solve the 1D DDS for the leaf problem of maximal size once
+        - compute all factors for the leaf node combinations ("leaf level DDS")
 
     -> exploit this property for storing the transformation in an even more compressed format!
     (and with just numpy arrays!)
 
-    :return: all the required data structures for the transformation
+    in the following, this compact format is called "factorised"
+
+    Returns
+    -------
+
+    all the required data structures for the transformation
     """
     leaf_sizes = subtree_sizes[0]
     max_problem_size = np.max(leaf_sizes)
@@ -359,11 +309,9 @@ def compute_n2l_factorised(exponents: ARRAY, generating_points: ARRAY, unisolven
 
     NOTE: JIT compilation not possible, because newt eval fct. cannot be JIT compiled
 
-
     TODO also incorporate the latest improvements of the barycentric L2N transformation:
         evaluate just in one dimension then pass the results to all nodes in the tree "below"
         -> expand the result until the full transformation has been computed
-
 
     :return: all the required data structures for the transformation
     """
