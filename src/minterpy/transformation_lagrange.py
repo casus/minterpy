@@ -18,7 +18,7 @@ class TransformationLagrangeToNewton(TransformationABC):
     _short_name = "lagrange2newton"
     origin_type = minterpy.LagrangePolynomial
     target_type = NewtonPolynomial
-    _build_transformation = _build_lagrange_to_newton
+    _get_transformation_matrix = _build_lagrange_to_newton
 
 
 class TransformationLagrangeToCanonical(TransformationABC):
@@ -28,4 +28,4 @@ class TransformationLagrangeToCanonical(TransformationABC):
     _short_name = "lagrange2canonical"
     origin_type = minterpy.LagrangePolynomial
     target_type = CanonicalPolynomial
-    _build_transformation = _build_lagrange_to_canonical
+    _get_transformation_matrix = _build_lagrange_to_canonical

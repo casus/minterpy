@@ -18,7 +18,7 @@ class TransformationCanonicalToNewton(TransformationABC):
     _short_name = "canonical2newton"
     origin_type = CanonicalPolynomial
     target_type = NewtonPolynomial
-    _build_transformation = _build_canonical_to_newton
+    _get_transformation_matrix = _build_canonical_to_newton
 
 
 class TransformationCanonicalToLagrange(TransformationABC):
@@ -28,4 +28,4 @@ class TransformationCanonicalToLagrange(TransformationABC):
     _short_name = "canonical2lagrange"
     origin_type = CanonicalPolynomial
     target_type = LagrangePolynomial
-    _build_transformation = _build_canonical_to_lagrange
+    _get_transformation_matrix = _build_canonical_to_lagrange

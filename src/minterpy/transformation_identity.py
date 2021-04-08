@@ -16,7 +16,7 @@ class TransformationIdentity(TransformationABC):
     _short_name = "identity"
     origin_type = MultivariatePolynomialABC
     target_type = MultivariatePolynomialABC
-    _build_transformation = _build_identity_transformation
+    _get_transformation_matrix = _build_identity_transformation
 
     def _apply_transformation(self, origin_poly):
         return copy(origin_poly)  # no need to compute dot product

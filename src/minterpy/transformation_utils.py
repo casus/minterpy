@@ -62,6 +62,8 @@ def _build_newton_to_lagrange(transformation: TransformationABC, require_inverti
     if multi_index.is_complete:
         warn("computing a N2L transformation with complete indices by Newton evaluation. "
              "consider using barycentric transformations.")
+        # TODO use barycentric
+        # TODO else use naive
 
     exponents = multi_index.exponents
 

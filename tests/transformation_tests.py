@@ -33,7 +33,7 @@ def check_n_l_matrices(n2l_transformer: TransformationABC):
     grid = n2l_transformer.origin_poly.grid
     multi_index = grid.multi_index
 
-    newton_to_lagrange_eval = n2l_transformer.transformation
+    newton_to_lagrange_eval = n2l_transformer.transformation_matrix
     lagrange_to_newton = scipy.linalg.inv(newton_to_lagrange_eval)
     check_l2n_matrix(lagrange_to_newton, grid)
 
@@ -67,8 +67,8 @@ def check_newt_lagr_poly_equality(lagrange_poly, newton_poly):
     # the Lagrange basis:
     n2l_transformation = TransformationNewtonToLagrange(newton_poly)
     lagrange_poly2 = n2l_transformation()
-    lagrange_to_newton = l2n_transformation.transformation
-    newton_to_lagrange = n2l_transformation.transformation
+    lagrange_to_newton = l2n_transformation.transformation_matrix
+    newton_to_lagrange = n2l_transformation.transformation_matrix
     check_transformation_is_inverse(lagrange_to_newton, newton_to_lagrange)
     coeffs_newton_estim = newton_poly2.coeffs
     err = coeffs_newton_estim - coeffs_newton_true
@@ -131,7 +131,7 @@ def check_n2l_barycentric(spatial_dimension, poly_degree, lp_degree):
 
     n2l_transformer = get_transformer(spatial_dimension, poly_degree, lp_degree, cls_from=NewtonPolynomial,
                                       cls_to=LagrangePolynomial)
-    n2l_regular = n2l_transformer.transformation
+    n2l_regular = n2l_transformer.transformation_matrix
     n2l_barycentric = merge_matrix_pieces(*tree.n2l_trafo)
     almost_equal(n2l_regular, n2l_barycentric)
 
@@ -193,8 +193,8 @@ def canonical_newton_transformation_test(spatial_dimension, poly_degree, lp_degr
     err = coeffs_newton_estim - coeffs_newton_true
     report_error(err, f'error of the Newton coefficients (transformation):')
 
-    n2c = n2c_transformation.transformation
-    c2n = c2n_transformation.transformation
+    n2c = n2c_transformation.transformation_matrix
+    c2n = c2n_transformation.transformation_matrix
     check_transformation_is_inverse(c2n, n2c)
 
 

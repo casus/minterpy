@@ -46,7 +46,7 @@ def transform_barycentric_dict(coeffs_in: ARRAY, coeffs_out: ARRAY, trafo_dict: 
 
     transforms and sums up the respective parts (slices) of the coefficients
     """
-    for (leaf_idx_l, leaf_idx_r), matrix_piece, in trafo_dict.items():
+    for (leaf_idx_l, leaf_idx_r), matrix_piece in trafo_dict.items():
         start_pos_in = leaf_positions[leaf_idx_l]
         start_pos_out = leaf_positions[leaf_idx_r]
 

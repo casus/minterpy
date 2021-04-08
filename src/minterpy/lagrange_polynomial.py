@@ -59,7 +59,7 @@ class LagrangePolynomial(MultivariatePolynomialSingleABC):
             self._transformer_l2n = minterpy.TransformationLagrangeToNewton(self)
 
         # the Newton coefficients of all Lagrange polynomials ("monomials")
-        lagr_mon_coeffs_newton = self._transformer_l2n.transformation
+        lagr_mon_coeffs_newton = self._transformer_l2n.transformation_matrix
         return lagr_mon_coeffs_newton
 
     def eval_lagrange_monomials_on(self, points: np.ndarray):

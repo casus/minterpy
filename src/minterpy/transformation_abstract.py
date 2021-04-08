@@ -30,6 +30,10 @@ class TransformationABC(ABC):
         self.multi_index: MultiIndex = origin_poly.multi_index
         self.origin_poly = origin_poly
 
+        # TODO check for index completeness
+        # is complete: -> store the transformation fct once!?
+        # TODO transformation fct as an attribute -> assign here (e.g. barycentric if complete)
+
         # TODO automatic make complete?
         # self.origin_poly = self.origin_poly.make_complete()
         # raise ValueError('some transformations only work for complete multi index sets!')
@@ -48,7 +52,7 @@ class TransformationABC(ABC):
             raise NotImplementedError(
                 'the generating points should not be passed as input. should be stored in origin polynomial')
         # self.generating_points = generating_points
-        self._transformation: Optional[np.ndarray] = None
+        self._transformation_matrix: Optional[np.ndarray] = None
 
     # To register the transformation classes to the available_transforms dictionary
     # TODO integrate function to retrieve the proper transformation (cf. transformation_utils.py)
@@ -64,6 +68,8 @@ class TransformationABC(ABC):
     def __call__(self, origin_poly: Optional[MultivariatePolynomialSingleABC] = None):
         if origin_poly is None:
             origin_poly = self.origin_poly
+        # TODO check the validity of the basis (basis of the input poly during init, grids match)
+        # TODO helper fcts equality of bases ("grid") __eq__
         elif type(origin_poly) != self.origin_type:
             raise TypeError(
                 f"Input polynomial type <{type(origin_poly)}> differs from expected polynomial type <{self.origin_type}>")
@@ -89,14 +95,17 @@ class TransformationABC(ABC):
 
     @staticmethod
     @abstractmethod
-    def _build_transformation(self):
+    def _get_transformation_matrix(self):
         pass
 
+    # TODO returns type "TransformationMatrixABC"
+    # TODO implement "TransformationMatrixABC"
     @property
-    def transformation(self):
-        if self._transformation is None:
-            self._transformation = self._build_transformation()
-        return self._transformation
+    def transformation_matrix(self):
+        if self._transformation_matrix is None:
+            # TODO type "TransformationMatrixABC"
+            self._transformation_matrix = self._get_transformation_matrix()
+        return self._transformation_matrix
 
     @property
     def _target_indices(self) -> MultiIndex:
@@ -109,6 +118,7 @@ class TransformationABC(ABC):
         """
         return self.origin_poly.grid.multi_index
 
+    # TODO make abstract, generalise
     def _apply_transformation(self, origin_poly):
         # TODO is it meaningful to create a new polynomial instance every time?
         #  perhaps optional output polynomial to just update the coefficients?
@@ -117,6 +127,7 @@ class TransformationABC(ABC):
         # ATTENTION: assign the correct expected multi indices!
         output_poly.multi_index = self._target_indices
         # NOTE: only then the coefficients can be assigned, since the shapes need to match with the indices!
-        target_coeffs = np.dot(self.transformation, origin_poly.coeffs)
+        # TODO implement "TransformationMatrixABC" class for all precomputed transformations
+        target_coeffs = self.transformation_matrix @ origin_poly.coeffs # TODO is it calling __matmul__?
         output_poly.coeffs = target_coeffs
         return output_poly

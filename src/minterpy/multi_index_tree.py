@@ -109,6 +109,9 @@ class MultiIndexTree:
         return coeffs_lagr_placeholder
 
     def lagrange2newton(self, coeffs_lagr: ARRAY) -> ARRAY:  # barycentric transformation
+        # TODO module for transformation matrices
+        # TODO implement all matrix classes
+        # TODO move this fct to __matmul__() of the respective matricx class
         # TODO support 2D input?
         check_type_n_values(coeffs_lagr)
         check_shape(coeffs_lagr, shape=[len(self.multi_index)])

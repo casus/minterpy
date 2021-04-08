@@ -139,7 +139,7 @@ def compute_problem_sizes(nr_exponents, split_row_par: ARRAY, split_row_child: A
 
 
 @njit(cache=True)
-def compile_problem_sizes(nr_exponents: int, splits: TYPED_LIST, sizes:TYPED_LIST) -> TYPED_LIST:
+def compile_problem_sizes(nr_exponents: int, splits: TYPED_LIST, sizes: TYPED_LIST) -> TYPED_LIST:
     # independent in each dimension
     nr_dims = len(splits)
     amounts = List()  # use Numba typed list

@@ -193,7 +193,7 @@ class SinglePolyDerivator(object):
         if origin_is_canonical:  # canonical2canonical: no transformation required
             origin2canonical = None
         else:
-            origin2canonical = get_transformation(origin_poly, CanonicalPolynomial).transformation
+            origin2canonical = get_transformation(origin_poly, CanonicalPolynomial).transformation_matrix
             if DEBUG:
                 nr_monomials = len(self.multi_index)
                 check_is_square(origin2canonical, size=nr_monomials)
@@ -202,7 +202,7 @@ class SinglePolyDerivator(object):
             canonical2target = None
         else:
             canonical_poly = CanonicalPolynomial(None, self.multi_index)
-            canonical2target = get_transformation(canonical_poly, self.target_type).transformation
+            canonical2target = get_transformation(canonical_poly, self.target_type).transformation_matrix
             if DEBUG:
                 nr_monomials = len(self.multi_index)
                 check_is_square(canonical2target, size=nr_monomials)
