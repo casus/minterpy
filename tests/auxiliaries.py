@@ -115,9 +115,9 @@ def get_poly(spatial_dimension, poly_degree, lp_degree,
     return cls(None, multi_index, grid=grid)
 
 
-def get_transformer(spatial_dimension, poly_degree, lp_degree, cls_from=LagrangePolynomial,
-                    cls_to=LagrangePolynomial, get_incomplete: bool = False,
-                    separate_indices: bool = False) -> TransformationABC:
+def get_transformation(spatial_dimension, poly_degree, lp_degree, cls_from=LagrangePolynomial,
+                       cls_to=LagrangePolynomial, get_incomplete: bool = False,
+                       separate_indices: bool = False) -> TransformationABC:
     poly = get_poly(spatial_dimension, poly_degree, lp_degree, cls=cls_from, get_incomplete=get_incomplete,
                     separate_indices=separate_indices)
     transformer_cls = get_transformation_class(cls_from, cls_to)

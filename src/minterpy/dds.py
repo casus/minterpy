@@ -426,8 +426,8 @@ def project_n_update(dim_idx: int, node_idx_l: int, node_idx_r: int, exponent_l:
 
 
 @njit(cache=True)
-def dds_n_dimensional(result_placeholder: ARRAY, generating_points: ARRAY, split_positions: TYPED_LIST,
-                      subtree_sizes: TYPED_LIST, masks: ARRAY_DICT, exponents: ARRAY) -> None:
+def jit_dds(result_placeholder: ARRAY, generating_points: ARRAY, split_positions: TYPED_LIST,
+            subtree_sizes: TYPED_LIST, masks: ARRAY_DICT, exponents: ARRAY) -> None:
     """ divided difference scheme for multiple dimensions
 
     refactored version: iterative, working on a result placeholder
@@ -478,3 +478,25 @@ def dds_n_dimensional(result_placeholder: ARRAY, generating_points: ARRAY, split
     for node_idx_par in range(nr_nodes_in_dim):
         v_leaf = get_array_slice(dim_idx_child, node_idx_par, result_placeholder, split_positions, subtree_sizes)
         dds_1_dimensional(generating_values, v_leaf)
+
+
+def dds(fct_values: ARRAY, tree: 'MultiIndexTree') -> ARRAY:
+    # TODO type checking?!
+    # check_type_n_values(fct_values)
+    # check_shape(fct_values, shape=[len(tree.multi_index)])
+
+    # NOTE: for more memory efficiency computes the results "in place"
+    # initialise the placeholder with the function values (= Lagrange coefficients
+    # NOTE: the DDS function expects a 2D array as input
+    result_placeholder = fct_values.copy()
+    if fct_values.ndim == 1:
+        # ATTENTION: the DDS operates on the first dimension! -> second dimension must be 1
+        result_placeholder = result_placeholder.reshape(-1, 1)
+    generating_points = tree.grid.generating_points
+    split_positions = tree.split_positions
+    subtree_sizes = tree.subtree_sizes
+    masks = tree.stored_masks
+    exponents = tree.multi_index.exponents
+    jit_dds(result_placeholder, generating_points, split_positions, subtree_sizes,
+            masks, exponents)
+    return result_placeholder  # = Newton coefficients

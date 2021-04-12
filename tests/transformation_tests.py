@@ -4,14 +4,14 @@ import unittest
 import numpy as np
 import scipy.linalg
 
-from auxiliaries import check_different_settings, rnd_points, almost_equal, get_transformer, check_is_identity, \
+from auxiliaries import check_different_settings, rnd_points, almost_equal, get_transformation, check_is_identity, \
     check_transformation_is_inverse, get_grid
 from minterpy import MultiIndex, Grid, NewtonPolynomial, \
     TransformationNewtonToCanonical, TransformationCanonicalToNewton, TransformationLagrangeToNewton, \
     TransformationNewtonToLagrange, LagrangePolynomial, TransformationABC
-from minterpy.barycentric import merge_matrix_pieces, merge_trafo_dict
+from minterpy.barycentric_precomp import _build_lagrange_to_newton_bary, _build_newton_to_lagrange_bary
 from minterpy.global_settings import FLOAT_DTYPE, INT_DTYPE
-from minterpy.transformation_utils import build_l2n_matrix_dds
+from minterpy.transformation_utils import build_l2n_matrix_dds, _build_newton_to_lagrange_naive
 from minterpy.utils import report_error
 
 
@@ -33,7 +33,7 @@ def check_n_l_matrices(n2l_transformer: TransformationABC):
     grid = n2l_transformer.origin_poly.grid
     multi_index = grid.multi_index
 
-    newton_to_lagrange_eval = n2l_transformer.transformation_matrix
+    newton_to_lagrange_eval = n2l_transformer.transformation_operator.to_array()
     lagrange_to_newton = scipy.linalg.inv(newton_to_lagrange_eval)
     check_l2n_matrix(lagrange_to_newton, grid)
 
@@ -67,8 +67,8 @@ def check_newt_lagr_poly_equality(lagrange_poly, newton_poly):
     # the Lagrange basis:
     n2l_transformation = TransformationNewtonToLagrange(newton_poly)
     lagrange_poly2 = n2l_transformation()
-    lagrange_to_newton = l2n_transformation.transformation_matrix
-    newton_to_lagrange = n2l_transformation.transformation_matrix
+    lagrange_to_newton = l2n_transformation.transformation_operator.to_array()
+    newton_to_lagrange = n2l_transformation.transformation_operator.to_array()
     check_transformation_is_inverse(lagrange_to_newton, newton_to_lagrange)
     coeffs_newton_estim = newton_poly2.coeffs
     err = coeffs_newton_estim - coeffs_newton_true
@@ -101,10 +101,10 @@ def check_poly_interpolation(grid: Grid):
 
 
 def lagrange_n_newton_matrix_test_complete(spatial_dimension, poly_degree, lp_degree):
-    n2l_transformer = get_transformer(spatial_dimension, poly_degree, lp_degree, cls_from=NewtonPolynomial,
-                                      cls_to=LagrangePolynomial)
-    check_n_l_matrices(n2l_transformer)
-    grid = n2l_transformer.origin_poly.grid
+    transformation = get_transformation(spatial_dimension, poly_degree, lp_degree, cls_from=NewtonPolynomial,
+                                        cls_to=LagrangePolynomial)
+    check_n_l_matrices(transformation)
+    grid = transformation.origin_poly.grid
     check_poly_interpolation(grid)
 
 
@@ -124,22 +124,25 @@ def lagrange_n_newton_matrix_test_incomplete(spatial_dimension, poly_degree, lp_
 
 def check_n2l_barycentric(spatial_dimension, poly_degree, lp_degree):
     # NOTE: these tests are NOT working for incomplete multi index sets
-    grid = get_grid(spatial_dimension, poly_degree, lp_degree)
+    transformation = get_transformation(spatial_dimension, poly_degree, lp_degree, cls_from=NewtonPolynomial,
+                                        cls_to=LagrangePolynomial)
+    grid = transformation.grid
     multi_index = grid.multi_index
     nr_coefficients = len(multi_index)
-    tree = grid.tree
 
-    n2l_transformer = get_transformer(spatial_dimension, poly_degree, lp_degree, cls_from=NewtonPolynomial,
-                                      cls_to=LagrangePolynomial)
-    n2l_regular = n2l_transformer.transformation_matrix
-    n2l_barycentric = merge_matrix_pieces(*tree.n2l_trafo)
+    barycentric_operator = _build_lagrange_to_newton_bary(transformation)
+    n2l_barycentric = barycentric_operator.to_array()
+
+    matrix_operator = _build_newton_to_lagrange_naive(grid, multi_index)
+    n2l_regular = matrix_operator.to_array()
+
     almost_equal(n2l_regular, n2l_barycentric)
 
     coeffs_newton_true = rnd_points(nr_coefficients)  # \in [-1; 1]
     newton_poly = NewtonPolynomial(coeffs_newton_true, multi_index, grid=grid)
 
-    # perform barycentrical transformation (factorised format)
-    coeffs_lagrange = tree.newton2lagrange(coeffs_newton_true)
+    # perform barycentric transformation
+    coeffs_lagrange = barycentric_operator @ coeffs_newton_true
     lagrange_poly = LagrangePolynomial(coeffs_lagrange, multi_index, grid=grid)
 
     check_newt_lagr_poly_equality(lagrange_poly, newton_poly)
@@ -147,25 +150,23 @@ def check_n2l_barycentric(spatial_dimension, poly_degree, lp_degree):
 
 def check_l2n_barycentric(spatial_dimension, poly_degree, lp_degree):
     # NOTE: these tests are NOT working for incomplete multi index sets
-    grid = get_grid(spatial_dimension, poly_degree, lp_degree)
+    transformation = get_transformation(spatial_dimension, poly_degree, lp_degree, cls_from=LagrangePolynomial,
+                                        cls_to=NewtonPolynomial)
+    grid = transformation.grid
     multi_index = grid.multi_index
     nr_coefficients = len(multi_index)
-    tree = grid.tree
 
-    # n2l_transformer = get_transformer(spatial_dimension, poly_degree, lp_degree, cls_from=NewtonPolynomial,
-    #                                   cls_to=LagrangePolynomial)
-    # n2l_regular = n2l_transformer.transformation
-    # l2n_regular = np.linalg.inv(n2l_regular)
+    # check for array equality:
     l2n_regular = build_l2n_matrix_dds(grid)
-    l2n_barycentric = merge_trafo_dict(tree.l2n_trafo, tree.split_positions[0], tree.subtree_sizes[0])
+    transformation_operator = _build_newton_to_lagrange_bary(transformation)
+    l2n_barycentric = transformation_operator.to_array()
     almost_equal(l2n_regular, l2n_barycentric)
 
     coeffs_lagr_true = rnd_points(nr_coefficients)  # \in [-1; 1]
     lagrange_poly = LagrangePolynomial(coeffs_lagr_true, multi_index, grid=grid)
 
-    # perform barycentrical transformation
-    # NOTE: internally uses another format for storing the barycentrical transformation than the one used above
-    coeffs_newton = tree.lagrange2newton(coeffs_lagr_true)
+    # perform barycentric transformation
+    coeffs_newton = transformation_operator @ coeffs_lagr_true
     newton_poly = NewtonPolynomial(coeffs_newton, multi_index, grid=grid)
 
     check_newt_lagr_poly_equality(lagrange_poly, newton_poly)
@@ -193,8 +194,8 @@ def canonical_newton_transformation_test(spatial_dimension, poly_degree, lp_degr
     err = coeffs_newton_estim - coeffs_newton_true
     report_error(err, f'error of the Newton coefficients (transformation):')
 
-    n2c = n2c_transformation.transformation_matrix
-    c2n = c2n_transformation.transformation_matrix
+    n2c = n2c_transformation.transformation_operator.to_array()
+    c2n = c2n_transformation.transformation_operator.to_array()
     check_transformation_is_inverse(c2n, n2c)
 
 
@@ -256,6 +257,7 @@ class TransformationTest(unittest.TestCase):
         print('\ntesting Newton to Lagrange transformation with incomplete multi index sets:')
         check_different_settings(lagrange_n_newton_matrix_test_incomplete)
 
+    # TODO test all different transformation formats!
     def test_newton2lagrange_barycentric(self):
         print('\ntesting the barycentric Lagrange to Newton transformation:')
         check_different_settings(check_n2l_barycentric)

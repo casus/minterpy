@@ -3,10 +3,10 @@ from copy import copy
 import numpy as np
 
 from minterpy import TransformationABC, MultivariatePolynomialABC
+from minterpy.transformation_operators import MatrixTransformationOperator
 
-
-def _build_identity_transformation(self):
-    return np.identity(len(self.multi_index))
+def _build_identity_transformation_operator(self):
+    return MatrixTransformationOperator(np.identity(len(self.multi_index)))
 
 
 class TransformationIdentity(TransformationABC):
@@ -16,7 +16,7 @@ class TransformationIdentity(TransformationABC):
     _short_name = "identity"
     origin_type = MultivariatePolynomialABC
     target_type = MultivariatePolynomialABC
-    _get_transformation_matrix = _build_identity_transformation
+    _get_transformation_operator = _build_identity_transformation_operator
 
     def _apply_transformation(self, origin_poly):
         return copy(origin_poly)  # no need to compute dot product

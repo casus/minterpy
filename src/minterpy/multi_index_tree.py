@@ -4,9 +4,9 @@ from typing import Optional
 
 import numpy as np
 
-from minterpy.barycentric import transform_barycentric_factorised, transform_barycentric_dict
-from minterpy.barycentric_precomp import barycentric_dds, compute_n2l_factorised
-from minterpy.dds import dds_n_dimensional, compile_splits, compile_subtree_sizes, precompute_masks, \
+from minterpy.barycentric_transformation_fcts import transform_barycentric_factorised, transform_barycentric_dict
+from minterpy.barycentric_precomp import compute_l2n_dict, compute_n2l_factorised
+from minterpy.dds import jit_dds, compile_splits, compile_subtree_sizes, precompute_masks, \
     compile_problem_sizes
 from minterpy.global_settings import ARRAY, FLOAT_DTYPE, ARRAY_DICT
 from minterpy.verification import check_type_n_values, check_shape
@@ -46,9 +46,6 @@ class MultiIndexTree:
         # TODO improvement: also "pre-compute" more of the recursion through the tree,
         #  avoid computing the node indices each time
         self._stored_masks: Optional[ARRAY_DICT] = None
-        self._leaf_matches = None
-        self._n2l_trafo = None
-        self._l2n_trafo = None
 
     @property
     def multi_index(self) -> 'MultiIndex':
@@ -64,97 +61,3 @@ class MultiIndexTree:
             exponents = self.multi_index.exponents
             self._stored_masks = precompute_masks(self.split_positions, self.subtree_sizes, exponents)
         return self._stored_masks
-
-    @property
-    def n2l_trafo(self):
-        """ the precomputed barycentric N2l transformation
-
-        :return: all the required data structures for the transformation
-        """
-        if self._n2l_trafo is None:  # lazy evaluation
-            exponents = self.multi_index.exponents
-            generating_points = self.grid.generating_points
-            unisolvent_nodes = self.grid.unisolvent_nodes
-            leaf_positions = self.split_positions[0]
-            leaf_sizes = self.subtree_sizes[0]
-            self._n2l_trafo = compute_n2l_factorised(exponents, generating_points, unisolvent_nodes, leaf_positions,
-                                                     leaf_sizes)
-
-        return self._n2l_trafo
-
-    @property
-    def l2n_trafo(self):
-        """ the precomputed barycentric L2N transformation
-
-        :return: all the required data structures for the transformation
-        """
-        if self._l2n_trafo is None:  # lazy evaluation
-            generating_points = self.grid.generating_points
-            split_positions = self.split_positions
-            subtree_sizes = self.subtree_sizes
-            problem_sizes = self.problem_sizes
-            self._l2n_trafo = barycentric_dds(generating_points, split_positions, subtree_sizes, problem_sizes)
-
-        return self._l2n_trafo
-
-    def newton2lagrange(self, coeffs_newt: ARRAY) -> ARRAY:  # barycentric transformation
-        check_type_n_values(coeffs_newt)
-        check_shape(coeffs_newt, shape=[len(self.multi_index)])
-
-        # use an output placeholder (for an increases compatibility with Numba JIT compilation)
-        nr_coeffs = len(coeffs_newt)
-        # initialise the placeholder with 0
-        coeffs_lagr_placeholder = np.zeros(nr_coeffs, dtype=FLOAT_DTYPE)
-        transform_barycentric_factorised(coeffs_newt, coeffs_lagr_placeholder, *self.n2l_trafo)
-        return coeffs_lagr_placeholder
-
-    def lagrange2newton(self, coeffs_lagr: ARRAY) -> ARRAY:  # barycentric transformation
-        # TODO module for transformation matrices
-        # TODO implement all matrix classes
-        # TODO move this fct to __matmul__() of the respective matricx class
-        # TODO support 2D input?
-        check_type_n_values(coeffs_lagr)
-        check_shape(coeffs_lagr, shape=[len(self.multi_index)])
-
-        # use an output placeholder (for an increases compatibility with Numba JIT compilation)
-        nr_coeffs = len(coeffs_lagr)
-        # initialise the placeholder with 0
-        coeffs_newt_placeholder = np.zeros(nr_coeffs, dtype=FLOAT_DTYPE)
-        leaf_positions = self.split_positions[0]
-        transform_barycentric_dict(coeffs_lagr, coeffs_newt_placeholder, self.l2n_trafo, leaf_positions)
-        return coeffs_newt_placeholder
-
-    def dds(self, coeffs_lagrange: ARRAY) -> ARRAY:
-        check_type_n_values(coeffs_lagrange)
-        check_shape(coeffs_lagrange, shape=[len(self.multi_index)])
-
-        # NOTE: for more memory efficiency computes the results "in place"
-        # initialise the placeholder with the function values
-        # NOTE: the DDS function expects a 2D array as input
-        # ATTENTION: the DDS operates on the first dimension! -> second dimension must be 1
-        result_placeholder = coeffs_lagrange.copy().reshape(-1, 1)
-        generating_points = self.grid.generating_points
-        split_positions = self.split_positions
-        subtree_sizes = self.subtree_sizes
-        masks = self.stored_masks
-        exponents = self.multi_index.exponents
-        dds_n_dimensional(result_placeholder, generating_points, split_positions, subtree_sizes,
-                          masks, exponents)
-        return result_placeholder  # = Newton coefficients
-
-    def build_dds_matrix(self, lagr_coeff_matrix: ARRAY) -> ARRAY:
-        check_type_n_values(lagr_coeff_matrix)
-        num_monomials = len(self.multi_index)
-        check_shape(lagr_coeff_matrix, shape=[num_monomials, num_monomials])
-        generating_points = self.grid.generating_points
-        split_positions = self.split_positions
-        subtree_sizes = self.subtree_sizes
-        masks = self.stored_masks
-        exponents = self.multi_index.exponents
-        # NOTE: for more memory efficiency computes the results "in place"
-        # initialise the output coefficient matrix
-        coeff_newt_matrix = lagr_coeff_matrix.copy()  # dds matrix placeholder
-        # NOTE: the DDS implementation is able to handle nD array input!
-        dds_n_dimensional(coeff_newt_matrix, generating_points, split_positions, subtree_sizes,
-                          masks, exponents)
-        return coeff_newt_matrix
