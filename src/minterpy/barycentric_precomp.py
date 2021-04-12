@@ -1,19 +1,22 @@
 #!/usr/bin/env python
-""" functions required for precomputing the barycentric transformations
+""" functions required for precomputing the barycentric trees
 
-utilises the special properties of the transformations to compute and store them in a very compact (barycentric) format.
-this can be done very efficiently, enabling transformations for very large (e.g. high dimensional) problems.
+utilises the special properties of the trees to compute and store them in a very compact (barycentric) format.
+this can be done very efficiently, enabling trees for very large (e.g. high dimensional) problems.
 
-due to the nested (recursive) structure of the transformations
-there are different formats for storing (and computing) these transformations
+due to the nested (recursive) structure of the trees
+there are different formats for storing (and computing) these trees
 """
 
 import numpy as np
 from numba import njit
 from numba.typed import List
 
+from minterpy.transformation_operators import BarycentricOperatorABC, BarycentricDictOperator, \
+    BarycentricFactorisedOperator
 from minterpy.dds import dds_1_dimensional, get_direct_child_idxs, get_leaf_idxs
-from minterpy.global_settings import ARRAY, TYPED_LIST, FLOAT_DTYPE, TRAFO_DICT, DEBUG
+from minterpy.global_settings import ARRAY, TYPED_LIST, FLOAT_DTYPE, TRAFO_DICT, DEBUG, DICT_TRAFO_TYPE, \
+    FACTORISED_TRAFO_TYPE
 from minterpy.utils import eval_newt_polys_on
 
 __author__ = "Jannik Michelfeit"
@@ -26,12 +29,12 @@ __email__ = "jannik@michelfe.it"
 __status__ = "Development"
 
 
-# functions for the L2N transformation:
+# functions for the L2N tree:
 
 
 @njit(cache=True)
-def compute_dds_solutions(generating_points: ARRAY, problem_sizes: TYPED_LIST) -> TYPED_LIST:
-    """ performs all 1D DDS schemes required for the L2N transformation
+def compute_1d_dds_solutions(generating_points: ARRAY, problem_sizes: TYPED_LIST) -> TYPED_LIST:
+    """ performs all 1D DDS schemes required for the L2N tree
 
     Returns
     -------
@@ -60,7 +63,8 @@ def expand_solution(prev_solutions: TRAFO_DICT, dds_solution_max: ARRAY, dim_idx
 
     Parameters
     ----------
-    prev_solutions: the previous DDS solution of the higher dimension, composite triangular matrix encoded by a dictionary
+    prev_solutions: the previous DDS solution of the higher dimension
+        given as a composite triangular matrix encoded by a dictionary
     dds_solution_max: 1D DDS solution of the lower dimension
     dim_idx_par: the index of the higher dimension
 
@@ -109,14 +113,15 @@ def expand_solution(prev_solutions: TRAFO_DICT, dds_solution_max: ARRAY, dim_idx
 
 
 @njit(cache=True)
-def barycentric_dds(generating_points: ARRAY, split_positions: TYPED_LIST,
-                    subtree_sizes: TYPED_LIST, problem_sizes: TYPED_LIST, stop_dim_idx: int = 0) -> TRAFO_DICT:
-    """ barycentric divided difference scheme for multiple dimensions
+def compute_l2n_dict(generating_points: ARRAY, split_positions: TYPED_LIST,
+                     subtree_sizes: TYPED_LIST, problem_sizes: TYPED_LIST, stop_dim_idx: int = 0) \
+        -> DICT_TRAFO_TYPE:
+    """ fully barycentric divided difference scheme for multiple dimensions
 
     modified version using only the regular 1D DDS function ("fully barycentric")
     using a "top-down" approach starting from an initial 1D DDS solution
-    expands the "nested" DDS solution into the full L2N transformation
-    This is the core algorithm for the computation of the barycentric L2N transformation
+    expands the "nested" DDS solution into the full L2N tree
+    This is the core algorithm for the computation of the barycentric L2N tree
 
     Parameters
     ----------
@@ -144,7 +149,7 @@ def barycentric_dds(generating_points: ARRAY, split_positions: TYPED_LIST,
     if stop_dim_idx > dim_idx_par:
         raise ValueError('the highest possible dimension to stop is the dimensionality of the problem.')
 
-    dds_solutions = compute_dds_solutions(generating_points, problem_sizes)
+    dds_solutions = compute_1d_dds_solutions(generating_points, problem_sizes)
     dds_solution_max = dds_solutions[dim_idx_par]
 
     # IDEA: use a dictionary to represent composite triangular matrices
@@ -162,7 +167,8 @@ def barycentric_dds(generating_points: ARRAY, split_positions: TYPED_LIST,
                                          problem_sizes)
 
     # return only the result of the last iteration
-    return curr_solutions
+    leaf_positions = split_positions[0]
+    return curr_solutions, leaf_positions
 
 
 @njit(cache=True)
@@ -210,7 +216,7 @@ def leaf_node_dds(result_placeholder: ARRAY, generating_points: ARRAY, split_pos
     modified version for a constant leaf node size of 1
 
     -> perform the nD DDS for this special case directly "on the leaf level"
-    this simplifies to computing a factor for every leaf node match (<-> matrix piece in the transformation)
+    this simplifies to computing a factor for every leaf node match (<-> matrix piece in the tree)
 
     NOTE: only use case is calling this with the identity matrix?!
     TODO optimise for this use case
@@ -248,22 +254,23 @@ def leaf_node_dds(result_placeholder: ARRAY, generating_points: ARRAY, split_pos
 
 
 @njit(cache=True)
-def compute_l2n_factorised(generating_points: ARRAY, split_positions: TYPED_LIST, subtree_sizes: TYPED_LIST):
-    """ computes the L2N transformation in factorised barycentric format
+def compute_l2n_factorised(generating_points: ARRAY, split_positions: TYPED_LIST,
+                           subtree_sizes: TYPED_LIST) -> FACTORISED_TRAFO_TYPE:
+    """ computes the L2N tree in factorised barycentric format
 
     legacy version. is not exploiting the full nested structure of the nD DDS problem!
 
     special property:
-    the full transformation matrices are of nested lower triangular form and hence sparse.
+    the full tree matrices are of nested lower triangular form and hence sparse.
     the smallest possible triangular matrix pieces are determined by the leaves of the multi index tree.
     each combination of 2 leaves corresponds to such an "atomic" matrix piece (some of them are all 0).
     the largest of these pieces corresponds to the first node (has size n = polynomial degree).
     additionally all the atomic pieces are just multiples of each other (and with different size).
-    this allows a very efficient computation and compact storage of the transformations:
+    this allows a very efficient computation and compact storage of the trees:
         - solve the 1D DDS for the leaf problem of maximal size once
         - compute all factors for the leaf node combinations ("leaf level DDS")
 
-    -> exploit this property for storing the transformation in an even more compressed format!
+    -> exploit this property for storing the tree in an even more compressed format!
     (and with just numpy arrays!)
 
     in the following, this compact format is called "factorised"
@@ -271,7 +278,7 @@ def compute_l2n_factorised(generating_points: ARRAY, split_positions: TYPED_LIST
     Returns
     -------
 
-    all the required data structures for the transformation
+    all the required data structures for the tree
     """
     leaf_sizes = subtree_sizes[0]
     max_problem_size = np.max(leaf_sizes)
@@ -282,7 +289,7 @@ def compute_l2n_factorised(generating_points: ARRAY, split_positions: TYPED_LIST
     leaf_positions = split_positions[0]
     nr_of_leaves = len(leaf_positions)
     # compute the correction factors for all leaf node combinations (recursively defined by the DDS)
-    # = the first value of each triangular transformation matrix piece
+    # = the first value of each triangular tree matrix piece
     # initialise a placeholder with the expected DDS result
     # NOTE: this matrix will be triangular (1/2 of the values are 0)
     # TODO again this matrix is of nested triangular form. optimise!?
@@ -293,30 +300,30 @@ def compute_l2n_factorised(generating_points: ARRAY, split_positions: TYPED_LIST
     return dds_solution_max, leaf_factors, leaf_positions, leaf_sizes
 
 
-# functions for the N2L transformation:
+# functions for the N2L tree:
 
 def compute_n2l_factorised(exponents: ARRAY, generating_points: ARRAY, unisolvent_nodes: ARRAY, leaf_positions: ARRAY,
-                           leaf_sizes: ARRAY):
-    """ computes the N2L transformation in factorised barycentric format
+                           leaf_sizes: ARRAY) -> FACTORISED_TRAFO_TYPE:
+    """ computes the N2L tree in factorised barycentric format
 
-    NOTE: the Newton to Lagrange transformation is implicitly given by the Newton evaluation
+    NOTE: the Newton to Lagrange tree is implicitly given by the Newton evaluation
 
-    "piecewise L2N transformation":
-    compute the L2N transformation for the maximal problem size (= polynomial degree) once.
+    "piecewise L2N tree":
+    compute the L2N tree for the maximal problem size (= polynomial degree) once.
     NOTE: the topmost entry of this first atomic triangular matrix will be 1.
     all of the other matrix pieces will only be parts of this solution multiplied by a factor.
     for computing the factors just "compute" the first entry of each sub matrix (again with Newton evaluation).
 
     NOTE: JIT compilation not possible, because newt eval fct. cannot be JIT compiled
 
-    TODO also incorporate the latest improvements of the barycentric L2N transformation:
+    TODO also incorporate the latest improvements of the barycentric L2N tree:
         evaluate just in one dimension then pass the results to all nodes in the tree "below"
-        -> expand the result until the full transformation has been computed
+        -> expand the result until the full tree has been computed
 
-    :return: all the required data structures for the transformation
+    :return: all the required data structures for the tree
     """
     max_problem_size = np.max(leaf_sizes)
-    # compute the N2L transformation matrix piece for the first leaf node (<- is of biggest size!)
+    # compute the N2L tree matrix piece for the first leaf node (<- is of biggest size!)
     # ATTENTION: only works for multi indices (exponents) which start with the 0 vector!
     leaf_points = unisolvent_nodes[:max_problem_size, :]
     leaf_exponents = exponents[:max_problem_size, :]
@@ -325,7 +332,7 @@ def compute_n2l_factorised(exponents: ARRAY, generating_points: ARRAY, unisolven
                                          triangular=True)
 
     # compute the correction factors for all leaf node combinations:
-    # = the first value of each triangular transformation matrix piece
+    # = the first value of each triangular tree matrix piece
     leaf_exponents = exponents[leaf_positions, :]
     leaf_points = unisolvent_nodes[leaf_positions, :]
     # NOTE: this matrix will be triangular (1/2 of the values are 0)
@@ -334,3 +341,37 @@ def compute_n2l_factorised(exponents: ARRAY, generating_points: ARRAY, unisolven
                                       triangular=True)
 
     return first_n2l_piece, leaf_factors, leaf_positions, leaf_sizes
+
+
+def _build_lagrange_to_newton_bary(transformation: "TransformationABC") -> BarycentricOperatorABC:
+    # TODO balancing: deciding on the optimal tree format to use!
+    grid = transformation.grid
+    tree = grid.tree
+    generating_points = grid.generating_points
+    split_positions = tree.split_positions
+    subtree_sizes = tree.subtree_sizes
+    problem_sizes = tree.problem_sizes
+    transformation_data = compute_l2n_dict(generating_points, split_positions, subtree_sizes, problem_sizes)
+    transformation_operator = BarycentricDictOperator(transformation_data)
+
+    # transformation_data = compute_l2n_factorised(generating_points, split_positions, subtree_sizes)
+    # transformation_operator = BarycentricFactorisedOperator(transformation_data)
+
+    return transformation_operator
+
+
+def _build_newton_to_lagrange_bary(transformation: "TransformationABC") -> BarycentricFactorisedOperator:
+    # TODO balancing: deciding on the optimal tree format to use!
+    grid = transformation.grid
+    multi_index = grid.multi_index
+    tree = grid.tree
+    generating_points = grid.generating_points
+    exponents = multi_index.exponents
+    unisolvent_nodes = grid.unisolvent_nodes
+    leaf_positions = tree.split_positions[0]
+    leaf_sizes = tree.subtree_sizes[0]
+    transformation_data = compute_n2l_factorised(exponents, generating_points, unisolvent_nodes, leaf_positions,
+                                                 leaf_sizes)
+    transformation_operator = BarycentricFactorisedOperator(transformation_data)
+
+    return transformation_operator

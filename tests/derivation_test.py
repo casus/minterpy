@@ -63,11 +63,11 @@ def check_grad_basis_transformations(spatial_dimension, poly_degree, lp_degree):
         origin_poly = d.origin_poly
         assert type(origin_poly) is cls_from
         # 'manually' compute the gradient operator "x2x" based on the basis operator
-        x2c = get_transformation(origin_poly, CanonicalPolynomial).transformation_matrix
+        x2c = get_transformation(origin_poly, CanonicalPolynomial).transformation_operator.to_array()
         grad_op_x2c = tensor_right_product(grad_op_c2c, x2c)
 
         canonical_poly = CanonicalPolynomial(None, d.multi_index)
-        c2x = get_transformation(canonical_poly, cls_to).transformation_matrix
+        c2x = get_transformation(canonical_poly, cls_to).transformation_operator.to_array()
         grad_op_x2x = tensor_left_product(c2x, grad_op_x2c)
 
         almost_equal(grad_op_x2x, grad_op)

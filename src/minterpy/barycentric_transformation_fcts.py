@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-""" functions required for performing (precomputed) barycentric transformations
-    and for converting different transformation formats
+""" this module provides the functionality required for performing (precomputed) barycentric transformations
 
 TODO use the most performant transformation implementation depending on
 NOTE: TODO the performance of each of the different formats needs to be balanced
@@ -11,7 +10,13 @@ make use of the nested factorised format
 precompute intermediary results of transforming each vector slice (matrix multiplication)
 during a transformation only once.
 then just use multiples of these results instead of performing actual matrix multiplications
+
+TODO test all different transformation formats!
 """
+
+from numba import njit
+
+from minterpy.global_settings import ARRAY, TRAFO_DICT, TYPED_LIST
 
 __author__ = "Jannik Michelfeit"
 __copyright__ = "Copyright 2021, minterpy"
@@ -22,13 +27,6 @@ __credits__ = ["Jannik Michelfeit"]
 __email__ = "jannik@michelfe.it"
 __status__ = "Development"
 
-import numpy as np
-from numba import njit
-
-from minterpy.global_settings import ARRAY, TYPED_LIST, INT_DTYPE, FLOAT_DTYPE, TRAFO_DICT
-
-
-# functions for performing the precomputed transformations:
 
 @njit(cache=True)
 def transform_barycentric_dict(coeffs_in: ARRAY, coeffs_out: ARRAY, trafo_dict: TRAFO_DICT,
@@ -138,85 +136,3 @@ def transform_barycentric_piecewise(coeffs_in: ARRAY, coeffs_out: ARRAY, matrix_
         end_pos_out = start_pos_out + size_out
         slice_out = coeffs_out[start_pos_out:end_pos_out]
         slice_out[:] += coeff_slice_transformed  # sum up
-
-
-# utility functions for converting different transformation formats:
-
-@njit(cache=True)
-def merge_trafo_dict(trafo_dict, leaf_positions, leaf_sizes) -> ARRAY:
-    expected_size = leaf_positions[-1] + leaf_sizes[-1]
-    combined_matrix = np.zeros((expected_size, expected_size), dtype=FLOAT_DTYPE)
-    for (leaf_idx_l, leaf_idx_r), matrix_piece, in trafo_dict.items():
-        start_pos_in = leaf_positions[leaf_idx_l]
-        start_pos_out = leaf_positions[leaf_idx_r]
-
-        # NOTE: the size of the required slices of the coefficient vectors
-        # are implicitly encoded in the size of each transformation matrix piece!
-        size_out, size_in = matrix_piece.shape
-        end_pos_in = start_pos_in + size_in
-        end_pos_out = start_pos_out + size_out
-
-        window = combined_matrix[start_pos_out:end_pos_out, start_pos_in:end_pos_in]
-        window[:] = matrix_piece
-
-    return combined_matrix
-
-
-@njit(cache=True)
-def compute_matrix_pieces(first_leaf_solution, leaf_factors, leaf_positions, leaf_sizes):
-    """ computes the actual matrix pieces of a transformation in factorised format explicitly
-
-    NOTE:  useful e.g. for merging all the pieces into a single matrix
-    """
-    matrix_pieces = []
-    start_positions_1 = []
-    start_positions_2 = []
-    nr_of_leaves = len(leaf_positions)
-    for node_idx_1 in range(nr_of_leaves):
-        # "lower triangular form"
-        for node_idx_2 in range(node_idx_1, nr_of_leaves):
-            corr_factor = leaf_factors[node_idx_2, node_idx_1]
-            if corr_factor == 0.0:
-                continue
-
-            size_in = leaf_sizes[node_idx_1]
-            size_out = leaf_sizes[node_idx_2]
-
-            transformation_piece = first_leaf_solution[:size_out, :size_in] * corr_factor
-
-            matrix_pieces.append(transformation_piece)
-
-            start_pos_in = leaf_positions[node_idx_1]
-            start_pos_out = leaf_positions[node_idx_2]
-            start_positions_1.append(start_pos_in)
-            start_positions_2.append(start_pos_out)
-
-    start_positions_1 = np.array(start_positions_1, dtype=INT_DTYPE)
-    start_positions_2 = np.array(start_positions_2, dtype=INT_DTYPE)
-
-    return matrix_pieces, start_positions_1, start_positions_2
-
-
-@njit(cache=True)
-def merge_matrix_pieces(first_leaf_solution: ARRAY, leaf_factors: ARRAY, leaf_positions: ARRAY,
-                        leaf_sizes: ARRAY) -> ARRAY:
-    """ creates a transformation matrix of full size from a precomputed barycentric transformation in factorised form
-
-    used for testing the equality of the transformation matrices of both regular and barycentric computation
-    TODO allow to only create a slice of the total matrix
-    """
-    expected_size = leaf_positions[-1] + leaf_sizes[-1]
-    matrix_pieces, start_positions_in, start_positions_out = compute_matrix_pieces(first_leaf_solution, leaf_factors,
-                                                                                   leaf_positions, leaf_sizes)
-    combined_matrix = np.zeros((expected_size, expected_size), dtype=FLOAT_DTYPE)
-    for matrix_piece, start_pos_in, start_pos_out in zip(matrix_pieces, start_positions_in, start_positions_out):
-        # NOTE: the size of the required slices of the coefficient vectors
-        # are implicitly encoded in the size of each transformation matrix piece!
-        size_out, size_in = matrix_piece.shape
-        end_pos_in = start_pos_in + size_in
-        end_pos_out = start_pos_out + size_out
-
-        window = combined_matrix[start_pos_out:end_pos_out, start_pos_in:end_pos_in]
-        window[:] = matrix_piece
-
-    return combined_matrix
