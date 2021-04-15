@@ -56,6 +56,8 @@ class BarycentricOperatorABC(TransformationOperatorABC):
             # TODO support this natively
             return MatrixTransformationOperator(self.to_array() @ other.to_array())
 
+        # TODO support "separate multi index" transformations
+
         # assuming the input are coefficients which should be transformed
         coeffs_in = other  # alias
         # use an output placeholder (for an increases compatibility with Numba JIT compilation)

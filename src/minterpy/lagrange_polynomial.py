@@ -1,10 +1,12 @@
 """
 LagrangePolynomial class
 """
+from typing import Optional
 
 import numpy as np
 
 import minterpy
+from minterpy.global_settings import ARRAY
 from minterpy.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC
 from minterpy.utils import newt_eval
 from minterpy.verification import verify_domain
@@ -40,7 +42,7 @@ class LagrangePolynomial(MultivariatePolynomialSingleABC):
     Conceptually this is equal to fix the "inactivate" coefficients to always be 0.
     """
 
-    _transformer_l2n = None
+    _newt_coeffs_lagr_monomials:Optional[ARRAY] = None
 
     # Virtual Functions
     _add = staticmethod(dummy)
@@ -55,12 +57,11 @@ class LagrangePolynomial(MultivariatePolynomialSingleABC):
 
     @property
     def newt_coeffs_lagr_monomials(self):
-        if self._transformer_l2n is None:  # lazy initialisation
-            self._transformer_l2n = minterpy.TransformationLagrangeToNewton(self)
-
-        # the Newton coefficients of all Lagrange polynomials ("monomials")
-        lagr_mon_coeffs_newton = self._transformer_l2n.transformation_operator
-        return lagr_mon_coeffs_newton
+        if self._newt_coeffs_lagr_monomials is None:  # lazy initialisation
+            transformer_l2n = minterpy.TransformationLagrangeToNewton(self)
+            # TODO more performant alternative?
+            self._newt_coeffs_lagr_monomials = transformer_l2n.transformation_operator.to_array()
+        return self._newt_coeffs_lagr_monomials
 
     def eval_lagrange_monomials_on(self, points: np.ndarray):
         """ computes the values of all Lagrange monomials at all k input points
