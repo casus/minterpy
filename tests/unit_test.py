@@ -16,7 +16,7 @@ from tests.test_settings import DESIRED_PRECISION, NR_SAMPLE_POINTS, TIME_FORMAT
 # TODO test tree!
 # test if interpolation is globally converging
 # test grid structure
-from tests.transformation_tests import check_poly_interpolation
+from tests.transformation_test import check_poly_interpolation
 
 
 def accuracy_test_fct(spatial_dimension, poly_degree, lp_degree):
