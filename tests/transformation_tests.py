@@ -130,10 +130,10 @@ def check_n2l_barycentric(spatial_dimension, poly_degree, lp_degree):
     multi_index = grid.multi_index
     nr_coefficients = len(multi_index)
 
-    barycentric_operator = _build_lagrange_to_newton_bary(transformation)
+    barycentric_operator = _build_newton_to_lagrange_bary(transformation)
     n2l_barycentric = barycentric_operator.to_array()
 
-    matrix_operator = _build_newton_to_lagrange_naive(grid, multi_index)
+    matrix_operator = _build_newton_to_lagrange_naive(transformation)
     n2l_regular = matrix_operator.to_array()
 
     almost_equal(n2l_regular, n2l_barycentric)
@@ -158,7 +158,7 @@ def check_l2n_barycentric(spatial_dimension, poly_degree, lp_degree):
 
     # check for array equality:
     l2n_regular = build_l2n_matrix_dds(grid)
-    transformation_operator = _build_newton_to_lagrange_bary(transformation)
+    transformation_operator = _build_lagrange_to_newton_bary(transformation)
     l2n_barycentric = transformation_operator.to_array()
     almost_equal(l2n_regular, l2n_barycentric)
 
