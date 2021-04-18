@@ -1,6 +1,7 @@
 from itertools import product
 from random import randint
 from typing import Iterable, List, Type
+from warnings import warn
 
 import numpy as np
 
@@ -31,9 +32,12 @@ def print_test_setttings(spatial_dimension, poly_degree, lp_degree):
           f"\n- lp_degree: {lp_degree}")
 
 
-def check_different_settings(test_fct, test_degrees: Iterable[int] = DEGREES2TEST, ):
+def check_different_settings(test_fct, test_degrees: Iterable[int] = DEGREES2TEST, max_dim: int = None):
     # for g_vectorized in TEST_FUNCTIONS_VECTORIZED:
     for spatial_dimension, poly_degree, lp_degree in product(DIMENSIONS2TEST, test_degrees, LP_DEGREES):
+        if max_dim is not None and spatial_dimension > max_dim:
+            warn(f"skipping this test case. the dimensionality is higher than the max dimension: {max_dim}")
+            continue
         print_test_setttings(spatial_dimension, poly_degree, lp_degree)
         test_fct(spatial_dimension, poly_degree, lp_degree)
         print('PASSED.')
