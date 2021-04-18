@@ -15,7 +15,7 @@ __status__ = "Development"
 
 np.random.seed(42)
 
-DESIRED_PRECISION = 10  # decimals of maximally allowed errors
+DESIRED_PRECISION = 9  # decimals of maximally allowed errors
 NR_SAMPLE_POINTS = 1000  # TODO dependent on m?
 MIN_DEGREE = 1
 MAX_DEGREE = 4
@@ -29,7 +29,7 @@ else:
 DEGREES2TEST = range(MIN_DEGREE, MAX_DEGREE + 1, DEGREE_STEP)
 
 MIN_DIMENSION = 1
-MAX_DIMENSION = 3
+MAX_DIMENSION = 4
 DIMENSIONS2TEST = range(MIN_DIMENSION, MAX_DIMENSION + 1)
 
 # TODO allow other lp degrees: -> not supported yet. e.g. functions use linalg.norm!
