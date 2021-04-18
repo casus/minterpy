@@ -12,11 +12,11 @@ import numpy as np
 from numba import njit
 from numba.typed import List
 
-from minterpy.transformation_operators import BarycentricOperatorABC, BarycentricDictOperator, \
-    BarycentricFactorisedOperator
 from minterpy.dds import dds_1_dimensional, get_direct_child_idxs, get_leaf_idxs
 from minterpy.global_settings import ARRAY, TYPED_LIST, FLOAT_DTYPE, TRAFO_DICT, DEBUG, DICT_TRAFO_TYPE, \
     FACTORISED_TRAFO_TYPE
+from minterpy.transformation_operators import BarycentricOperatorABC, BarycentricDictOperator, \
+    BarycentricFactorisedOperator
 from minterpy.utils import eval_newt_polys_on
 
 __author__ = "Jannik Michelfeit"
@@ -85,10 +85,12 @@ def expand_solution(prev_solutions: TRAFO_DICT, dds_solution_max: ARRAY, dim_idx
         child_idx_range_l = range(first_child_idx, last_child_idx + 1)  # ATTENTION: also include the last node!
         # for all nodes to the right including the selected left node!
         for node_idx_par_r in range(node_idx_par_l, nr_nodes_in_dim):
-            first_child_idx_r, last_child_idx_r = get_direct_child_idxs(dim_idx_par, node_idx_par_r,
+            first_child_idx, last_child_idx = get_direct_child_idxs(dim_idx_par, node_idx_par_r,
                                                                         split_positions,
                                                                         subtree_sizes)
-            nr_children_r = last_child_idx_r - first_child_idx_r + 1
+            child_idx_range_r = range(first_child_idx, last_child_idx + 1)  # ATTENTION: also include the last node!
+
+            # nr_children_r = last_child_idx_r - first_child_idx_r + 1
 
             # the solution of the parent node combination (= triangular matrix)
             # contains the the required factors for all child solutions
@@ -100,10 +102,10 @@ def expand_solution(prev_solutions: TRAFO_DICT, dds_solution_max: ARRAY, dim_idx
                 # iterate over the child nodes of the right parent
                 # NOTE: in each iteration on less node needs to be considered
                 # (the factor would be 0 due to the lower triangular form)
-                for idx_r_rel in range(idx_l_rel, nr_children_r):
-                    idx_r_abs = first_child_idx_r + idx_r_rel
+                for idx_r_rel, idx_r_abs in enumerate(child_idx_range_r):
                     node_size_r = problem_sizes[dim_idx_child][idx_r_abs]
                     factor = factors[idx_r_rel, idx_l_rel]
+
                     # the solution for a combination of child nodes consists of
                     # the top left part of the DDS solution with the correct size
                     # multiplied by the factor of the parent
