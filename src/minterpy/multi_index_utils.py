@@ -92,6 +92,8 @@ NORM_FCT = lp_norm
 
 def _gen_multi_index_exponents_recur(m, n, gamma, gamma2, lp_degree):
     """ DEPRECATED. only for reference. TODO remove
+    NOTE: this is slow for larger problem instances!
+
     build multi index "gamma" depending on lp_degree
     NOTE: multi indices are being called "alpha" in the newest interpolation paper
 
@@ -297,20 +299,17 @@ def insert_lexicographically(indices: Union[List[np.ndarray], np.ndarray],
     """
     if indices2insert is None:
         return indices
-    if type(indices) is list:
-        nr_exponents = len(indices)
-    else:
-        nr_exponents, m = indices.shape
+    nr_exponents = len(indices)
     list_of_indices = None  # avoid creating a list when there is no index to insert
     for i, index2insert in enumerate(iterate_indices(indices2insert)):
         if i == 0:  # initialise list
             list_of_indices = to_index_list(indices)
         list_insert_single(list_of_indices, index2insert)
-    if list_of_indices is None or len(list_of_indices) == nr_exponents: # len(list_of_indices) or len(indices)
+    if list_of_indices is None or len(list_of_indices) == nr_exponents:  # len(list_of_indices) or len(indices)
         # no index has been inserted.
         # ATTENTION: return the previous array in order to easily compare for equality!
         return indices
-    index_array = to_index_array(list_of_indices).reshape(-1,m)
+    index_array = to_index_array(list_of_indices)
     return index_array
 
 
