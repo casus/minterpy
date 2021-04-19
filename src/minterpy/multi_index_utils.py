@@ -244,6 +244,7 @@ def list_insert_single(list_of_indices: List[np.ndarray], index2insert: np.ndarr
                        check_for_inclusion: bool = True):
     """ inserts a single index into a given list of indices maintaining lexicographical ordering
     """
+    # TODO check length of single index to insert!
     if list_of_indices is None:
         raise TypeError
     nr_of_indices = len(list_of_indices)

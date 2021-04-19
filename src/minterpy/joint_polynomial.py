@@ -17,7 +17,6 @@ __credits__ = ["Jannik Michelfeit"]
 __email__ = "jannik@michelfe.it"
 __status__ = "Development"
 
-
 from minterpy.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC, MultivariatePolynomialABC
 from minterpy.verification import rectify_query_points
 
@@ -45,11 +44,15 @@ class JointPolynomial(MultivariatePolynomialABC):
 
     NOTE: represents the SUM of all given sub-polynomials
 
+    TODO: rename
+    TODO: test
     """
 
     expected_type = MultivariatePolynomialSingleABC
 
     def __init__(self, sub_polynomials: Iterable[MultivariatePolynomialSingleABC]):
+        # TODO check if the shape of the coefficients (all but the first axis) match!
+        #  otherwise e.g. concatenation won't work!
         # TODO if all input polynomials are Lagrange polynomials.
         #  a LagrangeJointPolynomial must be constructed automatically!
 
@@ -102,7 +105,7 @@ class JointPolynomial(MultivariatePolynomialABC):
             if i == 0:
                 out = coeffs
             else:
-                out = np.append(out, coeffs)
+                out = np.append(out, coeffs, axis=0)
         return out
 
     @coeffs.setter
@@ -127,7 +130,7 @@ class JointPolynomial(MultivariatePolynomialABC):
     def unisolvent_nodes(self):
         """ the points the polynomial is defined on
         """
-        return np.concatenate([p.grid.unisolvent_nodes for p in self.sub_polynomials], axis=1)
+        return np.concatenate([p.grid.unisolvent_nodes for p in self.sub_polynomials], axis=0)
 
     @property
     def newt_coeffs_lagr_monomials(self):
@@ -152,10 +155,9 @@ class JointPolynomial(MultivariatePolynomialABC):
             if i == 0:
                 out = mon_vals
             else:
-                out = np.append(out, mon_vals, axis=1)
+                out = np.append(out, mon_vals, axis=0)
         return out
 
-#
 # class JointLagrangePolynomial(JointPolynomial):
 #     """ class for combining multiple Lagrange polynomials into a single polynomial instance
 #     """
