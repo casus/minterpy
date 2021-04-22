@@ -10,13 +10,13 @@ import numpy as np
 from minterpy import MultiIndex, LagrangePolynomial, TransformationLagrangeToNewton, Grid, \
     TransformationNewtonToLagrange
 from minterpy.utils import report_error
-from tests.auxiliaries import rnd_points, check_different_settings, get_grid
-from tests.test_settings import DESIRED_PRECISION, NR_SAMPLE_POINTS, TIME_FORMAT_STR, RUNGE_FCT_VECTORIZED
+from auxiliaries import rnd_points, check_different_settings, get_grid
+from test_settings import DESIRED_PRECISION, NR_SAMPLE_POINTS, TIME_FORMAT_STR, RUNGE_FCT_VECTORIZED
 # TODO more sophisticated tests
 # TODO test tree!
 # test if interpolation is globally converging
 # test grid structure
-from tests.transformation_test import check_poly_interpolation
+from transformation_test import check_poly_interpolation
 
 
 def accuracy_test_fct(spatial_dimension, poly_degree, lp_degree):

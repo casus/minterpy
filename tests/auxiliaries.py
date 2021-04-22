@@ -9,7 +9,7 @@ from minterpy import MultiIndex, Grid, LagrangePolynomial, Derivator, Multivaria
     TransformationABC
 from minterpy.transformation_meta import get_transformation_class
 from minterpy.verification import check_shape, check_is_square
-from tests.test_settings import DIMENSIONS2TEST, DEGREES2TEST, LP_DEGREES, DESIRED_PRECISION
+from test_settings import DIMENSIONS2TEST, DEGREES2TEST, LP_DEGREES, DESIRED_PRECISION
 
 
 def proto_test_case(data, fct):
