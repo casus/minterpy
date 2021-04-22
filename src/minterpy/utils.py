@@ -53,9 +53,9 @@ def gen_chebychev_2nd_order_leja_ordered(n: int):
         lj[0, k + 1] = ord[jj]
         ord = np.delete(ord, jj)
 
-    leja_points = np.zeros([1, n + 1])
+    leja_points = np.zeros([n + 1, 1])
     for i in range(n + 1):
-        leja_points[0, i] = points2[int(lj[0, i])]
+        leja_points[i, 0] = points2[int(lj[0, i])]
     return leja_points
 
 

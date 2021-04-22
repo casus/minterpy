@@ -451,7 +451,7 @@ def jit_dds(result_placeholder: ARRAY, generating_points: ARRAY, split_positions
         dim_idx_child = dim_idx_par - 1
         splits_in_dim = split_positions[dim_idx_par]
         nr_nodes_in_dim = len(splits_in_dim)
-        generating_values = generating_points[dim_idx_par]
+        generating_values = generating_points[:, dim_idx_par]
         for node_idx_par in range(nr_nodes_in_dim):  # for all parent nodes
             first_child_idx, last_child_idx = get_direct_child_idxs(dim_idx_par, node_idx_par, split_positions,
                                                                     subtree_sizes)
@@ -474,7 +474,7 @@ def jit_dds(result_placeholder: ARRAY, generating_points: ARRAY, split_positions
     dim_idx_child = 0
     splits_in_dim = split_positions[dim_idx_child]
     nr_nodes_in_dim = len(splits_in_dim)
-    generating_values = generating_points[dim_idx_child]
+    generating_values = generating_points[:,dim_idx_child]
     for node_idx_par in range(nr_nodes_in_dim):
         v_leaf = get_array_slice(dim_idx_child, node_idx_par, result_placeholder, split_positions, subtree_sizes)
         dds_1_dimensional(generating_values, v_leaf)

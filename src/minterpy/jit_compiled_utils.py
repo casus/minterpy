@@ -59,7 +59,7 @@ def eval_newton_polynomials(x, exponents, generating_points, max_exponents, prod
         prod = 1.0
         for j in range(max_exp_in_dim):  # O(n)
             # TODO there are n+1 1D grid values, the last one will never be used!?
-            p_ij = generating_points[i, j]
+            p_ij = generating_points[j, i]
             prod *= (x_i - p_ij)
             # NOTE: shift index by one
             exponent = j + 1  # NOTE: otherwise the result type is float

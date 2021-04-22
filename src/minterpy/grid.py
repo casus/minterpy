@@ -17,12 +17,12 @@ __all__ = ['Grid']
 
 
 def _gen_unisolvent_nodes(multi_index, generating_points):
-    return np.take_along_axis(generating_points, multi_index.exponents.T, axis=-1).T
+    return np.take_along_axis(generating_points, multi_index.exponents, axis=0)
 
 
 def get_points_from_values(spatial_dimension: int, generating_values: np.ndarray):
-    generating_points = np.tile(generating_values, (spatial_dimension, 1))
-    generating_points[::2] *= -1
+    generating_points = np.tile(generating_values, (1, spatial_dimension))
+    generating_points[:, ::2] *= -1
     return generating_points
 
 

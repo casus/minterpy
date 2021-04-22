@@ -12,8 +12,8 @@ from minterpy.jit_compiled_utils import lex_smaller_or_equal, have_lexicographic
 from minterpy.multi_index_utils import is_lexicographically_complete, \
     make_derivable, make_complete, _gen_multi_index_exponents, find_match_between, _get_poly_degree, \
     insert_lexicographically
-from tests.auxiliaries import check_different_settings
-from tests.test_settings import TIME_FORMAT_STR
+from auxiliaries import check_different_settings
+from test_settings import TIME_FORMAT_STR
 
 random.seed(42)  # for reproducible results
 

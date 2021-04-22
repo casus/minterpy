@@ -3,7 +3,7 @@ from itertools import product
 
 import numpy as np
 
-from tests.auxiliaries import all_are_close, check_different_settings, get_derivator, almost_equal, \
+from auxiliaries import all_are_close, check_different_settings, get_derivator, almost_equal, \
     get_multi_index, rnd_points
 from minterpy import LagrangePolynomial, CanonicalPolynomial, NewtonPolynomial, get_transformation, compute_grad_c2c, \
     compute_grad_x2c

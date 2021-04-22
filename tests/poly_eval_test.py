@@ -5,8 +5,8 @@ import numpy as np
 
 from minterpy import MultiIndex, Grid, NewtonPolynomial, TransformationNewtonToCanonical
 from minterpy.utils import report_error
-from tests.test_settings import DESIRED_PRECISION
-from tests.auxiliaries import check_different_settings, rnd_points
+from test_settings import DESIRED_PRECISION
+from auxiliaries import check_different_settings, rnd_points
 
 
 # TODO unit test the single evaluation functions!

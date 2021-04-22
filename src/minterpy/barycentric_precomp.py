@@ -48,7 +48,7 @@ def compute_1d_dds_solutions(generating_points: ARRAY, problem_sizes: TYPED_LIST
         # TODO is the problem size always equal to the degree n?
         max_problem_size = problem_sizes[dim_idx][0]
         dds_solution_max = np.eye(max_problem_size, dtype=FLOAT_DTYPE)
-        gen_vals = generating_points[dim_idx]  # ATTENTION: different in each dimension!
+        gen_vals = generating_points[:, dim_idx]  # ATTENTION: different in each dimension!
         # TODO optimise 1D dds for diagonal input <-> output!
         dds_1_dimensional(gen_vals, dds_solution_max)  # O(n^2)
         dds_solutions.append(dds_solution_max)
@@ -233,7 +233,7 @@ def leaf_node_dds(result_placeholder: ARRAY, generating_points: ARRAY, split_pos
         dim_idx_child = dim_idx_par - 1
         splits_in_dim = split_positions[dim_idx_par]
         nr_nodes_in_dim = len(splits_in_dim)
-        generating_values = generating_points[dim_idx_par]
+        generating_values = generating_points[:, dim_idx_par]
         for node_idx_par in range(nr_nodes_in_dim):  # for all parent nodes
             first_child_idx, last_child_idx = get_direct_child_idxs(dim_idx_par, node_idx_par, split_positions,
                                                                     subtree_sizes)
@@ -285,7 +285,7 @@ def compute_l2n_factorised(generating_points: ARRAY, split_positions: TYPED_LIST
     leaf_sizes = subtree_sizes[0]
     max_problem_size = np.max(leaf_sizes)
     dds_solution_max = np.eye(max_problem_size, dtype=FLOAT_DTYPE)
-    gen_vals_leaves = generating_points[0]  # NOTE: equal for all leaves
+    gen_vals_leaves = generating_points[:, 0]  # NOTE: equal for all leaves
     dds_1_dimensional(gen_vals_leaves, dds_solution_max)
 
     leaf_positions = split_positions[0]
