@@ -155,7 +155,7 @@ class JointPolynomial(MultivariatePolynomialABC):
             if i == 0:
                 out = mon_vals
             else:
-                out = np.append(out, mon_vals, axis=0)
+                out = np.append(out, mon_vals, axis=1)
         return out
 
 # class JointLagrangePolynomial(JointPolynomial):
