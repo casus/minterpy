@@ -14,7 +14,7 @@ from minterpy.multi_index import MultiIndex
 __all__ = ['MultivariatePolynomialABC', 'MultivariatePolynomialSingleABC']
 
 from minterpy.multi_index_utils import find_match_between
-from minterpy.verification import check_type_n_values, check_shape
+from minterpy.verification import check_type_n_values, check_shape, verify_domain
 
 
 class MultivariatePolynomialABC(abc.ABC):
@@ -217,16 +217,16 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
             raise NotImplementedError(f"Subtraction operation not implemented for "
                                       f"'{self.__class__}', '{other.__class__}'")
 
-        result = self._add(self, -other)
+        result = self._sub(self, other)
         return result
 
     def __mul__(self, other):
         if self.__class__ != other.__class__:
             raise NotImplementedError(f"Multiplication operation not implemented for "
                                       f"'{self.__class__}', '{other.__class__}'")
-        # TODO Call to the _mul method
-        # TODO Return a new class instance with the result
-        return
+
+        result = self._mul(self, other)
+        return result
 
     def __radd__(self, other):
         if self.__class__ != other.__class__:
@@ -360,3 +360,18 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
     #     """
     #     new_indices = self.multi_index.make_derivable()
     #     return self._new_instance_if_necessary(new_indices)
+
+    def expand_dim(self, dim, extra_internal_domain=None, extra_user_domain=None):
+        """
+        Expands the dimension of the polynomial by adding zeros to the multi_indices
+        (which is equivalent to the multiplication of ones to each monomial)
+
+        TODO handle grid points.
+        """
+        expand_dim = dim - self.multi_index.spatial_dimension
+
+        self.multi_index.expand_dim(dim)  # breaks if dim<spacial_dimension, i.e. expand_dim<0
+        extra_internal_domain = verify_domain(extra_internal_domain, expand_dim)
+        self.internal_domain = np.concatenate((self.internal_domain, extra_internal_domain))
+        extra_user_domain = verify_domain(extra_user_domain, expand_dim)
+        self.user_domain = np.concatenate((self.user_domain, extra_user_domain))

@@ -262,17 +262,3 @@ class CanonicalPolynomial(MultivariatePolynomialSingleABC):
     generate_internal_domain = staticmethod(canonical_generate_internal_domain)
     generate_user_domain = staticmethod(canonical_generate_user_domain)
 
-    def expand_dim(self, dim, extra_internal_domain=None, extra_user_domain=None):
-        """
-        Expands the dimension of the polynomial by adding zeros to the multi_indices
-        (which is equivalent to the multiplication of ones to each monomial)
-
-        TODO maybe move this function to MultivariatePolynomialSingleABC, but be aware of the grid points.
-        """
-        expand_dim = dim - self.multi_index.spatial_dimension
-
-        self.multi_index.expand_dim(dim)  # breaks if dim<spacial_dimension, i.e. expand_dim<0
-        extra_internal_domain = verify_domain(extra_internal_domain, expand_dim)
-        self.internal_domain = np.concatenate((self.internal_domain, extra_internal_domain))
-        extra_user_domain = verify_domain(extra_user_domain, expand_dim)
-        self.user_domain = np.concatenate((self.user_domain, extra_user_domain))
