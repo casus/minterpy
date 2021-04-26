@@ -10,12 +10,117 @@ from minterpy.global_settings import ARRAY
 from minterpy.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC
 from minterpy.utils import newt_eval
 from minterpy.verification import verify_domain
+from minterpy.multi_index_utils import insert_lexicographically
+from minterpy.canonical_polynomial import _match_dims, _matching_internal_domain
 
 __all__ = ['LagrangePolynomial']
 
-
 def dummy():
     raise NotImplementedError(f"This feature is not implemented yet.")
+
+# TODO: part of polynomial utils?
+# TODO: optimize with numba
+def _union_of_exponents(exp1, exp2):
+    """
+    Returns the union of two multiindices along with a mapping of indices from the
+    resultant set to the exp1 and exp2
+    """
+    res_exp = insert_lexicographically(exp1.copy(), exp2.copy())
+    nr_monomials, _ = res_exp.shape
+
+    res_map = np.zeros((nr_monomials, 2)).astype(np.int)
+
+    # Assuming all exponents are lexicographically sorted
+    pos_exp1 = 0
+    pos_exp2 = 0
+    for i in range(nr_monomials):
+        if np.array_equal(res_exp[i, :], exp1[pos_exp1, :]):
+            res_map[i, 0] = pos_exp1
+            pos_exp1 += 1
+        if np.array_equal(res_exp[i, :], exp2[pos_exp2, :]):
+            res_map[i, 1] = pos_exp2
+            pos_exp2 += 1
+
+    return res_exp, res_map
+
+# TODO : Generalize to handle multiple polynomials (2D coeffs)
+def _generic_lagrange_add(exp1, coeff1, exp2, coeff2):
+    if len(coeff2) > len(coeff1):
+        return _generic_lagrange_add(exp2, coeff2, exp1, coeff1)
+
+    res_exp, res_map = _union_of_exponents(exp1, exp2)
+    nr_monomials, _ = res_exp.shape
+    res_coeff = np.zeros(nr_monomials)
+    for i in range(nr_monomials):
+        if res_map[i, 0] != -1:
+            res_coeff[i] += coeff1[res_map[i, 0]]
+        if res_map[i, 1] != -1:
+            res_coeff[i] += coeff2[res_map[i, 1]]
+
+    return res_exp, res_coeff
+
+# TODO : poly2 can be of a different basis?
+def _lagrange_add(poly1, poly2):
+    """Addition of two polynomials in Lagrange basis.
+    """
+    p1, p2 = _match_dims(poly1, poly2)
+    if _matching_internal_domain(p1, p2):
+        res_mi, res_c = _generic_lagrange_add(p1.multi_index.exponents, p1.coeffs,
+                                              p2.multi_index.exponents, p2.coeffs)
+        return LagrangePolynomial(res_c, res_mi, internal_domain=p1.internal_domain, user_domain=p1.user_domain)
+    else:
+        raise NotImplementedError("Addition is not implemented for lagrange polynomials with different domains")
+
+def _lagrange_sub(poly1, poly2):
+    """Subtraction of two polynomials in Lagrange basis.
+    """
+    p1, p2 = _match_dims(poly1, poly2)
+    if _matching_internal_domain(p1, p2):
+        res_mi, res_c = _generic_lagrange_add(p1.multi_index.exponents, p1.coeffs,
+                                              p2.multi_index.exponents, -p2.coeffs)
+        return LagrangePolynomial(res_c, res_mi, internal_domain=p1.internal_domain, user_domain=p1.user_domain)
+    else:
+        raise NotImplementedError("Subtraction is not implemented for lagrange polynomials with different domains")
+
+def _lagrange_mul(poly1, poly2):
+    """Multiplication of two polynomials in Lagrange basis.
+    """
+    p1, p2 = _match_dims(poly1, poly2)
+    if _matching_internal_domain(p1, p2):
+        l2n_1 = minterpy.TransformationLagrangeToNewton(p1)
+        l2n_2 = minterpy.TransformationLagrangeToNewton(p2)
+
+        degree_poly1 = p1.multi_index.poly_degree
+        degree_poly2 = p2.multi_index.poly_degree
+        lpdegree_poly1 = p1.multi_index.lp_degree
+        lpdegree_poly2 = p2.multi_index.lp_degree
+
+        res_degree = int(degree_poly1 + degree_poly2)
+        res_lpdegree = lpdegree_poly1 + lpdegree_poly2
+
+        res_mi = minterpy.MultiIndex.from_degree(p1.spatial_dimension, res_degree, res_lpdegree)
+        res_grid = minterpy.Grid(res_mi)
+
+        num_points_res = res_grid.unisolvent_nodes.shape[0]
+
+        num_points_poly1 = p1.unisolvent_nodes.shape[0]
+        scale_up_poly1 = np.zeros((num_points_res, num_points_poly1))
+        for i in range(num_points_poly1):
+            scale_up_poly1[:, i] = newt_eval(res_grid.unisolvent_nodes, l2n_1.transformation_operator.to_array()[:, i],
+                                             p1.multi_index.exponents, p1.grid.generating_points)
+
+        num_points_poly2 = p2.unisolvent_nodes.shape[0]
+        scale_up_poly2 = np.zeros((num_points_res, num_points_poly2))
+        for i in range(num_points_poly2):
+            scale_up_poly2[:, i] = newt_eval(res_grid.unisolvent_nodes, l2n_2.transformation_operator.to_array()[:, i],
+                                             p2.multi_index.exponents, p2.grid.generating_points)
+
+        res_c = np.multiply(scale_up_poly1 @ p1.coeffs, scale_up_poly2 @ p2.coeffs)
+        print(res_c)
+        return LagrangePolynomial(res_c, res_mi, internal_domain=p1.internal_domain,
+                                  user_domain=p1.user_domain, grid=res_grid)
+    else:
+        raise NotImplementedError("Multiplication is not implemented for Lagrange polynomials with different domains")
 
 
 # TODO redundant
@@ -45,9 +150,9 @@ class LagrangePolynomial(MultivariatePolynomialSingleABC):
     _newt_coeffs_lagr_monomials:Optional[ARRAY] = None
 
     # Virtual Functions
-    _add = staticmethod(dummy)
-    _sub = staticmethod(dummy)
-    _mul = staticmethod(dummy)
+    _add = staticmethod(_lagrange_add)
+    _sub = staticmethod(_lagrange_sub)
+    _mul = staticmethod(_lagrange_mul)
     _div = staticmethod(dummy)
     _pow = staticmethod(dummy)
     _eval = staticmethod(dummy)
