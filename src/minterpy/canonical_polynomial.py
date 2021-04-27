@@ -39,7 +39,7 @@ def _generic_canonical_add(mi1, c1, mi2, c2):
     Returns
     -------
     res_mi : array_like
-        Resulting exponents (essentially the union of mi1 and mi2).
+        Resulting exponents (essentially the union of mi1 and mi2) in lexicographical order.
     res_coeffs : array_like
         Resulting coefficients related to res_mi
         (essentially the sum of c1 and c2 where the exponents in mi1 and mi2 are the same and a concatenation of the rest.)
@@ -48,43 +48,31 @@ def _generic_canonical_add(mi1, c1, mi2, c2):
     -----
     - there is no check if the shapes of the passed arrays match. This lies in the actual canonical_add function.
     """
+
     len1, dim1 = mi1.shape
-    # print("len1,dim1",len1,dim1)
     len2, dim2 = mi2.shape  # assume m1 and m2 are same dimension -> expand_dim of the mi with smaller dim
-    # print("len2,dim2",len2,dim2)
 
-    mi1r = mi1.reshape(dim1, len1, 1)
-    # print("mi1r",mi1r.shape)
-    # print("mi1r",mi1r)
-    mi2r = mi2.reshape(dim1, 1, len2)
-    # print("mi2r",mi2r.shape)
-    # print("mi2r",mi2r)
+    mi1r = mi1.reshape(len1, 1,dim1)
+    mi2r = mi2.reshape(1, len2,dim1)
 
-    add_cond = np.equal(mi1r, mi2r).all(axis=0, keepdims=False)  # where are mi1 and mi2 equal along the dim?
-    # print("add_cond",add_cond)
-    add_cond1 = add_cond.any(axis=-1)  # added condition for m1,c1
-    # print("add_cond1",add_cond1)
+    add_cond = np.equal(mi1r, mi2r).all(axis=2, keepdims=False)  # where are mi1 and mi2 equal along the dim?
+    add_cond1 = add_cond.any(axis=1)  # added condition for m1,c1
     not_add_cond1 = np.logical_not(add_cond1)  # not added condition for m1,c1
-    # print("not_add_cond1",not_add_cond1)
     add_cond2 = add_cond.any(axis=0)  # add condition for m2,c2
-    # print("add_cond2",add_cond2)
     not_add_cond2 = np.logical_not(add_cond2)  # not added condition for m2,c2
-    # print("not_add_cond2",not_add_cond2)
 
     # build resulting mi
-    added_mi = mi1[:, add_cond1]  # shall be the same as mi2[add_cond2,:]
-    # print("added_mi",added_mi)
-    not_added_mi = np.concatenate((mi1[:, not_add_cond1], mi2[:, not_add_cond2]), axis=-1)  # collect the rest
-    # print("not_added_mi",not_added_mi)
-    res_mi = np.concatenate((added_mi, not_added_mi), axis=-1)  # summed mi shall be the first
-    # print("res_mi",res_mi)
+    added_mi = mi1[add_cond1,:]  # shall be the same as mi2[add_cond2,:]
+    not_added_mi = np.concatenate((mi1[not_add_cond1,:], mi2[not_add_cond2,:]), axis=0)  # collect the rest
+    res_mi = np.concatenate((added_mi, not_added_mi), axis=0)  # summed mi shall be the first
+    sort_args = np.lexsort(res_mi.T,axis=-1)
 
     # build resulting coeffs
     added_c = c1[add_cond1] + c2[add_cond2]
     not_added_c = np.concatenate((c1[not_add_cond1], c2[not_add_cond2]))
     res_c = np.concatenate((added_c, not_added_c))
 
-    return res_mi, res_c
+    return res_mi[sort_args], res_c[sort_args]
 
 
 def _match_dims(poly1, poly2, copy=None):
@@ -156,6 +144,10 @@ def _matching_internal_domain(poly1, poly2, tol=None):
 def _canonical_add(poly1, poly2):
     """
     Addition of two polynomials in canonical basis.
+
+    Note
+    ----
+    This works only for the same domains!
     """
     p1, p2 = _match_dims(poly1, poly2)
     # print(p1.internal_domain,p2.internal_domain) # here is the error!!!!
@@ -169,35 +161,12 @@ def _canonical_add(poly1, poly2):
 def _canonical_sub(poly1, poly2):
     """
     Subtraction of two polynomials in canonical basis.
+
+    Note
+    ----
+    This works only for the same domains!
     """
     return _canonical_add(poly1, -poly2)
-
-
-def canonical_add(self, other):
-    """
-    WARNING: unchanged old implementation in order to test the more comprehensive _canonical_add
-
-    Addition of two polynomials in the canonical basis.
-    """
-    if self.multi_index == other.multi_index:
-        res_coeffs = np.add(self.coeffs, other.coeffs)
-    else:
-        raise NotImplementedError(f"Addition of polynomials with different exponents not implemented")
-    return CanonicalPolynomial(res_coeffs, self.multi_index, self.internal_domain, self.user_domain)
-
-
-def canonical_sub(self, other):
-    """
-    WARNING: unchanged old implementation in order to test the more comprehensive _canonical_sum
-
-    Subtraction of two polynomials in the canonical basis.
-    """
-    if self.multi_index == other.multi_index:
-        res_coeffs = np.add(self.coeffs, -other.coeffs)
-    else:
-        raise NotImplementedError(f"Addition of polynomials with different exponents not implemented")
-    return CanonicalPolynomial(res_coeffs, self.multi_index, self.internal_domain, self.user_domain)
-
 
 
 def can_eval(x, coefficients, exponents, verify_input: bool = False):
@@ -261,4 +230,3 @@ class CanonicalPolynomial(MultivariatePolynomialSingleABC):
 
     generate_internal_domain = staticmethod(canonical_generate_internal_domain)
     generate_user_domain = staticmethod(canonical_generate_user_domain)
-

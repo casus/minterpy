@@ -75,7 +75,7 @@ def sub_lagrange_test(spatial_dimension, poly_degree, lp_degree):
     report_error(err, f'error in canonical coefficients : ')
 
 
-class PolyArithmeticTest(unittest.TestCase):
+class LagrangePolyArithmeticTest(unittest.TestCase):
 
     def test_add_lagrange(self):
         print('\ntesting the addition in lagrange basis:')
