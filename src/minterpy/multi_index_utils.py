@@ -180,14 +180,8 @@ def _expand_dim(exps, target_dim):
 
 
 def iterate_indices(indices: Union[np.ndarray, Iterable[np.ndarray]]) -> Iterable[np.ndarray]:
-    if isinstance(indices, np.ndarray):
-        if len(indices.shape) == 1:  # just a single index
-            yield indices
-        else:
-            # yield the columns of the index matrix
-            nr_exponents, spatial_dimension = indices.shape
-            for i in range(nr_exponents):
-                yield indices[i, :]
+    if isinstance(indices, np.ndarray) and indices.ndim == 1:  # just a single index
+        yield indices
     else:  # already iterable as is:
         yield from indices
 
