@@ -15,7 +15,7 @@ __status__ = "Development"
 
 np.random.seed(42)
 
-DESIRED_PRECISION = 9  # decimals of maximally allowed errors
+DESIRED_PRECISION = 7  # decimals of maximally allowed errors TODO different for some test cases?
 NR_SAMPLE_POINTS = 1000  # TODO dependent on m?
 MIN_DEGREE = 1
 MAX_DEGREE = 4
