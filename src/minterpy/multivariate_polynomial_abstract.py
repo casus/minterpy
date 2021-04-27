@@ -7,7 +7,7 @@ from typing import Union, Optional
 
 import numpy as np
 
-from minterpy.global_settings import INT_DTYPE
+from minterpy.global_settings import ARRAY
 from minterpy.grid import Grid
 from minterpy.multi_index import MultiIndex
 
@@ -25,7 +25,7 @@ class MultivariatePolynomialABC(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def coeffs(self) -> np.ndarray:
+    def coeffs(self) -> ARRAY:
         pass
 
     @coeffs.setter
@@ -58,11 +58,11 @@ class MultivariatePolynomialABC(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _eval(self, arg) -> Union[float, np.ndarray]:
+    def _eval(self, arg) -> Union[float, ARRAY]:
         pass
 
     # TODO *args, **kwargs ?! or rather "point" or "x"
-    def __call__(self, arg) -> Union[float, np.ndarray]:
+    def __call__(self, arg) -> Union[float, ARRAY]:
         """  NOTE: the output may be a ndarray when multiple sets of coefficients have been stored
 
         :param arg:
@@ -87,7 +87,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
       but all indices from multi_index must be contained in the grid!
       this corresponds to polynomials with just some of the Lagrange polynomials of the basis being "active"
     """
-    _coeffs: Optional[np.ndarray] = None
+    _coeffs: Optional[ARRAY] = None
 
     @staticmethod
     @abc.abstractmethod
@@ -129,17 +129,17 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
     def _gen_grid_default(multi_index):
         return Grid(multi_index)
 
-    def __init__(self, coeffs: Optional[np.ndarray],
-                 multi_index: Union[MultiIndex, np.ndarray],
-                 internal_domain: Optional[np.ndarray] = None,
-                 user_domain: Optional[np.ndarray] = None,
+    def __init__(self, coeffs: Optional[ARRAY],
+                 multi_index: Union[MultiIndex, ARRAY],
+                 internal_domain: Optional[ARRAY] = None,
+                 user_domain: Optional[ARRAY] = None,
                  grid: Optional[Grid] = None):
 
         if multi_index.__class__ is MultiIndex:
             self.multi_index = multi_index
         else:
             # TODO should passing multi indices as ndarray be supported?
-            check_type_n_values(multi_index)  # expected np.ndarray
+            check_type_n_values(multi_index)  # expected ARRAY
             check_shape(multi_index, dimensionality=2)
             self.multi_index = MultiIndex(multi_index)
 
@@ -168,20 +168,20 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         self.grid: Grid = grid
         # weather or not the indices are independent from the grid ("basis")
         self.indices_are_separate: bool = self.grid.multi_index is not self.multi_index
-        self.index_correspondence: Optional[np.ndarray] = None  # 1:1 correspondence
+        self.index_correspondence: Optional[ARRAY] = None  # 1:1 correspondence
         if self.indices_are_separate:
             # store the position of the active Lagrange polynomials with respect to the basis indices:
             self.index_correspondence = find_match_between(self.multi_index.exponents, self.grid.multi_index.exponents)
 
     @classmethod
-    def from_degree(cls, coeffs: Optional[np.ndarray], spatial_dimension: int, poly_degree: int, lp_degree: int,
-                    internal_domain: np.ndarray = None, user_domain: np.ndarray = None):
+    def from_degree(cls, coeffs: Optional[ARRAY], spatial_dimension: int, poly_degree: int, lp_degree: int,
+                    internal_domain: ARRAY = None, user_domain: ARRAY = None):
         return cls(coeffs, MultiIndex.from_degree(spatial_dimension, poly_degree, lp_degree), internal_domain,
                    user_domain)
 
     @classmethod
     def from_poly(cls, polynomial: 'MultivariatePolynomialSingleABC',
-                  new_coeffs: Optional[np.ndarray] = None) -> 'MultivariatePolynomialSingleABC':
+                  new_coeffs: Optional[ARRAY] = None) -> 'MultivariatePolynomialSingleABC':
         """ constructs a new polynomial instance based on the properties of an input polynomial
 
         useful for copying polynomials of other types
@@ -278,7 +278,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         return self.multi_index.spatial_dimension
 
     @property
-    def coeffs(self) -> Optional[np.ndarray]:
+    def coeffs(self) -> Optional[ARRAY]:
         """
         :returns (N) or (N, p) the coefficients of the multivariate polynomial(s).
             N = amount of monomials
@@ -289,7 +289,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         return self._coeffs
 
     @coeffs.setter
-    def coeffs(self, value: Optional[np.ndarray]):
+    def coeffs(self, value: Optional[ARRAY]):
         """
         :param value: (N) or (N, p) the coefficients of the multivariate polynomial(s).
             N = amount of monomials
@@ -348,15 +348,13 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         # ATTENTION: also the grid ("basis") needs to be completed!
         return self._new_instance_if_necessary(new_indices)
 
-    def add_points(self, exponents: np.ndarray) -> 'MultivariatePolynomialSingleABC':
-        exponents = np.require(exponents, dtype=INT_DTYPE)
-        exponents = exponents.reshape(self.spatial_dimension, -1)
-        multi_indices_old = self.multi_index
-        multi_indices_new = multi_indices_old.add_exponents(exponents)
+    def add_points(self, exponents: ARRAY) -> 'MultivariatePolynomialSingleABC':
+        multi_indices_new = self.multi_index.add_exponents(exponents)
         return self._new_instance_if_necessary(multi_indices_new)
 
     # def make_derivable(self) -> "MultivariatePolynomialSingleABC":
     #     """ convert the polynomial into a new polynomial instance with a "derivable" multi index set
+    #  NOTE: not meaningful since derivation requires complete index sets anyway?
     #     """
     #     new_indices = self.multi_index.make_derivable()
     #     return self._new_instance_if_necessary(new_indices)

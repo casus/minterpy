@@ -20,7 +20,7 @@ def _gen_unisolvent_nodes(multi_index, generating_points):
     return np.take_along_axis(generating_points, multi_index.exponents, axis=0)
 
 
-def get_points_from_values(spatial_dimension: int, generating_values: np.ndarray):
+def get_points_from_values(spatial_dimension: int, generating_values: ARRAY):
     generating_points = np.tile(generating_values, (1, spatial_dimension))
     generating_points[:, ::2] *= -1
     return generating_points
@@ -63,11 +63,11 @@ def remap_indices(gen_pts_from: ARRAY, gen_pts_to: ARRAY, exponents: ARRAY) -> A
 class Grid(object):
     # TODO make all attributes read only!
 
-    _unisolvent_nodes: Optional[np.ndarray] = None
+    _unisolvent_nodes: Optional[ARRAY] = None
 
     def __init__(self, multi_index: MultiIndex,
-                 generating_points: Optional[np.ndarray] = None,
-                 generating_values: Optional[np.ndarray] = None):
+                 generating_points: Optional[ARRAY] = None,
+                 generating_values: Optional[ARRAY] = None):
         if not isinstance(multi_index, MultiIndex):
             raise TypeError(f'the indices must be given as {MultiIndex} class instance')
         # NOTE: the multi indices of a grid must be NOT be 'lexicographically complete in order to form a basis!
@@ -85,7 +85,7 @@ class Grid(object):
         check_type_n_values(generating_points)
         check_shape(generating_points, dimensionality=2)
         check_domain_fit(generating_points)
-        self.generating_points: np.ndarray = generating_points
+        self.generating_points: ARRAY = generating_points
         # TODO check if values and points fit together
         # TODO redundant information.
 
@@ -100,7 +100,7 @@ class Grid(object):
         return cls.from_value_set(multi_index, generating_values)
 
     @classmethod
-    def from_value_set(cls, multi_index: MultiIndex, generating_values: np.ndarray):
+    def from_value_set(cls, multi_index: MultiIndex, generating_values: ARRAY):
         spatial_dimension = multi_index.spatial_dimension
         generating_points = get_points_from_values(spatial_dimension, generating_values)
         return cls(multi_index, generating_points, generating_values)
@@ -120,7 +120,7 @@ class Grid(object):
         return self._generating_values
 
     @generating_values.setter
-    def generating_values(self, values: np.ndarray):
+    def generating_values(self, values: ARRAY):
         check_type_n_values(values)
         check_domain_fit(values.reshape(-1, 1))  # 2D
         values = values.reshape(-1)  # 1D
@@ -133,7 +133,7 @@ class Grid(object):
             raise ValueError(f'a grid of degree {self.poly_degree} '
                              f'cannot consist of indices with degree {self.multi_index.poly_degree}')
         self._unisolvent_nodes = None  # reset the unisolvent nodes
-        self._generating_values: np.ndarray = values
+        self._generating_values: ARRAY = values
 
     @property
     def tree(self):
@@ -166,9 +166,8 @@ class Grid(object):
         # apply func to unisolvent nodes and return the func values, or store them alternatively in out
         raise NotImplementedError
 
-    def add_points(self, exponents: np.ndarray) -> 'Grid':
+    def add_points(self, exponents: ARRAY) -> 'Grid':
         exponents = np.require(exponents, dtype=INT_DTYPE)
-        check_values(exponents)
         if np.max(exponents) > self.poly_degree:
             # TODO 'enlarge' the grid, increase the degree, ATTENTION:
             raise ValueError(f'trying to add point with exponent {np.max(exponents)} '

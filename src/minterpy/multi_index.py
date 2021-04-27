@@ -6,7 +6,7 @@ from typing import Optional
 
 import numpy as np
 
-from minterpy.global_settings import INT_DTYPE
+from minterpy.global_settings import INT_DTYPE, ARRAY
 from minterpy.jit_compiled_utils import have_lexicographical_ordering, all_indices_are_contained
 from minterpy.multi_index_utils import _expand_dim, \
     is_lexicographically_complete, insert_lexicographically, \
@@ -14,20 +14,19 @@ from minterpy.multi_index_utils import _expand_dim, \
 
 __all__ = ['MultiIndex']
 
-from minterpy.verification import check_shape
-
+from minterpy.verification import check_shape, check_values
 
 # TODO implement (set) comparison operations based on the multi index utils (>=, == ...)
 class MultiIndex(object):
 
-    def __init__(self, exponents: np.ndarray, lp_degree=None, poly_deg_dtype=None):
+    def __init__(self, exponents: ARRAY, lp_degree=None, poly_deg_dtype=None):
         exponents = np.require(exponents, dtype=INT_DTYPE)
         check_shape(exponents, dimensionality=2)
         if exponents.shape[1] == 0:
             raise ValueError(f'the dimensionality of the given exponents is 0. shape: {exponents.shape}')
         if not have_lexicographical_ordering(exponents):
             raise ValueError('the multi_indices must be ordered lexicographically from last to first column')
-        self._exponents: np.ndarray = exponents
+        self._exponents: ARRAY = exponents
 
         # TODO compute properly, max norm of the exponents?
         # while _get_poly_degree(exponents, __lp_degree) > poly_degree: ...
@@ -49,7 +48,7 @@ class MultiIndex(object):
 
         self._is_complete: Optional[bool] = None
         # for avoiding to complete the exponents multiple times
-        self._exponents_completed: Optional[np.ndarray] = None
+        self._exponents_completed: Optional[ARRAY] = None
 
     @classmethod
     def from_degree(cls, spatial_dimension: int, poly_degree: int, lp_degree=None):
@@ -149,7 +148,7 @@ class MultiIndex(object):
         self.copy_private_attributes(new_instance)
         return new_instance
 
-    def contains_these_exponents(self, vectors: np.ndarray) -> bool:
+    def contains_these_exponents(self, vectors: ARRAY) -> bool:
         return all_indices_are_contained(vectors, self._exponents)
 
     def is_sub_index_set_of(self, super_set: 'MultiIndex') -> bool:
@@ -158,7 +157,7 @@ class MultiIndex(object):
     def is_super_index_set_of(self, sub_set: 'MultiIndex') -> bool:
         return self.contains_these_exponents(sub_set.exponents)
 
-    def _new_instance_if_necessary(self, new_exponents: np.ndarray) -> 'MultiIndex':
+    def _new_instance_if_necessary(self, new_exponents: ARRAY) -> 'MultiIndex':
         """ constructs a new instance only if the exponents are different
         """
         old_exponents = self._exponents
@@ -172,16 +171,19 @@ class MultiIndex(object):
                 # make complete again!
                 _exponents_completed = make_complete(_exponents_completed)
             new_instance._exponents_completed = _exponents_completed
-            #also set the exponents of the new_instance
-            #TODO avoid redundancy. why store both _exponents and _exponents_completed?
-            #new_instance._exponents = _exponents_completed
+            # also set the exponents of the new_instance
+            # TODO avoid redundancy. why store both _exponents and _exponents_completed?
+            # new_instance._exponents = _exponents_completed
         return new_instance
 
-    def add_exponents(self, vectors: np.ndarray) -> 'MultiIndex':
+    def add_exponents(self, exponents: ARRAY) -> 'MultiIndex':
+        exponents = np.require(exponents, dtype=INT_DTYPE)
+        check_values(exponents)
+        exponents = exponents.reshape(-1, self.spatial_dimension)  # convert input to 2D in expected shape
         #  NOTE: the insertion is expected to return the same identical array instance
         #  if all exponents are already contained!
         # -> no need to check for inclusion first!
-        new_exponents = insert_lexicographically(self._exponents, vectors)
+        new_exponents = insert_lexicographically(self._exponents, exponents)
         return self._new_instance_if_necessary(new_exponents)
 
     def make_complete(self) -> 'MultiIndex':
@@ -196,4 +198,5 @@ class MultiIndex(object):
         new_instance._exponents_completed = new_exponents
         return new_instance
 
-    # TODO make_derivable(): add (only) partial derivative exponent vectors
+    # TODO make_derivable(): add (only) partial derivative exponent vectors,
+    #  NOTE: not meaningful since derivation requires complete index sets anyway?
