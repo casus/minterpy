@@ -6,7 +6,7 @@ from typing import Optional, Callable
 
 import numpy as np
 
-from minterpy.global_settings import INT_DTYPE
+from minterpy.global_settings import INT_DTYPE, ARRAY
 from minterpy.multi_index import MultiIndex
 from minterpy.multi_index_tree import MultiIndexTree
 from minterpy.multi_index_utils import sort_lexicographically
@@ -29,20 +29,34 @@ def get_points_from_values(spatial_dimension: int, generating_values: np.ndarray
 DEFAULT_GRID_VAL_GEN_FCT = gen_chebychev_2nd_order_leja_ordered
 
 
-def remap_indices(gen_pts_from: np.ndarray, gen_pts_to: np.ndarray, exponents: np.ndarray) -> np.ndarray:
-    exponents = exponents.copy()  # create an independent copy!
-    m, nr_grid_vals_n = gen_pts_from.shape
-    for i in range(m):  # NOTE: the generating points might be different in every dimension!
-        cheby_values_2n_dim = gen_pts_to[i].tolist()
-        cheby_values_n_dim = gen_pts_from[i].tolist()
-        indices_dim = exponents[i]
+def remap_indices(gen_pts_from: ARRAY, gen_pts_to: ARRAY, exponents: ARRAY) -> ARRAY:
+    """ replaces the exponents such that they point to new given generating points (values)
+
+    # TODO test
+    """
+    exponents_remapped = exponents.copy()  # create an independent copy!
+    nr_grid_vals_n, m = gen_pts_from.shape
+    for i in range(m):  # NOTE: the generating points are independent in each dimension!
+        cheby_values_2n_dim = gen_pts_to[:, i]
+        cheby_values_n_dim = gen_pts_from[:, i]
+        indices_dim = exponents[:, i]
         for idx_old, cheby_val in enumerate(cheby_values_n_dim):
-            if np.isclose(cheby_values_2n_dim[idx_old], cheby_val):
-                continue  # no changes required
-            idx_new = cheby_values_2n_dim.index(cheby_val)  # raises IndexError when not contained
-            exponents[i] = np.where(indices_dim == idx_old, idx_new, indices_dim)
-    exponents = sort_lexicographically(exponents)
-    return exponents
+            mask = np.where(indices_dim == idx_old)
+            abs_diff = np.abs(cheby_values_2n_dim - cheby_val)
+            # TODO use a mutable tolerance
+            zero_entries = np.isclose(abs_diff, 0.0)
+            nr_zero_entries = np.sum(zero_entries)
+            if nr_zero_entries == 0:
+                raise ValueError(f'the value {cheby_val} does not appear in the previous generating values. '
+                                 'remapping the indices not possible.')
+            if nr_zero_entries > 1:
+                raise ValueError(f'the given generating values are not unique. remapping the indices not possible.')
+            idx_new = np.argmin(abs_diff)
+            exponents_remapped[mask,i] = idx_new
+
+    # by changing the indices the lexicographical sorting might get destroyed -> restore
+    exponents_remapped = sort_lexicographically(exponents_remapped)
+    return exponents_remapped
 
 
 # TODO implement comparison operations based on multi index comparison operations and the generating values used
@@ -127,7 +141,7 @@ class Grid(object):
             self._tree = MultiIndexTree(self)
         return self._tree
 
-    def enlarge(self):
+    def enlarge(self):  # TODO: find more meaningful name
         if self.poly_degree == 0:
             double_degree = 1
         else:
