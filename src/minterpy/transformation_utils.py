@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """ functions for computing all required transformation matrices
 
-TODO use barycentric transformations
 """
 
 import numpy as np
@@ -66,7 +65,7 @@ def _build_newton_to_lagrange_naive(transformation: TransformationABC) -> Matrix
     """
     grid = transformation.grid
     transformation_matrix = _build_n2l_array(grid, transformation.origin_poly.multi_index)
-    transformation_operator = MatrixTransformationOperator(transformation_matrix)
+    transformation_operator = MatrixTransformationOperator(transformation, transformation_matrix)
     return transformation_operator
 
 
@@ -90,15 +89,7 @@ def _build_lagrange_to_newton_naive(transformation: TransformationABC) -> Matrix
     """
     newton_to_lagrange = _build_n2l_array(transformation.grid, require_invertible=True)
     transformation_matrix = invert_triangular(newton_to_lagrange)
-    if transformation.origin_poly.indices_are_separate:
-        # TODO find a more performant way to compute just the required entries!
-        # select only the required columns of the transformation matrix
-        selection_idxs = transformation.origin_poly.index_correspondence
-        transformation_matrix = transformation_matrix[:, selection_idxs]
-    if DEBUG:
-        # there are as many "active" Lagrange polynomials as there are index vectors
-        assert transformation_matrix.shape[1] == len(transformation.multi_index)
-    transformation_operator = MatrixTransformationOperator(transformation_matrix)
+    transformation_operator = MatrixTransformationOperator(transformation, transformation_matrix)
     return transformation_operator
 
 
@@ -168,11 +159,11 @@ def _build_lagrange_to_newton_operator(transformation: TransformationABC) -> Tra
 
 # TODO test these transformations:
 def _build_canonical_to_newton_operator(transformation: TransformationABC) -> MatrixTransformationOperator:
-    return MatrixTransformationOperator(_build_c2n_array(transformation))
+    return MatrixTransformationOperator(transformation, _build_c2n_array(transformation))
 
 
 def _build_newton_to_canonical_operator(transformation: TransformationABC) -> MatrixTransformationOperator:
-    return MatrixTransformationOperator(_build_n2c_array(transformation))
+    return MatrixTransformationOperator(transformation, _build_n2c_array(transformation))
 
 
 def _build_lagrange_to_canonical_operator(transformation: TransformationABC) -> TransformationOperatorABC:
