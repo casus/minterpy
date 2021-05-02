@@ -11,7 +11,7 @@ from minterpy.multi_index import MultiIndex
 from minterpy.multi_index_tree import MultiIndexTree
 from minterpy.multi_index_utils import sort_lexicographically
 from minterpy.utils import gen_chebychev_2nd_order_leja_ordered
-from minterpy.verification import check_domain_fit, check_type_n_values, check_values, check_shape
+from minterpy.verification import check_domain_fit, check_type_n_values, check_shape
 
 __all__ = ['Grid']
 
@@ -52,7 +52,7 @@ def remap_indices(gen_pts_from: ARRAY, gen_pts_to: ARRAY, exponents: ARRAY) -> A
             if nr_zero_entries > 1:
                 raise ValueError(f'the given generating values are not unique. remapping the indices not possible.')
             idx_new = np.argmin(abs_diff)
-            exponents_remapped[mask,i] = idx_new
+            exponents_remapped[mask, i] = idx_new
 
     # by changing the indices the lexicographical sorting might get destroyed -> restore
     exponents_remapped = sort_lexicographically(exponents_remapped)
@@ -166,6 +166,23 @@ class Grid(object):
         # apply func to unisolvent nodes and return the func values, or store them alternatively in out
         raise NotImplementedError
 
+    def _new_instance_if_necessary(self, multi_indices_new: MultiIndex) -> 'Grid':
+        """ constructs new grid instance only if the multi indices have changed
+        """
+        multi_indices_old = self.multi_index
+        if multi_indices_new is multi_indices_old:
+            return self
+        # construct new:
+        return self.__class__(multi_indices_new, self.generating_points, self.generating_values)
+
+    def make_complete(self) -> 'Grid':
+        """ completes the multi index
+
+        # NOTE: required e.g. for building a multi index tree (DDS scheme)!
+        """
+        multi_indices_new = self.multi_index.make_complete()
+        return self._new_instance_if_necessary(multi_indices_new)
+
     def add_points(self, exponents: ARRAY) -> 'Grid':
         exponents = np.require(exponents, dtype=INT_DTYPE)
         if np.max(exponents) > self.poly_degree:
@@ -173,15 +190,8 @@ class Grid(object):
             raise ValueError(f'trying to add point with exponent {np.max(exponents)} '
                              f'but the grid is only of degree {self.poly_degree}')
 
-        multi_indices_old = self.multi_index
-        multi_indices_new = multi_indices_old.add_exponents(exponents)
-        # ATTENTION: TODO the indices must be complete in order to build a multi index tree (e.g. for the DDS scheme)!
-        # multi_indices_new = multi_indices_new.make_complete()
-        if multi_indices_new is multi_indices_old:  # no changes
-            return self
-
-        # construct new:
-        return self.__class__(multi_indices_new, self.generating_points, self.generating_values)
+        multi_indices_new = self.multi_index.add_exponents(exponents)
+        return self._new_instance_if_necessary(multi_indices_new)
 
     # copying
     def __copy__(self):
