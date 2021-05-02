@@ -354,7 +354,7 @@ def _build_lagrange_to_newton_bary(transformation: "TransformationABC") -> Baryc
     subtree_sizes = tree.subtree_sizes
     problem_sizes = tree.problem_sizes
     transformation_data = compute_l2n_dict(generating_points, split_positions, subtree_sizes, problem_sizes)
-    transformation_operator = BarycentricDictOperator(transformation_data)
+    transformation_operator = BarycentricDictOperator(transformation,transformation_data)
 
     # transformation_data = compute_l2n_factorised(generating_points, split_positions, subtree_sizes)
     # transformation_operator = BarycentricFactorisedOperator(transformation_data)
@@ -374,6 +374,6 @@ def _build_newton_to_lagrange_bary(transformation: "TransformationABC") -> Baryc
     leaf_sizes = tree.subtree_sizes[0]
     transformation_data = compute_n2l_factorised(exponents, generating_points, unisolvent_nodes, leaf_positions,
                                                  leaf_sizes)
-    transformation_operator = BarycentricFactorisedOperator(transformation_data)
+    transformation_operator = BarycentricFactorisedOperator(transformation,transformation_data)
 
     return transformation_operator
