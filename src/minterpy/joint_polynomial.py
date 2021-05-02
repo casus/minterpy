@@ -17,6 +17,7 @@ __credits__ = ["Jannik Michelfeit"]
 __email__ = "jannik@michelfe.it"
 __status__ = "Development"
 
+from minterpy.global_settings import ARRAY
 from minterpy.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC, MultivariatePolynomialABC
 from minterpy.verification import rectify_query_points
 
@@ -28,7 +29,7 @@ def eval_each(polynomials: List[MultivariatePolynomialSingleABC], arg) -> Iterab
 
 def nr_mons_of_each(polynomials: List[MultivariatePolynomialSingleABC]) -> Iterable[int]:
     for p in polynomials:
-        yield p.nr_of_monomials
+        yield p.nr_active_monomials
 
 
 def acc_nr_mons_of_each(polynomials: List[MultivariatePolynomialSingleABC]) -> Iterable[int]:
@@ -80,7 +81,7 @@ class JointPolynomial(MultivariatePolynomialABC):
         return sum(eval_each(self.sub_polynomials, arg))
 
     @property
-    def nr_of_monomials(self):
+    def nr_active_monomials(self):
         """
         :return: the total amount of monomials of all sub polynomials
         """
@@ -117,9 +118,9 @@ class JointPolynomial(MultivariatePolynomialABC):
         :param value:
             TODO perhaps also allow a list of coefficients for each polynomial
         """
-        if value.shape[-1] != self.nr_of_monomials:
+        if value.shape[-1] != self.nr_active_monomials:
             raise ValueError(f'the given coefficients with shape {value.shape} do not fit '
-                             f'the total amount of monomials {self.nr_of_monomials}')
+                             f'the total amount of monomials {self.nr_active_monomials}')
         split_positions = np.fromiter(acc_nr_mons_of_each(self.sub_polynomials), dtype=int)
         # NOTE: do not pass the last split position (would result in an empty last split)
         split_coeffs = np.split(value, split_positions[:-1])
@@ -127,10 +128,22 @@ class JointPolynomial(MultivariatePolynomialABC):
             poly.coeffs = coeffs
 
     @property
-    def unisolvent_nodes(self):
+    def unisolvent_nodes(self) -> ARRAY:
         """ the points the polynomial is defined on
         """
-        return np.concatenate([p.grid.unisolvent_nodes for p in self.sub_polynomials], axis=0)
+        out = None
+        for i, poly in enumerate(self.sub_polynomials):
+            nodes = poly.grid.unisolvent_nodes
+            # ATTENTION: only use the nodes corresponding to "active" monomials
+            #  such that the coefficients match with the unisolvent nodes!
+            if poly.indices_are_separate:
+                active_idxs = poly.active_monomials
+                nodes = nodes[active_idxs]
+            if i == 0:
+                out = nodes
+            else:
+                out = np.append(out, nodes, axis=0)
+        return out
 
     @property
     def newt_coeffs_lagr_monomials(self):
@@ -151,7 +164,12 @@ class JointPolynomial(MultivariatePolynomialABC):
         for i, poly in enumerate(self.sub_polynomials):
             # NOTE: only supported by LagrangePolynomials
             mon_vals = poly.eval_lagrange_monomials_on(x)
+<<<<<<< HEAD
             mon_vals = mon_vals.reshape((nr_of_points, poly.nr_of_monomials))
+=======
+            # NOTE: first axis is the common one -> append TODO
+            mon_vals = mon_vals.reshape((nr_of_points, poly.nr_active_monomials))
+>>>>>>> 84e335b (unisolvent nodes for joint polynomials with split indices)
             if i == 0:
                 out = mon_vals
             else:
