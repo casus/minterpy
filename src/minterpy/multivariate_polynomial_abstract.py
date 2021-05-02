@@ -34,7 +34,7 @@ class MultivariatePolynomialABC(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def nr_of_monomials(self):
+    def nr_active_monomials(self):
         """
         NOTE: this is usually equal to the "amount of coefficients".
             However the coefficients can also be a 2D array
@@ -167,11 +167,12 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
             raise ValueError("the multi indices of a polynomial must be a subset of the indices of the grid in use")
         self.grid: Grid = grid
         # weather or not the indices are independent from the grid ("basis")
+        # TODO this could be enconded by .active_monomials being None
         self.indices_are_separate: bool = self.grid.multi_index is not self.multi_index
-        self.index_correspondence: Optional[ARRAY] = None  # 1:1 correspondence
+        self.active_monomials: Optional[ARRAY] = None  # 1:1 correspondence
         if self.indices_are_separate:
             # store the position of the active Lagrange polynomials with respect to the basis indices:
-            self.index_correspondence = find_match_between(self.multi_index.exponents, self.grid.multi_index.exponents)
+            self.active_monomials = find_match_between(self.multi_index.exponents, self.grid.multi_index.exponents)
 
     @classmethod
     def from_degree(cls, coeffs: Optional[ARRAY], spatial_dimension: int, poly_degree: int, lp_degree: int,
@@ -262,7 +263,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
                               deepcopy(self.user_domain), deepcopy(self.grid))
 
     @property
-    def nr_of_monomials(self):
+    def nr_active_monomials(self):
         """
         NOTE: this is usually equal to the "amount of coefficients".
             However the coefficients can also be a 2D array
@@ -300,10 +301,10 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
             self._coeffs = None
             return
         check_type_n_values(value)
-        if value.shape[0] != self.nr_of_monomials:
+        if value.shape[0] != self.nr_active_monomials:
             raise ValueError(
                 f"the amount of given coefficients <{value.shape[0]}> does not match "
-                f"with the amount of monomials in the polynomial <{self.nr_of_monomials}>.")
+                f"with the amount of monomials in the polynomial <{self.nr_active_monomials}>.")
         self._coeffs = value
 
     @property
@@ -312,45 +313,56 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         """
         return self.grid.unisolvent_nodes
 
-    def _new_instance_if_necessary(self, new_indices: MultiIndex) -> 'MultivariatePolynomialSingleABC':
-        """ constructs new class only if the multi indices have changed
+    def _new_instance_if_necessary(self, new_grid,
+                                   new_indices: Optional[MultiIndex] = None) -> 'MultivariatePolynomialSingleABC':
+        """ constructs a new instance only if the multi indices have changed
         """
-        old_indices = self.multi_index
-        if new_indices is old_indices:
+        prev_grid = self.grid
+        if new_grid is prev_grid:
             return self
-        if not old_indices.is_sub_index_set_of(new_indices):
-            raise ValueError('an index set of a polynomial can only be expanded, '
-                             'but the old indices contain multi indices not present in the new indices.')
-
-        # convert the coefficients correctly:
-        if self._coeffs is None:
-            new_coeffs = None
+        # grid has changed
+        if new_indices is None:
+            # the active monomials (and coefficients) stay equal
+            new_indices = self.multi_index
+            new_coeffs = self._coeffs
         else:
-            new_coeffs = np.zeros(len(new_indices))
-            idxs_of_old = find_match_between(old_indices.exponents, new_indices.exponents)
-            new_coeffs[idxs_of_old] = self._coeffs
-        # replace the grid with an independent copy with new multi indices
-        # ATTENTION: the grid might be defined on other indices than multi_index!
-        #   but all indices from multi_index must be contained in the grid!
-        # -> make sure to add all new additional indices also to the grid!
-        new_grid = self.grid.add_points(new_indices.exponents)
+            # also the active monomials change
+            prev_indices = self.multi_index
+            if not prev_indices.is_sub_index_set_of(new_indices):
+                raise ValueError('an index set of a polynomial can only be expanded, '
+                                 'but the old indices contain multi indices not present in the new indices.')
+
+            # convert the coefficients correctly:
+            if self._coeffs is None:
+                new_coeffs = None
+            else:
+                new_coeffs = np.zeros(len(new_indices))
+                idxs_of_old = find_match_between(prev_indices.exponents, new_indices.exponents)
+                new_coeffs[idxs_of_old] = self._coeffs
+
         new_poly_instance = self.__class__(new_coeffs, new_indices, grid=new_grid)
         return new_poly_instance
 
     def make_complete(self) -> "MultivariatePolynomialSingleABC":
-        """ convert the polynomial into a new polynomial instance with a complete multi index set
+        """ returns a possibly new polynomial instance with a complete multi index set
 
-        NOTE: (only) in the case of a Lagrange polynomial this could be done
+        NOTE: the active monomials stay equal. only the grid ("basis") changes
+        NOTE: in the case of a Lagrange polynomial this could be done
             by evaluating the polynomial on the complete grid
         """
-        # TODO only grid
-        new_indices = self.multi_index.make_complete()
-        # ATTENTION: also the grid ("basis") needs to be completed!
-        return self._new_instance_if_necessary(new_indices)
+        grid_completed = self.grid.make_complete()
+        return self._new_instance_if_necessary(grid_completed)
 
     def add_points(self, exponents: ARRAY) -> 'MultivariatePolynomialSingleABC':
-        multi_indices_new = self.multi_index.add_exponents(exponents)
-        return self._new_instance_if_necessary(multi_indices_new)
+        # replace the grid with an independent copy with the new multi indices
+        # ATTENTION: the grid might be defined on other indices than multi_index!
+        #   but all indices from multi_index must be contained in the grid!
+        # -> make sure to add all new additional indices also to the grid!
+        grid_new = self.grid.add_points(exponents)
+        multi_indices_new = None
+        if self.indices_are_separate:
+            multi_indices_new = self.multi_index.add_exponents(exponents)
+        return self._new_instance_if_necessary(grid_new, multi_indices_new)
 
     # def make_derivable(self) -> "MultivariatePolynomialSingleABC":
     #     """ convert the polynomial into a new polynomial instance with a "derivable" multi index set
