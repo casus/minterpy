@@ -5,8 +5,9 @@ import numpy as np
 from minterpy import TransformationABC, MultivariatePolynomialABC
 from minterpy.transformation_operators import MatrixTransformationOperator
 
-def _build_identity_transformation_operator(self):
-    return MatrixTransformationOperator(np.identity(len(self.multi_index)))
+
+def _build_identity_transformation_operator(transformation):
+    return MatrixTransformationOperator(transformation, np.identity(len(transformation.multi_index)))
 
 
 class TransformationIdentity(TransformationABC):
