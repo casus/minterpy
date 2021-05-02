@@ -7,6 +7,7 @@ import numpy as np
 
 from minterpy import MultiIndex, Grid, LagrangePolynomial, Derivator, MultivariatePolynomialSingleABC, \
     TransformationABC
+from minterpy.global_settings import INT_DTYPE
 from minterpy.transformation_meta import get_transformation_class
 from minterpy.verification import check_shape, check_is_square
 from test_settings import DIMENSIONS2TEST, DEGREES2TEST, LP_DEGREES, DESIRED_PRECISION
@@ -112,6 +113,34 @@ def get_grid(spatial_dimension, poly_degree, lp_degree, get_incomplete: bool = F
 def get_poly(spatial_dimension, poly_degree, lp_degree,
              cls: Type[MultivariatePolynomialSingleABC] = LagrangePolynomial,
              get_incomplete: bool = False, separate_indices: bool = False) -> MultivariatePolynomialSingleABC:
+    grid = get_grid(spatial_dimension, poly_degree, lp_degree, get_incomplete)
+    multi_index = grid.multi_index
+    if separate_indices:
+        multi_index = delete_random_index(multi_index)
+    return cls(None, multi_index, grid=grid)
+
+
+def get_separate_indices_poly(spatial_dimension, poly_degree, lp_degree,
+             cls: Type[MultivariatePolynomialSingleABC] = LagrangePolynomial) -> MultivariatePolynomialSingleABC:
+    base_grid = get_grid(spatial_dimension, poly_degree, lp_degree)
+    multi_index_grid = base_grid.multi_index
+
+    # select an exponent vector corresponding to one single "active" Lagrange polynomial
+    # choose the highest possible exponent in order to introduce a "hole"
+    # and thereby making the exponents incomplete (if possible)
+    max_exp = multi_index_grid.poly_degree
+    single_idx = np.zeros((1, spatial_dimension), dtype=INT_DTYPE) + max_exp
+    multi_index = MultiIndex(single_idx)
+    # this way there are enough generating values in the grid to represent the single exponent vector
+
+    # the basis (superset) must contain the new point
+    grid = base_grid.add_points(single_idx)
+    assert multi_index.is_sub_index_set_of(grid.multi_index)
+
+    # create a polynomial with a different basis than active Lagrange polynomials
+    return cls(None, multi_index, grid=grid)
+
+
     grid = get_grid(spatial_dimension, poly_degree, lp_degree, get_incomplete)
     multi_index = grid.multi_index
     if separate_indices:

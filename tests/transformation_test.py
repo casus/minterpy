@@ -5,14 +5,32 @@ import numpy as np
 import scipy.linalg
 
 from auxiliaries import check_different_settings, rnd_points, almost_equal, get_transformation, check_is_identity, \
-    check_transformation_is_inverse, get_grid
+    check_transformation_is_inverse, get_grid, get_separate_indices_poly
 from minterpy import MultiIndex, Grid, NewtonPolynomial, \
     TransformationNewtonToCanonical, TransformationCanonicalToNewton, TransformationLagrangeToNewton, \
     TransformationNewtonToLagrange, LagrangePolynomial, TransformationABC
 from minterpy.barycentric_precomp import _build_lagrange_to_newton_bary, _build_newton_to_lagrange_bary
-from minterpy.global_settings import FLOAT_DTYPE, INT_DTYPE
+from minterpy.global_settings import FLOAT_DTYPE, INT_DTYPE, ARRAY
+from minterpy.transformation_operator_abstract import TransformationOperatorABC
 from minterpy.transformation_utils import build_l2n_matrix_dds, _build_newton_to_lagrange_naive
 from minterpy.utils import report_error
+
+
+def check_trafo_general(transformation):
+    """ performs the checks valid for all transformations
+    """
+    # all transformations must have a transformation operator
+    operator = transformation.transformation_operator
+    assert isinstance(operator, TransformationOperatorABC)
+
+    # all transformation operators must have an array representation
+    transformation_matrix = operator.array_repr_sparse
+    assert isinstance(transformation_matrix, ARRAY)
+
+    # there are as many "active" Lagrange polynomials as there are index vectors
+    # the matrix should have as many columns as there are active monomials
+    nr_active_monomials = len(transformation.multi_index)
+    assert transformation_matrix.shape[1] == nr_active_monomials
 
 
 def check_l2n_matrix(l2n_matrix, grid):
@@ -29,11 +47,13 @@ def check_l2n_matrix(l2n_matrix, grid):
     check_is_identity(transformation_matrix)
 
 
-def check_n_l_matrices(n2l_transformer: TransformationABC):
-    grid = n2l_transformer.origin_poly.grid
+def check_n_l_matrices(n2l_transformation: TransformationABC):
+    check_trafo_general(n2l_transformation)
+
+    grid = n2l_transformation.origin_poly.grid
     multi_index = grid.multi_index
 
-    newton_to_lagrange_eval = n2l_transformer.transformation_operator.to_array()
+    newton_to_lagrange_eval = n2l_transformation.transformation_operator.array_repr_sparse
     lagrange_to_newton = scipy.linalg.inv(newton_to_lagrange_eval)
     check_l2n_matrix(lagrange_to_newton, grid)
 
@@ -67,8 +87,8 @@ def check_newt_lagr_poly_equality(lagrange_poly, newton_poly):
     # the Lagrange basis:
     n2l_transformation = TransformationNewtonToLagrange(newton_poly)
     lagrange_poly2 = n2l_transformation()
-    lagrange_to_newton = l2n_transformation.transformation_operator.to_array()
-    newton_to_lagrange = n2l_transformation.transformation_operator.to_array()
+    lagrange_to_newton = l2n_transformation.transformation_operator.array_repr_sparse
+    newton_to_lagrange = n2l_transformation.transformation_operator.array_repr_sparse
     check_transformation_is_inverse(lagrange_to_newton, newton_to_lagrange)
     coeffs_newton_estim = newton_poly2.coeffs
     err = coeffs_newton_estim - coeffs_newton_true
@@ -103,6 +123,7 @@ def check_poly_interpolation(grid: Grid):
 def lagrange_n_newton_matrix_test_complete(spatial_dimension, poly_degree, lp_degree):
     transformation = get_transformation(spatial_dimension, poly_degree, lp_degree, cls_from=NewtonPolynomial,
                                         cls_to=LagrangePolynomial)
+    check_trafo_general(transformation)
     check_n_l_matrices(transformation)
     grid = transformation.origin_poly.grid
     check_poly_interpolation(grid)
@@ -126,15 +147,17 @@ def check_n2l_barycentric(spatial_dimension, poly_degree, lp_degree):
     # NOTE: these tests are NOT working for incomplete multi index sets
     transformation = get_transformation(spatial_dimension, poly_degree, lp_degree, cls_from=NewtonPolynomial,
                                         cls_to=LagrangePolynomial)
+    check_trafo_general(transformation)
+
     grid = transformation.grid
     multi_index = grid.multi_index
     nr_coefficients = len(multi_index)
 
     barycentric_operator = _build_newton_to_lagrange_bary(transformation)
-    n2l_barycentric = barycentric_operator.to_array()
+    n2l_barycentric = barycentric_operator.array_repr_sparse
 
     matrix_operator = _build_newton_to_lagrange_naive(transformation)
-    n2l_regular = matrix_operator.to_array()
+    n2l_regular = matrix_operator.array_repr_sparse
 
     almost_equal(n2l_regular, n2l_barycentric)
 
@@ -152,6 +175,9 @@ def check_l2n_barycentric(spatial_dimension, poly_degree, lp_degree):
     # NOTE: these tests are NOT working for incomplete multi index sets
     transformation = get_transformation(spatial_dimension, poly_degree, lp_degree, cls_from=LagrangePolynomial,
                                         cls_to=NewtonPolynomial)
+    check_trafo_general(transformation)
+
+
     grid = transformation.grid
     multi_index = grid.multi_index
     nr_coefficients = len(multi_index)
@@ -159,7 +185,7 @@ def check_l2n_barycentric(spatial_dimension, poly_degree, lp_degree):
     # check for array equality:
     l2n_regular = build_l2n_matrix_dds(grid)
     transformation_operator = _build_lagrange_to_newton_bary(transformation)
-    l2n_barycentric = transformation_operator.to_array()
+    l2n_barycentric = transformation_operator.array_repr_sparse
     almost_equal(l2n_regular, l2n_barycentric)
 
     coeffs_lagr_true = rnd_points(nr_coefficients)  # \in [-1; 1]
@@ -194,32 +220,17 @@ def canonical_newton_transformation_test(spatial_dimension, poly_degree, lp_degr
     err = coeffs_newton_estim - coeffs_newton_true
     report_error(err, f'error of the Newton coefficients (transformation):')
 
-    n2c = n2c_transformation.transformation_operator.to_array()
-    c2n = c2n_transformation.transformation_operator.to_array()
+    n2c = n2c_transformation.transformation_operator.array_repr_sparse
+    c2n = c2n_transformation.transformation_operator.array_repr_sparse
     check_transformation_is_inverse(c2n, n2c)
 
 
 def check_separate_idx_transformation(spatial_dimension, poly_degree, lp_degree):
-    base_grid = get_grid(spatial_dimension, poly_degree, lp_degree)
-    multi_index_grid = base_grid.multi_index
-
-    # select an exponent vector corresponding to one single "active" Lagrange polynomial
-    # choose the highest possible exponent in order to introduce a "hole"
-    # and thereby making the exponents incomplete (if possible)
-    max_exp = multi_index_grid.poly_degree
-    single_idx = np.zeros((1, spatial_dimension), dtype=INT_DTYPE) + max_exp
-    multi_index = MultiIndex(single_idx)
-    # this way there are enough generating values in the grid to represent the single exponent vector
-
-    # the basis (superset) must contain the new point
-    grid = base_grid.add_points(single_idx)
-    assert multi_index.is_sub_index_set_of(grid.multi_index)
+    lagr_poly = get_separate_indices_poly(spatial_dimension, poly_degree, lp_degree,cls=LagrangePolynomial)
 
     # just a single active Lagrange polynomial -> one coefficient
     coeffs = np.ones(1, dtype=FLOAT_DTYPE)
-
-    # create a polynomial with a different basis than active Lagrange polynomials
-    lagr_poly = LagrangePolynomial(coeffs, multi_index, grid=grid)
+    lagr_poly.coeffs = coeffs
 
     # transform to Newton basis
     l2n_transformation = TransformationLagrangeToNewton(lagr_poly)
@@ -227,8 +238,9 @@ def check_separate_idx_transformation(spatial_dimension, poly_degree, lp_degree)
 
     # due to the properties of Lagrange polynomials and the constraints posed by the "basis",
     # this polynomial should be 0 on all grid points (basis) except the "active" point
-    pt_position = lagr_poly.index_correspondence
-    grid_nodes = grid.unisolvent_nodes
+    pt_position = lagr_poly.active_monomials
+
+    grid_nodes = lagr_poly.grid.unisolvent_nodes
     base_nodes = np.delete(grid_nodes, pt_position, axis=0)
     vals_on_grid_pts = newt_poly(base_nodes)
     np.testing.assert_allclose(vals_on_grid_pts, 0.0)

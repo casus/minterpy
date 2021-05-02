@@ -4,11 +4,11 @@ from itertools import product
 import numpy as np
 
 from auxiliaries import all_are_close, check_different_settings, get_derivator, almost_equal, \
-    get_multi_index, rnd_points
+    get_multi_index, rnd_points, get_separate_indices_poly
 from minterpy import LagrangePolynomial, CanonicalPolynomial, NewtonPolynomial, get_transformation, compute_grad_c2c, \
     compute_grad_x2c
 from minterpy.derivation import partial_derivative_canonical, derive_gradient_canonical, tensor_right_product, \
-    tensor_left_product
+    tensor_left_product, Derivator
 from minterpy.global_settings import FLOAT_DTYPE
 from minterpy.multi_index_utils import is_lexicographically_complete
 from minterpy.verification import check_shape
@@ -21,6 +21,8 @@ NR_NUMERICAL_SAMPLES = int(1e2)
 # DO_NUMERICAL_TESTS = True
 DO_NUMERICAL_TESTS = False
 
+POLY_CLASSES2TEST = [CanonicalPolynomial, LagrangePolynomial, NewtonPolynomial]
+
 
 def test_canonical_gradient():
     print('\ntesting gradient construction...')
@@ -31,14 +33,18 @@ def test_canonical_gradient():
     assert coeffs.shape == (5,)
 
     grad = derive_gradient_canonical(coeffs, exponents)
-    grad_expected = np.array([[ 0.,  2.,  3.],
-                              [ 0.,  0.,  4.],
-                              [ 0.,  4., 10.],
-                              [ 0.,  0.,  0.],
-                              [ 0.,  0.,  0.]])
+    grad_expected = np.array([[0., 2., 3.],
+                              [0., 0., 4.],
+                              [0., 4., 10.],
+                              [0., 0., 0.],
+                              [0., 0., 0.]])
     assert grad.shape == exponents.shape, f'unexpected gradient shape: {grad.shape}'
-    almost_equal(grad, grad_expected), f"unexpected gradient: {grad}"
+    almost_equal(grad, grad_expected)
     print('tests passed!')
+
+
+def check_derivator_general(derivator):
+    assert derivator._derivator.origin_poly.grid.multi_index.is_complete
 
 
 def check_grad_basis_transformations(spatial_dimension, poly_degree, lp_degree):
@@ -54,23 +60,54 @@ def check_grad_basis_transformations(spatial_dimension, poly_degree, lp_degree):
     compute_grad_c2c(grad_op_c2c, exponents)
 
     # compute the gradient operator for any in any basis (-> "x2x")
-    poly_classes = [CanonicalPolynomial, LagrangePolynomial, NewtonPolynomial]
-    for cls_from, cls_to in product(poly_classes, repeat=2):
+    for cls_from, cls_to in product(POLY_CLASSES2TEST, repeat=2):
         derivator = get_derivator(spatial_dimension, poly_degree, lp_degree, cls_from=cls_from,
                                   cls_to=cls_to)
+        check_derivator_general(derivator)
+
         d = derivator._derivator
         grad_op = d._gradient_op
         origin_poly = d.origin_poly
         assert type(origin_poly) is cls_from
         # 'manually' compute the gradient operator "x2x" based on the basis operator
-        x2c = get_transformation(origin_poly, CanonicalPolynomial).transformation_operator.to_array()
+        x2c = get_transformation(origin_poly, CanonicalPolynomial).transformation_operator.array_repr_sparse
         grad_op_x2c = tensor_right_product(grad_op_c2c, x2c)
 
         canonical_poly = CanonicalPolynomial(None, d.multi_index)
-        c2x = get_transformation(canonical_poly, cls_to).transformation_operator.to_array()
+        c2x = get_transformation(canonical_poly, cls_to).transformation_operator.array_repr_sparse
         grad_op_x2x = tensor_left_product(c2x, grad_op_x2c)
 
         almost_equal(grad_op_x2x, grad_op)
+
+        # assign random coefficients
+        coeffs = np.random.rand(nr_monomials)
+        derivator._derivator.origin_poly.coeffs = coeffs
+
+        # compute the gradient
+        gradient_poly = derivator.get_gradient_poly()
+        assert isinstance(gradient_poly, cls_to)
+
+        gradient_coeffs = gradient_poly.coeffs
+        check_shape(gradient_coeffs, (nr_monomials, dimensionality))
+
+
+def check_separate_idx_transformation(spatial_dimension, poly_degree, lp_degree):
+    lagr_poly = get_separate_indices_poly(spatial_dimension, poly_degree, lp_degree, cls=LagrangePolynomial)
+
+    # just a single active Lagrange polynomial -> one coefficient
+    nr_coeffs = 1
+    coeffs = np.ones(nr_coeffs, dtype=FLOAT_DTYPE)
+    lagr_poly.coeffs = coeffs
+
+    for cls_to in POLY_CLASSES2TEST:
+        derivator = Derivator(origin_poly=lagr_poly, target_type=cls_to)
+        check_derivator_general(derivator)
+
+        gradient_poly = derivator.get_gradient_poly()
+        assert isinstance(gradient_poly, cls_to)
+
+        gradient_coeffs = gradient_poly.coeffs
+        check_shape(gradient_coeffs, (nr_coeffs, spatial_dimension))
 
 
 def check_equality_to_canonical_grad_op(spatial_dimension, poly_degree, lp_degree):
@@ -84,13 +121,15 @@ def check_equality_to_canonical_grad_op(spatial_dimension, poly_degree, lp_degre
     grad_op1 = np.zeros((dimensionality, nr_monomials, nr_monomials), dtype=FLOAT_DTYPE)
     grad_op2 = grad_op1.copy()
 
-    # equal to construction with passing identity matrices  as transformations
+    # equal to construction with passing identity matrices as transformations
     c2c = np.eye(nr_monomials)
     compute_grad_x2c(grad_op1, exponents, c2c)
     compute_grad_c2c(grad_op2, exponents)
 
     derivator = get_derivator(spatial_dimension, poly_degree, lp_degree, cls_from=CanonicalPolynomial,
                               cls_to=CanonicalPolynomial)
+    check_derivator_general(derivator)
+
     grad_op3 = derivator._derivator._gradient_op
     all_are_close([grad_op1, grad_op2, grad_op3])
 
@@ -103,6 +142,8 @@ def check_gradient_analytical(spatial_dimension, poly_degree, lp_degree):
     # define a (scalar) quadratic function for which we already know the derivative (=gradient)
     derivator = get_derivator(m, n, lp_degree, cls_from=LagrangePolynomial,
                               cls_to=LagrangePolynomial)
+    check_derivator_general(derivator)
+
     lagr_poly = derivator._derivator.origin_poly
     assert type(lagr_poly) is LagrangePolynomial
     grid = lagr_poly.grid
@@ -142,7 +183,7 @@ def check_gradient_analytical(spatial_dimension, poly_degree, lp_degree):
     # grad_lagrange = get_gradient(coeffs_lagrange, grad_op_l2l)
 
 
-# # TODO test!
+# # TODO enable test!
 # def test_lagrange_monomial_gradient_eval(m, n):
 #     print('\ntesting the evaluation of Lagrange monomial gradient...')
 #     regressor = MultivariatePolynomialRegression(m, n)
@@ -165,9 +206,13 @@ class DerivatorTest(unittest.TestCase):
         print('\ntesting the basic gradient operator tensor construction...')
         check_different_settings(check_equality_to_canonical_grad_op)
 
-    def test_tensor_product(self):
-        print('\ntesting tensor product implementation...')
+    def test_gradient_computation(self):
+        print('\ntesting the gradient computation with varying bases...')
         check_different_settings(check_grad_basis_transformations)
+
+    def test_grad_separate_indices(self):
+        print('\ntesting the gradient computation of polynomials with separate indices...')
+        check_different_settings(check_separate_idx_transformation)
 
     def test_gradient_analytical(self):
         print('\ntesting gradient computation with an analytical example:')

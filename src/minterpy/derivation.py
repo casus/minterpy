@@ -7,7 +7,7 @@ from typing import Optional, Union, Type
 import numpy as np
 
 from minterpy import CanonicalPolynomial, MultiIndex, MultivariatePolynomialSingleABC, MultivariatePolynomialABC
-from minterpy.global_settings import DEBUG
+from minterpy.global_settings import DEBUG, FLOAT_DTYPE, ARRAY
 from minterpy.jit_compiled_utils import get_match_idx, compute_grad_c2c, compute_grad_x2c
 from minterpy.joint_polynomial import JointPolynomial
 from minterpy.transformation_meta import get_transformation
@@ -55,11 +55,11 @@ def derive_gradient_canonical(coeffs_canonical: np.ndarray, exponents: np.ndarra
     :param exponents: the respective exponent vectors of all monomials
     :return: the gradient in canonical form
     """
-    nr_monomials, dimensionality = exponents.shape
+    nr_of_monomials, dimensionality = exponents.shape
     nr_coefficients = len(coeffs_canonical)
-    assert nr_monomials == nr_coefficients, 'coefficient and exponent shapes do not match: ' \
+    assert nr_of_monomials == nr_coefficients, 'coefficient and exponent shapes do not match: ' \
                                             f'{coeffs_canonical.shape}, {exponents.shape}'
-    gradient = np.empty((nr_monomials, dimensionality))
+    gradient = np.empty((nr_of_monomials, dimensionality))
     for dim_idx in range(dimensionality):
         coeffs_canonical_deriv = partial_derivative_canonical(dim_idx, coeffs_canonical, exponents)
         gradient[:, dim_idx] = coeffs_canonical_deriv
@@ -142,9 +142,11 @@ def _get_gradient_operator(exponents: np.ndarray, x2c: Optional[np.ndarray] = No
             <-> exponents/multi indices have to be "complete"!
     @return: the tensor of the m partial derivative operators from Lagrange basis to Lagrange basis
     """
-    nr_monomials, dimensionality = exponents.shape
+
+    nr_of_monomials, dimensionality = exponents.shape
+
     # gradient operation tensor from basis x to canonical basis
-    grad_x2c = np.zeros((dimensionality, nr_monomials, nr_monomials))
+    grad_x2c = np.zeros((dimensionality, nr_of_monomials, nr_of_monomials))
     if x2c is None:  # no transformation -> origin basis is canonical
         compute_grad_c2c(grad_x2c, exponents)
     else:
@@ -186,26 +188,30 @@ class SinglePolyDerivator(object):
         #     # -> the multi indices in use must be complete (= without any "holes")
         # when canonical2canonical TODO only add the indices which are required for derivation (partial derivatives)
         #   origin_poly.make_derivable()
-        #   TODO ATTENTION: gradient operator has to "know" that some of the coefficients are not relevant
+        # TODO ATTENTION: gradient operator has to "know" that some of the monomials are not relevant
+        #  -> no derivation of these monomials
+
+        # TODO by completing a polynomial. its definition (basis) changes. allowed?
         origin_poly = origin_poly.make_complete()
         self.origin_poly = origin_poly
 
         if origin_is_canonical:  # canonical2canonical: no transformation required
             origin2canonical = None
         else:
-            origin2canonical = get_transformation(origin_poly, CanonicalPolynomial).transformation_operator.to_array()
+
+            origin2canonical = get_transformation(origin_poly, CanonicalPolynomial).transformation_operator.array_repr_full
             if DEBUG:
-                nr_monomials = len(self.multi_index)
-                check_is_square(origin2canonical, size=nr_monomials)
+                check_is_square(origin2canonical, size=self.nr_of_monomials)
 
         if target_is_canonical:  # canonical2canonical: no transformation required
             canonical2target = None
         else:
             canonical_poly = CanonicalPolynomial(None, self.multi_index)
-            canonical2target = get_transformation(canonical_poly, self.target_type).transformation_operator.to_array()
+            canonical2target = get_transformation(canonical_poly, self.target_type).transformation_operator.array_repr_full
             if DEBUG:
-                nr_monomials = len(self.multi_index)
-                check_is_square(canonical2target, size=nr_monomials)
+                # NOTE: not just multi index! <- indices might be separate
+                self.num_monomials = len(self.origin_poly.grid.multi_index)
+                check_is_square(canonical2target, size=self.nr_of_monomials)
 
         exponents = self.multi_index.exponents
         # TODO lazy evaluation?!
@@ -213,17 +219,39 @@ class SinglePolyDerivator(object):
 
     @property
     def multi_index(self) -> MultiIndex:
-        return self.origin_poly.multi_index
+        # ATTENTION: the exponents of the grid (full basis!)
+        return self.origin_poly.grid.multi_index
+
+    @property
+    def nr_of_monomials(self) -> int:
+        # NOTE: the total amount of grid points, not the amount of active monomials!
+        return len(self.origin_poly.grid.multi_index)
+
 
     @property
     def origin_type(self):
         return type(self.origin_poly)
 
-    def _get_gradient_coeffs(self) -> np.ndarray:
+    def _get_gradient_coeffs(self) -> ARRAY:
         # with fixed coefficients the gradient can be precomputed
         # (N x m): Newton coefficients of the partial derivative in each dimension
         # use output format expected for coefficients!
-        grad_coeffs = get_gradient_coeffs(self.origin_poly.coeffs, self._gradient_op).T
+        origin_poly = self.origin_poly
+        separate_indices = origin_poly.indices_are_separate
+        if separate_indices:
+            # NOTE: currently the gradient operator can only be applied to coefficient arrays of "full size"
+            # TODO simplify. use correct slice of the gradient operator?
+            # NOTE: not just multi index! <- indices might be separate
+            coeffs = np.zeros(self.nr_of_monomials, dtype=FLOAT_DTYPE)
+            active_idxs = origin_poly.active_monomials
+            coeffs[active_idxs] = origin_poly.coeffs
+        else:
+            coeffs = origin_poly.coeffs
+
+        grad_coeffs = get_gradient_coeffs(coeffs, self._gradient_op).T
+        if separate_indices:
+            # ATTENTION: also only use the coefficients of the active monomials
+            grad_coeffs = grad_coeffs[active_idxs]
         return grad_coeffs
 
     def get_gradient_poly(self) -> MultivariatePolynomialSingleABC:
@@ -234,7 +262,7 @@ class SinglePolyDerivator(object):
         output_poly = self.target_type.from_poly(self.origin_poly, new_coeffs=grad_coeffs)
         return output_poly
 
-    def _get_partial_deriv_coeffs(self) -> np.ndarray:
+    def _get_partial_deriv_coeffs(self) -> ARRAY:
         raise NotImplementedError
 
     def partial_derivative(self, dimension: int) -> MultivariatePolynomialSingleABC:
