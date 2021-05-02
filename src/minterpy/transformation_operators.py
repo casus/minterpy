@@ -19,11 +19,12 @@ class MatrixTransformationOperator(TransformationOperatorABC):
         if isinstance(other, TransformationOperatorABC):
             # the input is another transformation
             # instead of an array return another Matrix transformation operator constructed from the matrix product
-            return MatrixTransformationOperator(self.to_array() @ other.to_array())
+            # TODO which transformation object should be passed?
+            return MatrixTransformationOperator(self.transformation, self.array_repr_full @ other.array_repr_full)
 
-        return self.transformation_data @ other
+        return self.array_repr_sparse @ other
 
-    def to_array(self) -> ARRAY:
+    def _get_array_repr(self) -> ARRAY:
         return self.transformation_data
 
 
@@ -54,7 +55,8 @@ class BarycentricOperatorABC(TransformationOperatorABC):
             # the input is another transformation
             # workaround: return matrix operator constructed from the matrix product
             # TODO support this natively
-            return MatrixTransformationOperator(self.to_array() @ other.to_array())
+            # TODO which transformation object should be passed?
+            return MatrixTransformationOperator(self.transformation, self.array_repr_full @ other.array_repr_full)
 
         # TODO support "separate multi index" transformations
 
@@ -69,7 +71,7 @@ class BarycentricOperatorABC(TransformationOperatorABC):
         self.__class__.transformation_fct(coeffs_in, coeffs_out_placeholder, *self.transformation_data)
         return coeffs_out_placeholder
 
-    def to_array(self):
+    def _get_array_repr(self):
         return self.array_representation
 
 
