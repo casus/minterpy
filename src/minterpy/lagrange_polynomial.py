@@ -3,8 +3,6 @@ LagrangePolynomial class
 """
 from typing import Optional
 
-import numpy as np
-
 import minterpy
 from minterpy.global_settings import ARRAY
 from minterpy.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC
@@ -147,7 +145,7 @@ class LagrangePolynomial(MultivariatePolynomialSingleABC):
     Conceptually this is equal to fix the "inactivate" coefficients to always be 0.
     """
 
-    _newt_coeffs_lagr_monomials:Optional[ARRAY] = None
+    _newt_coeffs_lagr_monomials: Optional[ARRAY] = None
 
     # Virtual Functions
     _add = staticmethod(_lagrange_add)
@@ -161,23 +159,25 @@ class LagrangePolynomial(MultivariatePolynomialSingleABC):
     generate_user_domain = staticmethod(lagrange_generate_user_domain)
 
     @property
-    def newt_coeffs_lagr_monomials(self):
+    def newt_coeffs_lagr_monomials(self) -> ARRAY:
+        """ the Newton coefficients of all active Lagrange monomials
+        """
         if self._newt_coeffs_lagr_monomials is None:  # lazy initialisation
             transformer_l2n = minterpy.TransformationLagrangeToNewton(self)
             # TODO more performant alternative?
-            self._newt_coeffs_lagr_monomials = transformer_l2n.transformation_operator.to_array()
+            self._newt_coeffs_lagr_monomials = transformer_l2n.transformation_operator.array_repr_sparse
         return self._newt_coeffs_lagr_monomials
 
-    def eval_lagrange_monomials_on(self, points: np.ndarray):
+    def eval_lagrange_monomials_on(self, points: ARRAY) -> ARRAY:
         """ computes the values of all Lagrange monomials at all k input points
         :param points: (m x k) the k points to evaluate on.
-        :return: (k x N) the value of each Lagrange monomial in Newton form at each point.
+        :return: (k x N) the value of each active Lagrange monomial in Newton form at each point.
         """
         grid = self.grid
         generating_points = grid.generating_points
         # ATTENTION: ALL Newton polynomials of a basis are required to represent any single Lagrange polynomial
-        # -> for evaluating the "active" Lagrange polynomials (corresponding to self.multi_index)
-        # always ALL exponents from the basis (corresponding to the grid) are required.
+        # -> even for evaluating only some "active" Lagrange polynomials (corresponding to self.multi_index)
+        # always ALL exponents from the basis (corresponding to grid.multi_index) are required.
         exponents = grid.multi_index.exponents
         coefficients = self.newt_coeffs_lagr_monomials
         return newt_eval(points, coefficients, exponents, generating_points)
