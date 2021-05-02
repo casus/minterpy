@@ -164,12 +164,8 @@ class JointPolynomial(MultivariatePolynomialABC):
         for i, poly in enumerate(self.sub_polynomials):
             # NOTE: only supported by LagrangePolynomials
             mon_vals = poly.eval_lagrange_monomials_on(x)
-<<<<<<< HEAD
-            mon_vals = mon_vals.reshape((nr_of_points, poly.nr_of_monomials))
-=======
             # NOTE: first axis is the common one -> append TODO
             mon_vals = mon_vals.reshape((nr_of_points, poly.nr_active_monomials))
->>>>>>> 84e335b (unisolvent nodes for joint polynomials with split indices)
             if i == 0:
                 out = mon_vals
             else:
