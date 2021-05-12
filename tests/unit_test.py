@@ -1,22 +1,22 @@
-# -*- coding:utf-8 -*-
-
 import time
 import unittest
 from argparse import ArgumentParser
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-from auxiliaries import rnd_points, check_different_settings, get_grid
-from minterpy import MultiIndex, LagrangePolynomial, TransformationLagrangeToNewton, Grid, \
-    TransformationNewtonToLagrange
-from minterpy.utils import report_error
-from test_settings import DESIRED_PRECISION, NR_SAMPLE_POINTS, TIME_FORMAT_STR, RUNGE_FCT_VECTORIZED
+from auxiliaries import check_different_settings, get_grid, rnd_points
+from test_settings import (DESIRED_PRECISION, NR_SAMPLE_POINTS,
+                           RUNGE_FCT_VECTORIZED, TIME_FORMAT_STR)
 # TODO more sophisticated tests
 # TODO test tree!
 # test if interpolation is globally converging
 # test grid structure
 from transformation_test import check_poly_interpolation
+
+from minterpy import (Grid, LagrangePolynomial, MultiIndex,
+                      TransformationLagrangeToNewton,
+                      TransformationNewtonToLagrange)
+from minterpy.utils import report_error
 
 
 def accuracy_test_fct(spatial_dimension, poly_degree, lp_degree):
@@ -31,7 +31,9 @@ def accuracy_test_fct(spatial_dimension, poly_degree, lp_degree):
 
     t1 = time.time()
     ground_truth_fct = RUNGE_FCT_VECTORIZED  # TODO test different functions
-    fct_values = ground_truth_fct(interpolation_nodes)  # evaluate ground truths function
+    fct_values = ground_truth_fct(
+        interpolation_nodes
+    )  # evaluate ground truths function
     print("Groundtruth generated in", TIME_FORMAT_STR.format(time.time() - t1))
 
     nr_coefficients = len(multi_index)
@@ -46,7 +48,10 @@ def accuracy_test_fct(spatial_dimension, poly_degree, lp_degree):
     newton_poly = l2n_transformation()
 
     # coeffs_newton = newton_poly.coeffs
-    print("l2n transformation (=interpolation) took", TIME_FORMAT_STR.format(time.time() - t1))
+    print(
+        "l2n transformation (=interpolation) took",
+        TIME_FORMAT_STR.format(time.time() - t1),
+    )
 
     # test transformation:
     # the Lagrange coefficients (on the interpolation grid)
@@ -62,7 +67,7 @@ def accuracy_test_fct(spatial_dimension, poly_degree, lp_degree):
     # error should be at machine precision
     vals_interpol = newton_poly(interpolation_nodes)
     err = fct_values - vals_interpol
-    report_error(err, 'error at interpolation nodes (accuracy check):')
+    report_error(err, "error at interpolation nodes (accuracy check):")
     np.testing.assert_almost_equal(vals_interpol, fct_values, decimal=DESIRED_PRECISION)
 
     # Evaluate polynomial on uniformly sampled points
@@ -70,7 +75,9 @@ def accuracy_test_fct(spatial_dimension, poly_degree, lp_degree):
     vals_interpol = newton_poly(pts_uniformly_random)
     vals_true = ground_truth_fct(pts_uniformly_random)
     err = vals_true - vals_interpol
-    report_error(err, f'error on {NR_SAMPLE_POINTS} uniformly random points in [-1,1]^m')
+    report_error(
+        err, f"error on {NR_SAMPLE_POINTS} uniformly random points in [-1,1]^m"
+    )
 
     if spatial_dimension != 2:
         return
@@ -84,7 +91,7 @@ def accuracy_test_fct(spatial_dimension, poly_degree, lp_degree):
     vals_interpol = newton_poly(equidist_grid)
     vals_true = ground_truth_fct(equidist_grid)
     err = vals_true - vals_interpol
-    report_error(err, 'error on equidistant grid')
+    report_error(err, "error on equidistant grid")
 
     f, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
     ax1.imshow(vals_true.reshape([len(x), len(x)]))
@@ -133,11 +140,11 @@ class MainPackageTest(unittest.TestCase):
     # TEST CASES:
     # NOTE: all test case names have to start with "test..."
     def test_correctness(self):
-        print('\n\ntesting interpolation of ground truth polynomials:\n')
+        print("\n\ntesting interpolation of ground truth polynomials:\n")
         check_different_settings(interpolate_ground_truth_poly)
 
     def test_accuracy(self):
-        print('\n\ntesting runge function interpolation (accuracy test):\n')
+        print("\n\ntesting runge function interpolation (accuracy test):\n")
         check_different_settings(accuracy_test_fct)
 
     def test_grid_enlarge(self):
@@ -148,7 +155,9 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-m", dest="m", type=int, help="input dimension", default=2)
     parser.add_argument("-n", dest="n", type=int, help="polynomial degree", default=15)
-    parser.add_argument("-lp_degree", dest="lp_degree", type=float, help="LP order", default=2)
+    parser.add_argument(
+        "-lp_degree", dest="lp_degree", type=float, help="LP order", default=2
+    )
     args = parser.parse_args()
 
     n = args.n

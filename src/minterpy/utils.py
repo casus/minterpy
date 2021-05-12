@@ -4,9 +4,10 @@ set of package wide utility functions
 
 import numpy as np
 
-from minterpy.global_settings import FLOAT_DTYPE, INT_DTYPE, DEBUG
+from minterpy.global_settings import DEBUG, FLOAT_DTYPE, INT_DTYPE
 from minterpy.jit_compiled_utils import eval_all_newt_polys, evaluate_multiple
-from minterpy.verification import rectify_query_points, check_dtype, rectify_eval_input, convert_eval_output
+from minterpy.verification import (check_dtype, convert_eval_output,
+                                   rectify_eval_input, rectify_query_points)
 
 
 def lp_norm(arr, p, axis=None, keepdims: bool = False):
@@ -46,7 +47,7 @@ def gen_chebychev_2nd_order_leja_ordered(n: int):
                 idx_pts = int(lj[0, j])
                 P = P * (points1[idx_pts] - points1[ord[i]])
             P = np.abs(P)
-            if (P >= m):
+            if P >= m:
                 jj = i
                 m = P
         m = 0
@@ -61,44 +62,51 @@ def gen_chebychev_2nd_order_leja_ordered(n: int):
 
 def report_error(errors, description=None):
     if description is not None:
-        print('\n\n')
+        print("\n\n")
         print(description)
 
-    print(f'mean: {np.mean(errors):.2e}')
-    print(f'median: {np.median(errors):.2e}')
-    print(f'variance: {np.var(errors):.2e}')
-    print(f'l2-norm: {np.linalg.norm(errors):.2e}')
+    print(f"mean: {np.mean(errors):.2e}")
+    print(f"median: {np.median(errors):.2e}")
+    print(f"variance: {np.var(errors):.2e}")
+    print(f"l2-norm: {np.linalg.norm(errors):.2e}")
     # f"l_infty error (max): {np.linalg.norm(errors, ord=np.inf)}\n")
     errors = np.abs(errors)
-    print(f'abs mean: {np.mean(errors):.2e}')
-    print(f'abs median: {np.median(errors):.2e}')
-    print(f'abs variance: {np.var(errors):.2e}')
-    print(f'max abs {np.max(errors):.2e}')
+    print(f"abs mean: {np.mean(errors):.2e}")
+    print(f"abs median: {np.median(errors):.2e}")
+    print(f"abs variance: {np.var(errors):.2e}")
+    print(f"max abs {np.max(errors):.2e}")
 
 
-def eval_newt_polys_on(x: np.ndarray, exponents: np.ndarray, generating_points: np.ndarray,
-                       verify_input: bool = False, triangular: bool = False) -> np.ndarray:
-    """ computes the value of each Newton polynomial on each given point
+def eval_newt_polys_on(
+    x: np.ndarray,
+    exponents: np.ndarray,
+    generating_points: np.ndarray,
+    verify_input: bool = False,
+    triangular: bool = False,
+) -> np.ndarray:
+    """computes the value of each Newton polynomial on each given point
 
-        N = amount of coefficients
-        k = amount of points
+    N = amount of coefficients
+    k = amount of points
 
-        Parameters
-        ----------
-        x: the points to evaluate the polynomials on
-        exponents: the multi indices "alpha" for every Newton polynomial
-            corresponding to the exponents of this "monomial"
-        generating_points:
-        verify_input: weather the data types of the input should be checked. turned off by default for performance.
-        triangular: weather or not the output will be of lower triangular form
-            -> will skip the evaluation of some values
+    Parameters
+    ----------
+    x: the points to evaluate the polynomials on
+    exponents: the multi indices "alpha" for every Newton polynomial
+        corresponding to the exponents of this "monomial"
+    generating_points:
+    verify_input: weather the data types of the input should be checked. turned off by default for performance.
+    triangular: weather or not the output will be of lower triangular form
+        -> will skip the evaluation of some values
 
-        Returns
-        -------
-        (k, N) the value of each Newton polynomial on each point
+    Returns
+    -------
+    (k, N) the value of each Newton polynomial on each point
     """
     N, m = exponents.shape
-    nr_points, x = rectify_query_points(x, m)  # also working for 1D array, reshape into required shape
+    nr_points, x = rectify_query_points(
+        x, m
+    )  # also working for 1D array, reshape into required shape
     if verify_input:
         check_dtype(x, FLOAT_DTYPE)
         check_dtype(exponents, INT_DTYPE)
@@ -106,13 +114,22 @@ def eval_newt_polys_on(x: np.ndarray, exponents: np.ndarray, generating_points: 
     result_placeholder = np.empty((nr_points, N), dtype=FLOAT_DTYPE)
     max_exponents = np.max(exponents, axis=0)
     prod_placeholder = np.empty((np.max(max_exponents) + 1, m), dtype=FLOAT_DTYPE)
-    eval_all_newt_polys(x, exponents, generating_points, max_exponents, prod_placeholder, result_placeholder,
-                        triangular)
+    eval_all_newt_polys(
+        x,
+        exponents,
+        generating_points,
+        max_exponents,
+        prod_placeholder,
+        result_placeholder,
+        triangular,
+    )
     return result_placeholder
 
 
-def newt_eval(x, coefficients, exponents, generating_points, verify_input: bool = False):
-    """ iterative implementation of polynomial evaluation in Newton form
+def newt_eval(
+    x, coefficients, exponents, generating_points, verify_input: bool = False
+):
+    """iterative implementation of polynomial evaluation in Newton form
 
     version able to handle both:
      - list of input points x (2D input)
@@ -165,12 +182,16 @@ def newt_eval(x, coefficients, exponents, generating_points, verify_input: bool 
     NOTE: format fixed such that the regression can use the result as transformation matrix without transponation
     """
     verify_input = verify_input or DEBUG
-    N, coefficients, m, nr_points, nr_polynomials, x = rectify_eval_input(x, coefficients, exponents, verify_input)
+    N, coefficients, m, nr_points, nr_polynomials, x = rectify_eval_input(
+        x, coefficients, exponents, verify_input
+    )
     # m_grid, nr_grid_values = generating_points.shape
 
     if verify_input:
         if generating_points.dtype != FLOAT_DTYPE:
-            raise TypeError(f'grid values: expected dtype {FLOAT_DTYPE} got {generating_points.dtype}')
+            raise TypeError(
+                f"grid values: expected dtype {FLOAT_DTYPE} got {generating_points.dtype}"
+            )
 
     max_exponents = np.max(exponents, axis=0)
     # initialise arrays required for computing and storing the intermediary results:
@@ -178,6 +199,14 @@ def newt_eval(x, coefficients, exponents, generating_points, verify_input: bool 
     prod_placeholder = np.empty((np.max(max_exponents) + 1, m), dtype=FLOAT_DTYPE)
     monomial_vals_placeholder = np.empty(N, dtype=FLOAT_DTYPE)
     results_placeholder = np.empty((nr_points, nr_polynomials), dtype=FLOAT_DTYPE)
-    evaluate_multiple(x, coefficients, exponents, generating_points, max_exponents,
-                      prod_placeholder, monomial_vals_placeholder, results_placeholder)
+    evaluate_multiple(
+        x,
+        coefficients,
+        exponents,
+        generating_points,
+        max_exponents,
+        prod_placeholder,
+        monomial_vals_placeholder,
+        results_placeholder,
+    )
     return convert_eval_output(results_placeholder)

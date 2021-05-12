@@ -17,12 +17,13 @@ __status__ = "Development"
 import numpy as np
 from numba import njit
 
-from minterpy.global_settings import ARRAY, INT_DTYPE, FLOAT_DTYPE, TRAFO_DICT, TYPED_LIST
+from minterpy.global_settings import (ARRAY, FLOAT_DTYPE, INT_DTYPE,
+                                      TRAFO_DICT, TYPED_LIST)
 
 
 @njit(cache=True)
 def merge_trafo_dict(trafo_dict: TRAFO_DICT, leaf_positions: ARRAY) -> ARRAY:
-    """ creates a transformation array of full size from a precomputed barycentric transformation in dictionary format
+    """creates a transformation array of full size from a precomputed barycentric transformation in dictionary format
 
     TODO use the same merging fct everywhere in order to remove redundancies
     TODO convert into piecewise format first, create fct for this,
@@ -32,7 +33,10 @@ def merge_trafo_dict(trafo_dict: TRAFO_DICT, leaf_positions: ARRAY) -> ARRAY:
     last_leaf_size = trafo_dict[last_leaf_idx, last_leaf_idx].shape[0]
     expected_size = last_leaf_pos + last_leaf_size
     combined_matrix = np.zeros((expected_size, expected_size), dtype=FLOAT_DTYPE)
-    for (leaf_idx_l, leaf_idx_r), matrix_piece, in trafo_dict.items():
+    for (
+        (leaf_idx_l, leaf_idx_r),
+        matrix_piece,
+    ) in trafo_dict.items():
         start_pos_in = leaf_positions[leaf_idx_l]
         start_pos_out = leaf_positions[leaf_idx_r]
 
@@ -49,8 +53,10 @@ def merge_trafo_dict(trafo_dict: TRAFO_DICT, leaf_positions: ARRAY) -> ARRAY:
 
 
 @njit(cache=True)
-def factorised_2_piecewise(first_leaf_solution, leaf_factors, leaf_positions, leaf_sizes):
-    """ computes the actual matrix pieces of a transformation in factorised format explicitly
+def factorised_2_piecewise(
+    first_leaf_solution, leaf_factors, leaf_positions, leaf_sizes
+):
+    """computes the actual matrix pieces of a transformation in factorised format explicitly
 
     NOTE:  useful e.g. for merging all the pieces into a single matrix
     """
@@ -68,7 +74,9 @@ def factorised_2_piecewise(first_leaf_solution, leaf_factors, leaf_positions, le
             size_in = leaf_sizes[node_idx_1]
             size_out = leaf_sizes[node_idx_2]
 
-            transformation_piece = first_leaf_solution[:size_out, :size_in] * corr_factor
+            transformation_piece = (
+                first_leaf_solution[:size_out, :size_in] * corr_factor
+            )
 
             matrix_pieces.append(transformation_piece)
 
@@ -84,8 +92,10 @@ def factorised_2_piecewise(first_leaf_solution, leaf_factors, leaf_positions, le
 
 
 @njit(cache=True)
-def merge_trafo_piecewise(matrix_pieces: TYPED_LIST, start_positions_in: ARRAY, start_positions_out: ARRAY) -> ARRAY:
-    """ creates a transformation array of full size from a precomputed barycentric transformation in piecewise format
+def merge_trafo_piecewise(
+    matrix_pieces: TYPED_LIST, start_positions_in: ARRAY, start_positions_out: ARRAY
+) -> ARRAY:
+    """creates a transformation array of full size from a precomputed barycentric transformation in piecewise format
 
     used for testing the equality of the transformation matrices of both regular and barycentric computation
     TODO allow to only create a slice of the total matrix
@@ -97,7 +107,9 @@ def merge_trafo_piecewise(matrix_pieces: TYPED_LIST, start_positions_in: ARRAY, 
     last_leaf_size = matrix_pieces[last_leaf_idx].shape[0]
     expected_size = last_leaf_pos + last_leaf_size
     combined_matrix = np.zeros((expected_size, expected_size), dtype=FLOAT_DTYPE)
-    for matrix_piece, start_pos_in, start_pos_out in zip(matrix_pieces, start_positions_in, start_positions_out):
+    for matrix_piece, start_pos_in, start_pos_out in zip(
+        matrix_pieces, start_positions_in, start_positions_out
+    ):
         # NOTE: the size of the required slices of the coefficient vectors
         # are implicitly encoded in the size of each transformation array piece!
         size_out, size_in = matrix_piece.shape
@@ -111,10 +123,14 @@ def merge_trafo_piecewise(matrix_pieces: TYPED_LIST, start_positions_in: ARRAY, 
 
 
 @njit(cache=True)
-def merge_trafo_factorised(first_leaf_solution: ARRAY, leaf_factors: ARRAY, leaf_positions: ARRAY,
-                           leaf_sizes: ARRAY) -> ARRAY:
-    """ creates a transformation array of full size from a precomputed barycentric transformation in factorised format
-    """
-    trafo_piecewise = factorised_2_piecewise(first_leaf_solution, leaf_factors,
-                                             leaf_positions, leaf_sizes)
+def merge_trafo_factorised(
+    first_leaf_solution: ARRAY,
+    leaf_factors: ARRAY,
+    leaf_positions: ARRAY,
+    leaf_sizes: ARRAY,
+) -> ARRAY:
+    """creates a transformation array of full size from a precomputed barycentric transformation in factorised format"""
+    trafo_piecewise = factorised_2_piecewise(
+        first_leaf_solution, leaf_factors, leaf_positions, leaf_sizes
+    )
     return merge_trafo_piecewise(*trafo_piecewise)

@@ -4,9 +4,14 @@
 TODO make this module obsolete by introducing a global transformer class (s. transformation_abstract.py)
 """
 
-from minterpy import LagrangePolynomial, NewtonPolynomial, TransformationLagrangeToNewton, CanonicalPolynomial, \
-    TransformationLagrangeToCanonical, TransformationCanonicalToNewton, TransformationCanonicalToLagrange, \
-    TransformationNewtonToLagrange, TransformationNewtonToCanonical, MultivariatePolynomialABC
+from minterpy import (CanonicalPolynomial, LagrangePolynomial,
+                      MultivariatePolynomialABC, NewtonPolynomial,
+                      TransformationCanonicalToLagrange,
+                      TransformationCanonicalToNewton,
+                      TransformationLagrangeToCanonical,
+                      TransformationLagrangeToNewton,
+                      TransformationNewtonToCanonical,
+                      TransformationNewtonToLagrange)
 from minterpy.transformation_identity import TransformationIdentity
 
 __author__ = "Jannik Michelfeit"
@@ -22,13 +27,10 @@ available_transformations = {
     # (origin_type, target_type): class
     (LagrangePolynomial, NewtonPolynomial): TransformationLagrangeToNewton,
     (LagrangePolynomial, CanonicalPolynomial): TransformationLagrangeToCanonical,
-
     (CanonicalPolynomial, NewtonPolynomial): TransformationCanonicalToNewton,
     (CanonicalPolynomial, LagrangePolynomial): TransformationCanonicalToLagrange,
-
     (NewtonPolynomial, LagrangePolynomial): TransformationNewtonToLagrange,
     (NewtonPolynomial, CanonicalPolynomial): TransformationNewtonToCanonical,
-
     (LagrangePolynomial, LagrangePolynomial): TransformationIdentity,
     (NewtonPolynomial, NewtonPolynomial): TransformationIdentity,
     (CanonicalPolynomial, CanonicalPolynomial): TransformationIdentity,
@@ -39,9 +41,13 @@ def get_transformation_class(origin_type, target_type):
     try:
         return available_transformations[(origin_type, target_type)]
     except IndexError:
-        raise NotImplementedError(f'the is no known transformation from {origin_type} to {target_type}')
+        raise NotImplementedError(
+            f"the is no known transformation from {origin_type} to {target_type}"
+        )
 
 
 def get_transformation(origin_polynomial: MultivariatePolynomialABC, target_type):
-    transformation_class = get_transformation_class(origin_polynomial.__class__, target_type)
+    transformation_class = get_transformation_class(
+        origin_polynomial.__class__, target_type
+    )
     return transformation_class(origin_polynomial)

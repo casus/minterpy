@@ -1,13 +1,12 @@
-# -*- coding:utf-8 -*-
 import unittest
 
 import numpy as np
-
-from minterpy import MultiIndex, Grid, NewtonPolynomial, TransformationNewtonToCanonical
-from minterpy.utils import report_error
-from test_settings import DESIRED_PRECISION
 from auxiliaries import check_different_settings, rnd_points
+from test_settings import DESIRED_PRECISION
 
+from minterpy import (Grid, MultiIndex, NewtonPolynomial,
+                      TransformationNewtonToCanonical)
+from minterpy.utils import report_error
 
 # TODO unit test the single evaluation functions!
 
@@ -32,15 +31,19 @@ def eval_equality_test(spatial_dimension, poly_degree, lp_degree):
 
     # evaluating the polynomial in canonical form should yield the same coefficients:
     coeffs_lagrange2 = canonical_poly(interpolation_nodes)
-    np.testing.assert_almost_equal(coeffs_lagrange1, coeffs_lagrange2, decimal=DESIRED_PRECISION)
+    np.testing.assert_almost_equal(
+        coeffs_lagrange1, coeffs_lagrange2, decimal=DESIRED_PRECISION
+    )
     err = coeffs_lagrange1 - coeffs_lagrange2
-    report_error(err, f'error of the Lagrange coefficients (= polynomial evaluated on the interpolation nodes):')
+    report_error(
+        err,
+        f"error of the Lagrange coefficients (= polynomial evaluated on the interpolation nodes):",
+    )
 
 
 class PolyEvalTest(unittest.TestCase):
-
     def test_equality(self):
-        print('\ntesting the equality of the different evaluation implementations:')
+        print("\ntesting the equality of the different evaluation implementations:")
         # includes speed benchmarks
         check_different_settings(eval_equality_test)
 
@@ -49,7 +52,7 @@ class PolyEvalTest(unittest.TestCase):
 #   look at dev_jannik newt_eval_test.py
 # TODO compare speed?
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # suite = unittest.TestLoader().loadTestsFromTestCase(HelperTest)
     # unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()

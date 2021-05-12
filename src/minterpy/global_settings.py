@@ -1,8 +1,8 @@
-# -*- coding:utf-8 -*-
-from typing import List, Tuple, Dict, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 
-import numpy as np
 import numba
+import numpy as np
+
 # numpy dtypes
 # for exponents:
 
@@ -39,4 +39,4 @@ ARRAY_DICT = Dict[Tuple[int, int, int], Optional[ARRAY]]
 TRAFO_DICT = Dict[Tuple[int, int], ARRAY]
 INT_SET = Set[int]
 DICT_TRAFO_TYPE = Tuple[TRAFO_DICT, ARRAY]
-FACTORISED_TRAFO_TYPE = Tuple[ ARRAY, ARRAY, ARRAY, ARRAY]
+FACTORISED_TRAFO_TYPE = Tuple[ARRAY, ARRAY, ARRAY, ARRAY]

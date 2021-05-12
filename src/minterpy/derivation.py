@@ -2,13 +2,16 @@
 """ functions for deriving multivariate polynomials in different bases
 """
 
-from typing import Optional, Union, Type
+from typing import Optional, Type, Union
 
 import numpy as np
 
-from minterpy import CanonicalPolynomial, MultiIndex, MultivariatePolynomialSingleABC, MultivariatePolynomialABC
-from minterpy.global_settings import DEBUG, FLOAT_DTYPE, ARRAY
-from minterpy.jit_compiled_utils import get_match_idx, compute_grad_c2c, compute_grad_x2c
+from minterpy import (CanonicalPolynomial, MultiIndex,
+                      MultivariatePolynomialABC,
+                      MultivariatePolynomialSingleABC)
+from minterpy.global_settings import ARRAY, DEBUG, FLOAT_DTYPE
+from minterpy.jit_compiled_utils import (compute_grad_c2c, compute_grad_x2c,
+                                         get_match_idx)
 from minterpy.joint_polynomial import JointPolynomial
 from minterpy.transformation_meta import get_transformation
 from minterpy.verification import check_is_square
@@ -26,7 +29,9 @@ __status__ = "Development"
 # TODO use barycentrical transformations!
 
 # TODO test
-def partial_derivative_canonical(dim_idx: int, coeffs_canonical: np.ndarray, exponents: np.ndarray) -> np.ndarray:
+def partial_derivative_canonical(
+    dim_idx: int, coeffs_canonical: np.ndarray, exponents: np.ndarray
+) -> np.ndarray:
     """
     :param dim_idx: the index of the dimension to derive with respect to
     :param coeffs_canonical: the coefficients of the polynomial in canonical form
@@ -43,13 +48,17 @@ def partial_derivative_canonical(dim_idx: int, coeffs_canonical: np.ndarray, exp
             # "gradient exponential mapping"
             new_coeff_idx = get_match_idx(exponents, mon_exponents_derived)
             # multiply with exponent
-            coeffs_canonical_deriv[new_coeff_idx] = coeff * exponents[monomial_idx, dim_idx]
+            coeffs_canonical_deriv[new_coeff_idx] = (
+                coeff * exponents[monomial_idx, dim_idx]
+            )
     return coeffs_canonical_deriv
 
 
 # TODO test
-def derive_gradient_canonical(coeffs_canonical: np.ndarray, exponents: np.ndarray) -> np.ndarray:
-    """ derives the gradient without any precomputation
+def derive_gradient_canonical(
+    coeffs_canonical: np.ndarray, exponents: np.ndarray
+) -> np.ndarray:
+    """derives the gradient without any precomputation
 
     :param coeffs_canonical: the coefficients of the polynomial in canonical form
     :param exponents: the respective exponent vectors of all monomials
@@ -57,11 +66,15 @@ def derive_gradient_canonical(coeffs_canonical: np.ndarray, exponents: np.ndarra
     """
     nr_of_monomials, dimensionality = exponents.shape
     nr_coefficients = len(coeffs_canonical)
-    assert nr_of_monomials == nr_coefficients, 'coefficient and exponent shapes do not match: ' \
-                                            f'{coeffs_canonical.shape}, {exponents.shape}'
+    assert nr_of_monomials == nr_coefficients, (
+        "coefficient and exponent shapes do not match: "
+        f"{coeffs_canonical.shape}, {exponents.shape}"
+    )
     gradient = np.empty((nr_of_monomials, dimensionality))
     for dim_idx in range(dimensionality):
-        coeffs_canonical_deriv = partial_derivative_canonical(dim_idx, coeffs_canonical, exponents)
+        coeffs_canonical_deriv = partial_derivative_canonical(
+            dim_idx, coeffs_canonical, exponents
+        )
         gradient[:, dim_idx] = coeffs_canonical_deriv
     return gradient
 
@@ -98,7 +111,7 @@ def tensor_right_product(tensor: np.ndarray, right_factor: np.ndarray):
 
 
 def get_gradient_coeffs(coefficients, gradient_operator):
-    """ computes the gradient using a precomputed operator tensor
+    """computes the gradient using a precomputed operator tensor
 
     @param coefficients: the coefficients of a polynomial in basis a
     @param gradient_operator: the gradient operation tensor from basis a to b
@@ -127,9 +140,12 @@ def tensor_left_product(left_factor: np.ndarray, tensor: np.ndarray):
     return product
 
 
-def _get_gradient_operator(exponents: np.ndarray, x2c: Optional[np.ndarray] = None,
-                           c2x: Optional[np.ndarray] = None) -> np.ndarray:
-    """ computes the gradient operation tensor from a variable basis to a variable basis
+def _get_gradient_operator(
+    exponents: np.ndarray,
+    x2c: Optional[np.ndarray] = None,
+    c2x: Optional[np.ndarray] = None,
+) -> np.ndarray:
+    """computes the gradient operation tensor from a variable basis to a variable basis
 
     O(mN^3) due to matrix multiplications
 
@@ -158,10 +174,12 @@ def _get_gradient_operator(exponents: np.ndarray, x2c: Optional[np.ndarray] = No
     return grad_x2x
 
 
-class SinglePolyDerivator(object):
-
-    def __init__(self, origin_poly: MultivariatePolynomialSingleABC,
-                 target_type: Optional[Type[MultivariatePolynomialSingleABC]] = None):
+class SinglePolyDerivator:
+    def __init__(
+        self,
+        origin_poly: MultivariatePolynomialSingleABC,
+        target_type: Optional[Type[MultivariatePolynomialSingleABC]] = None,
+    ):
         """
 
         with fixed interpolation nodes ("grid") and exponents,
@@ -170,13 +188,17 @@ class SinglePolyDerivator(object):
         """
         origin_type = type(origin_poly)
         if not issubclass(origin_type, MultivariatePolynomialSingleABC):
-            raise TypeError(f"<{origin_poly}> is of type {origin_type}, "
-                            f"not of the expected type {MultivariatePolynomialSingleABC}")
+            raise TypeError(
+                f"<{origin_poly}> is of type {origin_type}, "
+                f"not of the expected type {MultivariatePolynomialSingleABC}"
+            )
 
-        if target_type is None:  # if no specific output type is specified, the output should be of the same class
+        if (
+            target_type is None
+        ):  # if no specific output type is specified, the output should be of the same class
             target_type = origin_type
         if not issubclass(target_type, MultivariatePolynomialSingleABC):
-            raise ValueError('the specified target type must be a polynomial class')
+            raise ValueError("the specified target type must be a polynomial class")
         self.target_type = target_type
 
         origin_is_canonical = origin_type == CanonicalPolynomial
@@ -199,7 +221,9 @@ class SinglePolyDerivator(object):
             origin2canonical = None
         else:
 
-            origin2canonical = get_transformation(origin_poly, CanonicalPolynomial).transformation_operator.array_repr_full
+            origin2canonical = get_transformation(
+                origin_poly, CanonicalPolynomial
+            ).transformation_operator.array_repr_full
             if DEBUG:
                 check_is_square(origin2canonical, size=self.nr_of_monomials)
 
@@ -207,7 +231,9 @@ class SinglePolyDerivator(object):
             canonical2target = None
         else:
             canonical_poly = CanonicalPolynomial(None, self.multi_index)
-            canonical2target = get_transformation(canonical_poly, self.target_type).transformation_operator.array_repr_full
+            canonical2target = get_transformation(
+                canonical_poly, self.target_type
+            ).transformation_operator.array_repr_full
             if DEBUG:
                 # NOTE: not just multi index! <- indices might be separate
                 self.num_monomials = len(self.origin_poly.grid.multi_index)
@@ -215,7 +241,9 @@ class SinglePolyDerivator(object):
 
         exponents = self.multi_index.exponents
         # TODO lazy evaluation?!
-        self._gradient_op = _get_gradient_operator(exponents, origin2canonical, canonical2target)
+        self._gradient_op = _get_gradient_operator(
+            exponents, origin2canonical, canonical2target
+        )
 
     @property
     def multi_index(self) -> MultiIndex:
@@ -226,7 +254,6 @@ class SinglePolyDerivator(object):
     def nr_of_monomials(self) -> int:
         # NOTE: the total amount of grid points, not the amount of active monomials!
         return len(self.origin_poly.grid.multi_index)
-
 
     @property
     def origin_type(self):
@@ -259,7 +286,9 @@ class SinglePolyDerivator(object):
         # however numerical computations with list of polynomial instances are inefficient.
         #  -> using a single polynomial class with a "list of coefficients"
         grad_coeffs = self._get_gradient_coeffs()
-        output_poly = self.target_type.from_poly(self.origin_poly, new_coeffs=grad_coeffs)
+        output_poly = self.target_type.from_poly(
+            self.origin_poly, new_coeffs=grad_coeffs
+        )
         return output_poly
 
     def _get_partial_deriv_coeffs(self) -> ARRAY:
@@ -269,10 +298,12 @@ class SinglePolyDerivator(object):
         raise NotImplementedError
 
 
-class JointPolyDerivator(object):
-
-    def __init__(self, origin_poly: JointPolynomial,
-                 target_type: Optional[Type[MultivariatePolynomialSingleABC]] = None):
+class JointPolyDerivator:
+    def __init__(
+        self,
+        origin_poly: JointPolynomial,
+        target_type: Optional[Type[MultivariatePolynomialSingleABC]] = None,
+    ):
         self._derivators = []
         for poly in origin_poly.sub_polynomials:
             self._derivators.append(SinglePolyDerivator(poly, target_type))
@@ -288,10 +319,12 @@ class JointPolyDerivator(object):
 
 
 # TODO remove nesting!
-class Derivator(object):
-
-    def __init__(self, origin_poly: MultivariatePolynomialABC,
-                 target_type: Optional[Type[MultivariatePolynomialSingleABC]] = None):
+class Derivator:
+    def __init__(
+        self,
+        origin_poly: MultivariatePolynomialABC,
+        target_type: Optional[Type[MultivariatePolynomialSingleABC]] = None,
+    ):
         # pick and store the fitting derivator class internally:
         if type(origin_poly) is JointPolynomial:
             derivator = JointPolyDerivator(origin_poly, target_type)

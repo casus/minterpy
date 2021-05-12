@@ -15,7 +15,9 @@ __status__ = "Development"
 
 np.random.seed(42)
 
-DESIRED_PRECISION = 7  # decimals of maximally allowed errors TODO different for some test cases?
+DESIRED_PRECISION = (
+    7  # decimals of maximally allowed errors TODO different for some test cases?
+)
 NR_SAMPLE_POINTS = 1000  # TODO dependent on m?
 MIN_DEGREE = 1
 MAX_DEGREE = 4
@@ -48,7 +50,9 @@ TEST_FUNCTIONS = [  # ground truths:
     # lambda x: x[0] + x[1], # TODO fixed 2D
 ]
 
-RUNGE_FCT_VECTORIZED = lambda eval_points: np.apply_along_axis(RUNGE_FCT, 1, eval_points)
+RUNGE_FCT_VECTORIZED = lambda eval_points: np.apply_along_axis(
+    RUNGE_FCT, 1, eval_points
+)
 
 # TODO
 # TEST_FUNCTIONS_VECTORIZED = [lambda eval_points: np.apply_along_axis(g, 0, eval_points) for g in TEST_FUNCTIONS]

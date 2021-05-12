@@ -2,13 +2,16 @@ import unittest
 from itertools import product
 
 import numpy as np
+from auxiliaries import (all_are_close, almost_equal, check_different_settings,
+                         get_derivator, get_multi_index,
+                         get_separate_indices_poly, rnd_points)
 
-from auxiliaries import all_are_close, check_different_settings, get_derivator, almost_equal, \
-    get_multi_index, rnd_points, get_separate_indices_poly
-from minterpy import LagrangePolynomial, CanonicalPolynomial, NewtonPolynomial, get_transformation, compute_grad_c2c, \
-    compute_grad_x2c
-from minterpy.derivation import partial_derivative_canonical, derive_gradient_canonical, tensor_right_product, \
-    tensor_left_product, Derivator
+from minterpy import (CanonicalPolynomial, LagrangePolynomial,
+                      NewtonPolynomial, compute_grad_c2c, compute_grad_x2c,
+                      get_transformation)
+from minterpy.derivation import (Derivator, derive_gradient_canonical,
+                                 partial_derivative_canonical,
+                                 tensor_left_product, tensor_right_product)
 from minterpy.global_settings import FLOAT_DTYPE
 from minterpy.multi_index_utils import is_lexicographically_complete
 from minterpy.verification import check_shape
@@ -25,7 +28,7 @@ POLY_CLASSES2TEST = [CanonicalPolynomial, LagrangePolynomial, NewtonPolynomial]
 
 
 def test_canonical_gradient():
-    print('\ntesting gradient construction...')
+    print("\ntesting gradient construction...")
     # ATTENTION: the exponent vectors of all derivatives have to be included already!
     exponents = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 1], [0, 1, 1], [0, 0, 2]])
     coeffs = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
@@ -33,14 +36,18 @@ def test_canonical_gradient():
     assert coeffs.shape == (5,)
 
     grad = derive_gradient_canonical(coeffs, exponents)
-    grad_expected = np.array([[0., 2., 3.],
-                              [0., 0., 4.],
-                              [0., 4., 10.],
-                              [0., 0., 0.],
-                              [0., 0., 0.]])
-    assert grad.shape == exponents.shape, f'unexpected gradient shape: {grad.shape}'
+    grad_expected = np.array(
+        [
+            [0.0, 2.0, 3.0],
+            [0.0, 0.0, 4.0],
+            [0.0, 4.0, 10.0],
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+        ]
+    )
+    assert grad.shape == exponents.shape, f"unexpected gradient shape: {grad.shape}"
     almost_equal(grad, grad_expected)
-    print('tests passed!')
+    print("tests passed!")
 
 
 def check_derivator_general(derivator):
@@ -55,14 +62,17 @@ def check_grad_basis_transformations(spatial_dimension, poly_degree, lp_degree):
     assert is_lexicographically_complete(exponents)
 
     # Expected shape:
-    grad_op_c2c = np.zeros((dimensionality, nr_monomials, nr_monomials), dtype=FLOAT_DTYPE)
+    grad_op_c2c = np.zeros(
+        (dimensionality, nr_monomials, nr_monomials), dtype=FLOAT_DTYPE
+    )
     # equal to construction with passing identity matrices  as transformations
     compute_grad_c2c(grad_op_c2c, exponents)
 
     # compute the gradient operator for any in any basis (-> "x2x")
     for cls_from, cls_to in product(POLY_CLASSES2TEST, repeat=2):
-        derivator = get_derivator(spatial_dimension, poly_degree, lp_degree, cls_from=cls_from,
-                                  cls_to=cls_to)
+        derivator = get_derivator(
+            spatial_dimension, poly_degree, lp_degree, cls_from=cls_from, cls_to=cls_to
+        )
         check_derivator_general(derivator)
 
         d = derivator._derivator
@@ -70,11 +80,15 @@ def check_grad_basis_transformations(spatial_dimension, poly_degree, lp_degree):
         origin_poly = d.origin_poly
         assert type(origin_poly) is cls_from
         # 'manually' compute the gradient operator "x2x" based on the basis operator
-        x2c = get_transformation(origin_poly, CanonicalPolynomial).transformation_operator.array_repr_sparse
+        x2c = get_transformation(
+            origin_poly, CanonicalPolynomial
+        ).transformation_operator.array_repr_sparse
         grad_op_x2c = tensor_right_product(grad_op_c2c, x2c)
 
         canonical_poly = CanonicalPolynomial(None, d.multi_index)
-        c2x = get_transformation(canonical_poly, cls_to).transformation_operator.array_repr_sparse
+        c2x = get_transformation(
+            canonical_poly, cls_to
+        ).transformation_operator.array_repr_sparse
         grad_op_x2x = tensor_left_product(c2x, grad_op_x2c)
 
         almost_equal(grad_op_x2x, grad_op)
@@ -92,7 +106,9 @@ def check_grad_basis_transformations(spatial_dimension, poly_degree, lp_degree):
 
 
 def check_separate_idx_transformation(spatial_dimension, poly_degree, lp_degree):
-    lagr_poly = get_separate_indices_poly(spatial_dimension, poly_degree, lp_degree, cls=LagrangePolynomial)
+    lagr_poly = get_separate_indices_poly(
+        spatial_dimension, poly_degree, lp_degree, cls=LagrangePolynomial
+    )
 
     # just a single active Lagrange polynomial -> one coefficient
     nr_coeffs = 1
@@ -126,8 +142,13 @@ def check_equality_to_canonical_grad_op(spatial_dimension, poly_degree, lp_degre
     compute_grad_x2c(grad_op1, exponents, c2c)
     compute_grad_c2c(grad_op2, exponents)
 
-    derivator = get_derivator(spatial_dimension, poly_degree, lp_degree, cls_from=CanonicalPolynomial,
-                              cls_to=CanonicalPolynomial)
+    derivator = get_derivator(
+        spatial_dimension,
+        poly_degree,
+        lp_degree,
+        cls_from=CanonicalPolynomial,
+        cls_to=CanonicalPolynomial,
+    )
     check_derivator_general(derivator)
 
     grad_op3 = derivator._derivator._gradient_op
@@ -140,8 +161,9 @@ def check_gradient_analytical(spatial_dimension, poly_degree, lp_degree):
     assert n == 2
     m = spatial_dimension
     # define a (scalar) quadratic function for which we already know the derivative (=gradient)
-    derivator = get_derivator(m, n, lp_degree, cls_from=LagrangePolynomial,
-                              cls_to=LagrangePolynomial)
+    derivator = get_derivator(
+        m, n, lp_degree, cls_from=LagrangePolynomial, cls_to=LagrangePolynomial
+    )
     check_derivator_general(derivator)
 
     lagr_poly = derivator._derivator.origin_poly
@@ -201,26 +223,27 @@ def check_gradient_analytical(spatial_dimension, poly_degree, lp_degree):
 
 
 class DerivatorTest(unittest.TestCase):
-
     def test_equality_to_canonical_grad_op(self):
-        print('\ntesting the basic gradient operator tensor construction...')
+        print("\ntesting the basic gradient operator tensor construction...")
         check_different_settings(check_equality_to_canonical_grad_op)
 
     def test_gradient_computation(self):
-        print('\ntesting the gradient computation with varying bases...')
+        print("\ntesting the gradient computation with varying bases...")
         check_different_settings(check_grad_basis_transformations)
 
     def test_grad_separate_indices(self):
-        print('\ntesting the gradient computation of polynomials with separate indices...')
+        print(
+            "\ntesting the gradient computation of polynomials with separate indices..."
+        )
         check_different_settings(check_separate_idx_transformation)
 
     def test_gradient_analytical(self):
-        print('\ntesting gradient computation with an analytical example:')
+        print("\ntesting gradient computation with an analytical example:")
         # example is of fixed polynomial degree 2:
         check_different_settings(check_gradient_analytical, test_degrees=[2])
 
     def test_partial_derivation_canonical(self):
-        print('\ntesting partial derivation...')
+        print("\ntesting partial derivation...")
         # ATTENTION: the exponent vectors of all derivatives have to be included already! (completeness!)
         exponents = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 1], [0, 1, 1], [0, 0, 2]])
         check_shape(exponents, (5, 3))
@@ -240,7 +263,7 @@ class DerivatorTest(unittest.TestCase):
         coeffs_canonical_deriv2 = partial_derivative_canonical(2, coeffs, exponents)
         # NOTE: coefficients should be multiplied with the exponent
         almost_equal(coeffs_canonical_deriv2, np.array([3.0, 4.0, 10.0, 0.0, 0.0]))
-        print('tests passed!')
+        print("tests passed!")
 
     # TODO test Joint Polynonial derivation
 
@@ -250,7 +273,7 @@ class DerivatorTest(unittest.TestCase):
     #     check_different_settings(gradient accuracy_test)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # suite = unittest.TestLoader().loadTestsFromTestCase(HelperTest)
     # unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()

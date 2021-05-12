@@ -1,13 +1,13 @@
-# -*- coding:utf-8 -*-
 import unittest
 
 import numpy as np
-
-from minterpy import MultiIndex, Grid, LagrangePolynomial, TransformationLagrangeToCanonical
-from minterpy import CanonicalPolynomial, TransformationCanonicalToLagrange
-from minterpy.utils import report_error
-from test_settings import DESIRED_PRECISION
 from auxiliaries import check_different_settings, rnd_points
+from test_settings import DESIRED_PRECISION
+
+from minterpy import (CanonicalPolynomial, Grid, LagrangePolynomial,
+                      MultiIndex, TransformationCanonicalToLagrange,
+                      TransformationLagrangeToCanonical)
+from minterpy.utils import report_error
 
 
 # TODO: Test addition with different multi indices
@@ -38,9 +38,11 @@ def add_lagrange_test(spatial_dimension, poly_degree, lp_degree):
 
     result_coeffs_canonical = coeffs_canonical1 + coeffs_canonical2
 
-    np.testing.assert_almost_equal(result_canonical_poly.coeffs, result_coeffs_canonical, decimal=DESIRED_PRECISION)
+    np.testing.assert_almost_equal(
+        result_canonical_poly.coeffs, result_coeffs_canonical, decimal=DESIRED_PRECISION
+    )
     err = result_canonical_poly.coeffs - result_coeffs_canonical
-    report_error(err, f'error in canonical coefficients : ')
+    report_error(err, f"error in canonical coefficients : ")
 
 
 def sub_lagrange_test(spatial_dimension, poly_degree, lp_degree):
@@ -70,24 +72,25 @@ def sub_lagrange_test(spatial_dimension, poly_degree, lp_degree):
 
     result_coeffs_canonical = coeffs_canonical1 - coeffs_canonical2
 
-    np.testing.assert_almost_equal(result_canonical_poly.coeffs, result_coeffs_canonical, decimal=DESIRED_PRECISION)
+    np.testing.assert_almost_equal(
+        result_canonical_poly.coeffs, result_coeffs_canonical, decimal=DESIRED_PRECISION
+    )
     err = result_canonical_poly.coeffs - result_coeffs_canonical
-    report_error(err, f'error in canonical coefficients : ')
+    report_error(err, f"error in canonical coefficients : ")
 
 
 class LagrangePolyArithmeticTest(unittest.TestCase):
-
     def test_add_lagrange(self):
-        print('\ntesting the addition in lagrange basis:')
+        print("\ntesting the addition in lagrange basis:")
         check_different_settings(add_lagrange_test)
 
     def test_sub_lagrange(self):
-        print('\ntesting the subtraction in lagrange basis:')
+        print("\ntesting the subtraction in lagrange basis:")
         check_different_settings(sub_lagrange_test)
 
     # TODO: Add more tests between polynomials having different multiindices
     def test_mul_lagrange(self):
-        print('\ntesting the multiplication in lagrange basis:')
+        print("\ntesting the multiplication in lagrange basis:")
         mi = MultiIndex.from_degree(2, 1, 2.0)
         canonical_coeffs1 = np.array([0, 1, 1])
         canonical_coeffs2 = np.array([0, 1, -1])
@@ -96,8 +99,12 @@ class LagrangePolyArithmeticTest(unittest.TestCase):
 
         c2l_transformation = TransformationCanonicalToLagrange(canonical_poly)
 
-        lagrange_coeffs1 = c2l_transformation.transformation_operator @ canonical_coeffs1
-        lagrange_coeffs2 = c2l_transformation.transformation_operator @ canonical_coeffs2
+        lagrange_coeffs1 = (
+            c2l_transformation.transformation_operator @ canonical_coeffs1
+        )
+        lagrange_coeffs2 = (
+            c2l_transformation.transformation_operator @ canonical_coeffs2
+        )
 
         lagrange_poly1 = LagrangePolynomial(lagrange_coeffs1, mi)
         lagrange_poly2 = LagrangePolynomial(lagrange_coeffs2, mi)
@@ -110,8 +117,12 @@ class LagrangePolyArithmeticTest(unittest.TestCase):
 
         expected_product_coeffs = np.array([0, 0, 1, 0, 0, -1])
 
-        np.testing.assert_almost_equal(expected_product_coeffs, res_canonical_poly.coeffs, decimal=DESIRED_PRECISION)
+        np.testing.assert_almost_equal(
+            expected_product_coeffs,
+            res_canonical_poly.coeffs,
+            decimal=DESIRED_PRECISION,
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

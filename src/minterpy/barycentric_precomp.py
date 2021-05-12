@@ -12,11 +12,14 @@ import numpy as np
 from numba import njit
 from numba.typed import List
 
-from minterpy.dds import dds_1_dimensional, get_direct_child_idxs, get_leaf_idxs
-from minterpy.global_settings import ARRAY, TYPED_LIST, FLOAT_DTYPE, TRAFO_DICT, DEBUG, DICT_TRAFO_TYPE, \
-    FACTORISED_TRAFO_TYPE
-from minterpy.transformation_operators import BarycentricOperatorABC, BarycentricDictOperator, \
-    BarycentricFactorisedOperator
+from minterpy.dds import (dds_1_dimensional, get_direct_child_idxs,
+                          get_leaf_idxs)
+from minterpy.global_settings import (ARRAY, DEBUG, DICT_TRAFO_TYPE,
+                                      FACTORISED_TRAFO_TYPE, FLOAT_DTYPE,
+                                      TRAFO_DICT, TYPED_LIST)
+from minterpy.transformation_operators import (BarycentricDictOperator,
+                                               BarycentricFactorisedOperator,
+                                               BarycentricOperatorABC)
 from minterpy.utils import eval_newt_polys_on
 
 __author__ = "Jannik Michelfeit"
@@ -33,8 +36,10 @@ __status__ = "Development"
 
 
 @njit(cache=True)
-def compute_1d_dds_solutions(generating_points: ARRAY, problem_sizes: TYPED_LIST) -> TYPED_LIST:
-    """ performs all 1D DDS schemes required for the L2N tree
+def compute_1d_dds_solutions(
+    generating_points: ARRAY, problem_sizes: TYPED_LIST
+) -> TYPED_LIST:
+    """performs all 1D DDS schemes required for the L2N tree
 
     Returns
     -------
@@ -48,7 +53,9 @@ def compute_1d_dds_solutions(generating_points: ARRAY, problem_sizes: TYPED_LIST
         # TODO is the problem size always equal to the degree n?
         max_problem_size = problem_sizes[dim_idx][0]
         dds_solution_max = np.eye(max_problem_size, dtype=FLOAT_DTYPE)
-        gen_vals = generating_points[:, dim_idx]  # ATTENTION: different in each dimension!
+        gen_vals = generating_points[
+            :, dim_idx
+        ]  # ATTENTION: different in each dimension!
         # TODO optimise 1D dds for diagonal input <-> output!
         dds_1_dimensional(gen_vals, dds_solution_max)  # O(n^2)
         dds_solutions.append(dds_solution_max)
@@ -57,9 +64,15 @@ def compute_1d_dds_solutions(generating_points: ARRAY, problem_sizes: TYPED_LIST
 
 
 @njit(cache=True)
-def expand_solution(prev_solutions: TRAFO_DICT, dds_solution_max: ARRAY, dim_idx_par: int, split_positions: TYPED_LIST,
-                    subtree_sizes: TYPED_LIST, problem_sizes: TYPED_LIST) -> TRAFO_DICT:
-    """ computes the DDS solution of the next lower dimension
+def expand_solution(
+    prev_solutions: TRAFO_DICT,
+    dds_solution_max: ARRAY,
+    dim_idx_par: int,
+    split_positions: TYPED_LIST,
+    subtree_sizes: TYPED_LIST,
+    problem_sizes: TYPED_LIST,
+) -> TRAFO_DICT:
+    """computes the DDS solution of the next lower dimension
 
     Parameters
     ----------
@@ -80,15 +93,20 @@ def expand_solution(prev_solutions: TRAFO_DICT, dds_solution_max: ARRAY, dim_idx
 
     # for all COMBINATIONS of parent nodes (NOTE: different than in usual DDS!)
     for node_idx_par_l in range(nr_nodes_in_dim):
-        first_child_idx, last_child_idx = get_direct_child_idxs(dim_idx_par, node_idx_par_l, split_positions,
-                                                                subtree_sizes)
-        child_idx_range_l = range(first_child_idx, last_child_idx + 1)  # ATTENTION: also include the last node!
+        first_child_idx, last_child_idx = get_direct_child_idxs(
+            dim_idx_par, node_idx_par_l, split_positions, subtree_sizes
+        )
+        child_idx_range_l = range(
+            first_child_idx, last_child_idx + 1
+        )  # ATTENTION: also include the last node!
         # for all nodes to the right including the selected left node!
         for node_idx_par_r in range(node_idx_par_l, nr_nodes_in_dim):
-            first_child_idx, last_child_idx = get_direct_child_idxs(dim_idx_par, node_idx_par_r,
-                                                                        split_positions,
-                                                                        subtree_sizes)
-            child_idx_range_r = range(first_child_idx, last_child_idx + 1)  # ATTENTION: also include the last node!
+            first_child_idx, last_child_idx = get_direct_child_idxs(
+                dim_idx_par, node_idx_par_r, split_positions, subtree_sizes
+            )
+            child_idx_range_r = range(
+                first_child_idx, last_child_idx + 1
+            )  # ATTENTION: also include the last node!
 
             # nr_children_r = last_child_idx_r - first_child_idx_r + 1
 
@@ -109,16 +127,22 @@ def expand_solution(prev_solutions: TRAFO_DICT, dds_solution_max: ARRAY, dim_idx
                     # the solution for a combination of child nodes consists of
                     # the top left part of the DDS solution with the correct size
                     # multiplied by the factor of the parent
-                    expanded_solution = dds_solution_max[:node_size_r, :node_size_l] * factor
+                    expanded_solution = (
+                        dds_solution_max[:node_size_r, :node_size_l] * factor
+                    )
                     expanded_solutions[idx_l_abs, idx_r_abs] = expanded_solution
     return expanded_solutions
 
 
 @njit(cache=True)
-def compute_l2n_dict(generating_points: ARRAY, split_positions: TYPED_LIST,
-                     subtree_sizes: TYPED_LIST, problem_sizes: TYPED_LIST, stop_dim_idx: int = 0) \
-        -> DICT_TRAFO_TYPE:
-    """ fully barycentric divided difference scheme for multiple dimensions
+def compute_l2n_dict(
+    generating_points: ARRAY,
+    split_positions: TYPED_LIST,
+    subtree_sizes: TYPED_LIST,
+    problem_sizes: TYPED_LIST,
+    stop_dim_idx: int = 0,
+) -> DICT_TRAFO_TYPE:
+    """fully barycentric divided difference scheme for multiple dimensions
 
     modified version using only the regular 1D DDS function ("fully barycentric")
     using a "top-down" approach starting from an initial 1D DDS solution
@@ -145,11 +169,13 @@ def compute_l2n_dict(generating_points: ARRAY, split_positions: TYPED_LIST,
     """
 
     if stop_dim_idx < 0:
-        raise ValueError('the smallest possible dimension to stop is 0.')
+        raise ValueError("the smallest possible dimension to stop is 0.")
     dimensionality = len(split_positions)
     dim_idx_par = dimensionality - 1
     if stop_dim_idx > dim_idx_par:
-        raise ValueError('the highest possible dimension to stop is the dimensionality of the problem.')
+        raise ValueError(
+            "the highest possible dimension to stop is the dimensionality of the problem."
+        )
 
     dds_solutions = compute_1d_dds_solutions(generating_points, problem_sizes)
     dds_solution_max = dds_solutions[dim_idx_par]
@@ -161,12 +187,20 @@ def compute_l2n_dict(generating_points: ARRAY, split_positions: TYPED_LIST,
     curr_solutions = {(0, 0): dds_solution_max}
 
     # traverse through the "tree" (mimicking recursion)
-    for dim_idx_par in range(dimensionality - 1, stop_dim_idx, -1):  # starting from the highest dimension O(m)
+    for dim_idx_par in range(
+        dimensionality - 1, stop_dim_idx, -1
+    ):  # starting from the highest dimension O(m)
         prev_solutions = curr_solutions
         dim_idx_child = dim_idx_par - 1
         dds_solution_max = dds_solutions[dim_idx_child]
-        curr_solutions = expand_solution(prev_solutions, dds_solution_max, dim_idx_par, split_positions, subtree_sizes,
-                                         problem_sizes)
+        curr_solutions = expand_solution(
+            prev_solutions,
+            dds_solution_max,
+            dim_idx_par,
+            split_positions,
+            subtree_sizes,
+            problem_sizes,
+        )
 
     # return only the result of the last iteration
     leaf_positions = split_positions[0]
@@ -174,17 +208,30 @@ def compute_l2n_dict(generating_points: ARRAY, split_positions: TYPED_LIST,
 
 
 @njit(cache=True)
-def get_leaf_array_slice(dim_idx: int, node_idx: int, array: ARRAY, split_positions: TYPED_LIST,
-                         subtree_sizes: TYPED_LIST) -> ARRAY:
+def get_leaf_array_slice(
+    dim_idx: int,
+    node_idx: int,
+    array: ARRAY,
+    split_positions: TYPED_LIST,
+    subtree_sizes: TYPED_LIST,
+) -> ARRAY:
     pos_from, pos_to = get_leaf_idxs(dim_idx, node_idx, split_positions, subtree_sizes)
     return array[pos_from:pos_to]
 
 
 @njit(cache=True)
-def update_leaves(dim_idx: int, node_idx_l: int, node_idx_r: int, exponent_l: int,
-                  v_left: ARRAY, result_placeholder: ARRAY, generating_values: ARRAY, split_positions: TYPED_LIST,
-                  subtree_sizes: TYPED_LIST) -> None:
-    """ projects v_left onto v_right and computes the divided difference
+def update_leaves(
+    dim_idx: int,
+    node_idx_l: int,
+    node_idx_r: int,
+    exponent_l: int,
+    v_left: ARRAY,
+    result_placeholder: ARRAY,
+    generating_values: ARRAY,
+    split_positions: TYPED_LIST,
+    subtree_sizes: TYPED_LIST,
+) -> None:
+    """projects v_left onto v_right and computes the divided difference
 
     modified version for a constant leaf node size of 1:
     each split corresponds to certain leaf nodes, which in turn correspond to a slice of result array
@@ -200,7 +247,9 @@ def update_leaves(dim_idx: int, node_idx_l: int, node_idx_r: int, exponent_l: in
     grid_val_diff = gen_val_r - gen_val_l
 
     # values corresponding to the right subtree
-    v_right = get_leaf_array_slice(dim_idx, node_idx_r, result_placeholder, split_positions, subtree_sizes)
+    v_right = get_leaf_array_slice(
+        dim_idx, node_idx_r, result_placeholder, split_positions, subtree_sizes
+    )
 
     # special property: the amount of leaves determines the match -> just use the length of the right slice
     nr_leaves_r = len(v_right)
@@ -211,9 +260,13 @@ def update_leaves(dim_idx: int, node_idx_l: int, node_idx_r: int, exponent_l: in
 
 
 @njit(cache=True)  # TODO
-def leaf_node_dds(result_placeholder: ARRAY, generating_points: ARRAY, split_positions: TYPED_LIST,
-                  subtree_sizes: TYPED_LIST) -> None:
-    """ divided difference scheme for multiple dimensions
+def leaf_node_dds(
+    result_placeholder: ARRAY,
+    generating_points: ARRAY,
+    split_positions: TYPED_LIST,
+    subtree_sizes: TYPED_LIST,
+) -> None:
+    """divided difference scheme for multiple dimensions
 
     modified version for a constant leaf node size of 1
 
@@ -229,36 +282,58 @@ def leaf_node_dds(result_placeholder: ARRAY, generating_points: ARRAY, split_pos
     dimensionality = len(split_positions)
     # traverse through the "tree" (mimicking recursion)
     # NOTE: in the last dimension the regular (1D DDS can be used)
-    for dim_idx_par in range(dimensionality - 1, 0, -1):  # starting from the highest dimension
+    for dim_idx_par in range(
+        dimensionality - 1, 0, -1
+    ):  # starting from the highest dimension
         dim_idx_child = dim_idx_par - 1
         splits_in_dim = split_positions[dim_idx_par]
         nr_nodes_in_dim = len(splits_in_dim)
         generating_values = generating_points[:, dim_idx_par]
         for node_idx_par in range(nr_nodes_in_dim):  # for all parent nodes
-            first_child_idx, last_child_idx = get_direct_child_idxs(dim_idx_par, node_idx_par, split_positions,
-                                                                    subtree_sizes)
+            first_child_idx, last_child_idx = get_direct_child_idxs(
+                dim_idx_par, node_idx_par, split_positions, subtree_sizes
+            )
             if first_child_idx == last_child_idx:
                 # ATTENTION: left and right node must not be equal!
                 continue  # abort when there are no "neighbouring nodes"
             # each split corresponds to set of leaf nodes (= 1D sub-problems)
-            for exponent_l, node_idx_l in enumerate(range(first_child_idx, last_child_idx)):
+            for exponent_l, node_idx_l in enumerate(
+                range(first_child_idx, last_child_idx)
+            ):
                 # NOTE: the exponents of the sub-problems corresponds to the order of appearance
                 # values corresponding to the left subtree
-                v_left = get_leaf_array_slice(dim_idx_child, node_idx_l, result_placeholder, split_positions,
-                                              subtree_sizes)
+                v_left = get_leaf_array_slice(
+                    dim_idx_child,
+                    node_idx_l,
+                    result_placeholder,
+                    split_positions,
+                    subtree_sizes,
+                )
                 # exponent_l = exponents[dim_idx_par, pos_l]  # ATTENTION: from the "dimension above"
                 # iterate over all splits to the right (<-> "right" nodes)
-                for node_idx_r in range(node_idx_l + 1, last_child_idx + 1):  # ATTENTION: also include the last idx!
-                    update_leaves(dim_idx_child, node_idx_l, node_idx_r, exponent_l, v_left, result_placeholder,
-                                  generating_values, split_positions, subtree_sizes)
+                for node_idx_r in range(
+                    node_idx_l + 1, last_child_idx + 1
+                ):  # ATTENTION: also include the last idx!
+                    update_leaves(
+                        dim_idx_child,
+                        node_idx_l,
+                        node_idx_r,
+                        exponent_l,
+                        v_left,
+                        result_placeholder,
+                        generating_values,
+                        split_positions,
+                        subtree_sizes,
+                    )
 
     # NOTE: not performing the 1D DDS schemes (considering leaf nodes only)
 
 
 @njit(cache=True)
-def compute_l2n_factorised(generating_points: ARRAY, split_positions: TYPED_LIST,
-                           subtree_sizes: TYPED_LIST) -> FACTORISED_TRAFO_TYPE:
-    """ computes the L2N tree in factorised barycentric format
+def compute_l2n_factorised(
+    generating_points: ARRAY, split_positions: TYPED_LIST, subtree_sizes: TYPED_LIST
+) -> FACTORISED_TRAFO_TYPE:
+    """computes the L2N tree in factorised barycentric format
 
     legacy version. is not exploiting the full nested structure of the nD DDS problem!
 
@@ -304,9 +379,15 @@ def compute_l2n_factorised(generating_points: ARRAY, split_positions: TYPED_LIST
 
 # functions for the N2L tree:
 
-def compute_n2l_factorised(exponents: ARRAY, generating_points: ARRAY, unisolvent_nodes: ARRAY, leaf_positions: ARRAY,
-                           leaf_sizes: ARRAY) -> FACTORISED_TRAFO_TYPE:
-    """ computes the N2L tree in factorised barycentric format
+
+def compute_n2l_factorised(
+    exponents: ARRAY,
+    generating_points: ARRAY,
+    unisolvent_nodes: ARRAY,
+    leaf_positions: ARRAY,
+    leaf_sizes: ARRAY,
+) -> FACTORISED_TRAFO_TYPE:
+    """computes the N2L tree in factorised barycentric format
 
     NOTE: the Newton to Lagrange tree is implicitly given by the Newton evaluation
 
@@ -330,8 +411,13 @@ def compute_n2l_factorised(exponents: ARRAY, generating_points: ARRAY, unisolven
     leaf_points = unisolvent_nodes[:max_problem_size, :]
     leaf_exponents = exponents[:max_problem_size, :]
     # NOTE: the first solution piece is always quadratic ("same nodes as polys")
-    first_n2l_piece = eval_newt_polys_on(leaf_points, leaf_exponents, generating_points, verify_input=DEBUG,
-                                         triangular=True)
+    first_n2l_piece = eval_newt_polys_on(
+        leaf_points,
+        leaf_exponents,
+        generating_points,
+        verify_input=DEBUG,
+        triangular=True,
+    )
 
     # compute the correction factors for all leaf node combinations:
     # = the first value of each triangular tree matrix piece
@@ -339,13 +425,20 @@ def compute_n2l_factorised(exponents: ARRAY, generating_points: ARRAY, unisolven
     leaf_points = unisolvent_nodes[leaf_positions, :]
     # NOTE: this matrix will be triangular (1/2 of the values are 0)
     # TODO  find more memory efficient format?!
-    leaf_factors = eval_newt_polys_on(leaf_points, leaf_exponents, generating_points, verify_input=DEBUG,
-                                      triangular=True)
+    leaf_factors = eval_newt_polys_on(
+        leaf_points,
+        leaf_exponents,
+        generating_points,
+        verify_input=DEBUG,
+        triangular=True,
+    )
 
     return first_n2l_piece, leaf_factors, leaf_positions, leaf_sizes
 
 
-def _build_lagrange_to_newton_bary(transformation: "TransformationABC") -> BarycentricOperatorABC:
+def _build_lagrange_to_newton_bary(
+    transformation: "TransformationABC",
+) -> BarycentricOperatorABC:
     # TODO balancing: deciding on the optimal tree format to use!
     grid = transformation.grid
     tree = grid.tree
@@ -353,8 +446,12 @@ def _build_lagrange_to_newton_bary(transformation: "TransformationABC") -> Baryc
     split_positions = tree.split_positions
     subtree_sizes = tree.subtree_sizes
     problem_sizes = tree.problem_sizes
-    transformation_data = compute_l2n_dict(generating_points, split_positions, subtree_sizes, problem_sizes)
-    transformation_operator = BarycentricDictOperator(transformation,transformation_data)
+    transformation_data = compute_l2n_dict(
+        generating_points, split_positions, subtree_sizes, problem_sizes
+    )
+    transformation_operator = BarycentricDictOperator(
+        transformation, transformation_data
+    )
 
     # transformation_data = compute_l2n_factorised(generating_points, split_positions, subtree_sizes)
     # transformation_operator = BarycentricFactorisedOperator(transformation_data)
@@ -362,7 +459,9 @@ def _build_lagrange_to_newton_bary(transformation: "TransformationABC") -> Baryc
     return transformation_operator
 
 
-def _build_newton_to_lagrange_bary(transformation: "TransformationABC") -> BarycentricFactorisedOperator:
+def _build_newton_to_lagrange_bary(
+    transformation: "TransformationABC",
+) -> BarycentricFactorisedOperator:
     # TODO balancing: deciding on the optimal tree format to use!
     grid = transformation.grid
     multi_index = grid.multi_index
@@ -372,8 +471,11 @@ def _build_newton_to_lagrange_bary(transformation: "TransformationABC") -> Baryc
     unisolvent_nodes = grid.unisolvent_nodes
     leaf_positions = tree.split_positions[0]
     leaf_sizes = tree.subtree_sizes[0]
-    transformation_data = compute_n2l_factorised(exponents, generating_points, unisolvent_nodes, leaf_positions,
-                                                 leaf_sizes)
-    transformation_operator = BarycentricFactorisedOperator(transformation,transformation_data)
+    transformation_data = compute_n2l_factorised(
+        exponents, generating_points, unisolvent_nodes, leaf_positions, leaf_sizes
+    )
+    transformation_operator = BarycentricFactorisedOperator(
+        transformation, transformation_data
+    )
 
     return transformation_operator

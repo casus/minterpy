@@ -1,7 +1,8 @@
 import numpy as np
-from numba import void, njit, b1
+from numba import b1, njit, void
 
-from minterpy.global_settings import F_2D, I_2D, FLOAT, F_1D, I_1D, B_TYPE, INT, F_3D, NOT_FOUND
+from minterpy.global_settings import (B_TYPE, F_1D, F_2D, F_3D, FLOAT, I_1D,
+                                      I_2D, INT, NOT_FOUND)
 
 
 @njit(void(F_2D, F_2D, I_2D, F_2D), cache=True)
@@ -22,6 +23,7 @@ def can_eval_mult(x_multiple, coeffs, exponents, result_placeholder):
 # NOTE: the most "fine grained" functions must be defined first
 # in order for Numba to properly infer the function types
 
+
 @njit(FLOAT(F_1D, F_1D), cache=True)  # O(N)
 def single_eval(coefficients, monomial_vals):
     # single eval with a single point and a single list of coefficients
@@ -32,9 +34,15 @@ def single_eval(coefficients, monomial_vals):
 
 
 @njit(void(F_1D, I_2D, F_2D, I_1D, F_2D, F_1D), cache=True)  # O(Nm)
-def eval_newton_polynomials(x, exponents, generating_points, max_exponents, prod_placeholder,
-                            monomial_vals_placeholder):
-    """ precomputes the value of all given Newton polynomials at a fixed point x
+def eval_newton_polynomials(
+    x,
+    exponents,
+    generating_points,
+    max_exponents,
+    prod_placeholder,
+    monomial_vals_placeholder,
+):
+    """precomputes the value of all given Newton polynomials at a fixed point x
 
     core of the fast polynomial evaluation algorithm
 
@@ -60,7 +68,7 @@ def eval_newton_polynomials(x, exponents, generating_points, max_exponents, prod
         for j in range(max_exp_in_dim):  # O(n)
             # TODO there are n+1 1D grid values, the last one will never be used!?
             p_ij = generating_points[j, i]
-            prod *= (x_i - p_ij)
+            prod *= x_i - p_ij
             # NOTE: shift index by one
             exponent = j + 1  # NOTE: otherwise the result type is float
             prod_placeholder[exponent, i] = prod
@@ -82,9 +90,16 @@ def eval_newton_polynomials(x, exponents, generating_points, max_exponents, prod
 
 
 # @njit(void(F_2D, I_2D, F_2D, I_1D, F_2D, F_2D, B_TYPE), cache=True)
-def eval_all_newt_polys(x, exponents, generating_points, max_exponents, prod_placeholder, matrix_placeholder,
-                        triangular=False):
-    """ evaluates all Newton polynomials (monomials) on all given points
+def eval_all_newt_polys(
+    x,
+    exponents,
+    generating_points,
+    max_exponents,
+    prod_placeholder,
+    matrix_placeholder,
+    triangular=False,
+):
+    """evaluates all Newton polynomials (monomials) on all given points
 
      N = amount of Newton polynomials
      k = amount of points
@@ -100,19 +115,35 @@ def eval_all_newt_polys(x, exponents, generating_points, max_exponents, prod_pla
     for point_nr in range(nr_points):  # evaluate on all given points points
         x_single = x[point_nr, :]
         monomial_vals_placeholder = matrix_placeholder[point_nr]  # row of the matrix
-        if triangular:  # only evaluate some polynomials to create a triangular output array
+        if (
+            triangular
+        ):  # only evaluate some polynomials to create a triangular output array
             nr_active_polys = point_nr + 1
             # IMPORTANT: initialised empty. set all others to 0!
             monomial_vals_placeholder[nr_active_polys:] = 0.0
             monomial_vals_placeholder = monomial_vals_placeholder[:nr_active_polys]
             active_exponents = exponents[:nr_active_polys, :]
-        eval_newton_polynomials(x_single, active_exponents, generating_points, max_exponents, prod_placeholder,
-                                monomial_vals_placeholder)
+        eval_newton_polynomials(
+            x_single,
+            active_exponents,
+            generating_points,
+            max_exponents,
+            prod_placeholder,
+            monomial_vals_placeholder,
+        )
 
 
 @njit(void(F_2D, F_2D, I_2D, F_2D, I_1D, F_2D, F_1D, F_2D), cache=True)
-def evaluate_multiple(x, coefficients, exponents, generating_points, max_exponents, prod_placeholder,
-                      monomial_vals_placeholder, results_placeholder):
+def evaluate_multiple(
+    x,
+    coefficients,
+    exponents,
+    generating_points,
+    max_exponents,
+    prod_placeholder,
+    monomial_vals_placeholder,
+    results_placeholder,
+):
     nr_points = x.shape[0]
     nr_polynomials = coefficients.shape[1]
     for point_nr in range(nr_points):
@@ -120,11 +151,19 @@ def evaluate_multiple(x, coefficients, exponents, generating_points, max_exponen
         # NOTE: with a fixed single point x to evaluate the polynomial on,
         # the values of the Newton polynomials become fixed (coefficient agnostic)
         # -> precompute all intermediary results (=compute the value of all Newton polynomials)
-        eval_newton_polynomials(x_single, exponents, generating_points, max_exponents, prod_placeholder,
-                                monomial_vals_placeholder)
+        eval_newton_polynomials(
+            x_single,
+            exponents,
+            generating_points,
+            max_exponents,
+            prod_placeholder,
+            monomial_vals_placeholder,
+        )
         for poly_nr in range(nr_polynomials):
             coeffs_single = coefficients[:, poly_nr]
-            results_placeholder[point_nr, poly_nr] = single_eval(coeffs_single, monomial_vals_placeholder)
+            results_placeholder[point_nr, poly_nr] = single_eval(
+                coeffs_single, monomial_vals_placeholder
+            )
 
 
 @njit(void(F_2D, F_2D, I_2D), cache=True)
@@ -138,8 +177,7 @@ def compute_vandermonde_n2c(V_n2c, nodes, exponents):
 
 @njit(b1(I_1D, I_1D), cache=True)
 def lex_smaller_or_equal(index1: np.ndarray, index2: np.ndarray) -> bool:
-    """ tells weather multi-index 1 is lexicographically smaller than or equal to index 2
-    """
+    """tells weather multi-index 1 is lexicographically smaller than or equal to index 2"""
     spatial_dimension = len(index1)
     for m in range(spatial_dimension - 1, -1, -1):  # from last to first dimension
         if index1[m] > index2[m]:
@@ -151,8 +189,7 @@ def lex_smaller_or_equal(index1: np.ndarray, index2: np.ndarray) -> bool:
 
 @njit(B_TYPE(I_2D), cache=True)
 def have_lexicographical_ordering(indices: np.ndarray) -> bool:
-    """ tells weather an array of indices is ordered lexicographically
-    """
+    """tells weather an array of indices is ordered lexicographically"""
     nr_exponents, spatial_dimension = indices.shape
     if nr_exponents <= 1:
         return True
@@ -169,7 +206,7 @@ def have_lexicographical_ordering(indices: np.ndarray) -> bool:
 
 @njit(INT(I_2D, I_1D), cache=True)
 def get_match_idx(indices: np.ndarray, index: np.ndarray) -> int:
-    """ finds the position of a multi index within an exponent matrix
+    """finds the position of a multi index within an exponent matrix
 
     exploits the lexicographical order of the indices to abort early -> not testing all indices
     time complexity: O(mN)
@@ -179,7 +216,7 @@ def get_match_idx(indices: np.ndarray, index: np.ndarray) -> int:
         return NOT_FOUND
     m = len(index)
     if m != spatial_dimension:
-        raise ValueError('dimensions do not match.')
+        raise ValueError("dimensions do not match.")
     out = NOT_FOUND
     for i in range(nr_exponents):  # O(N)
         contained_index = indices[i, :]
@@ -197,7 +234,7 @@ def get_match_idx(indices: np.ndarray, index: np.ndarray) -> int:
 
 @njit(B_TYPE(I_2D, I_1D), cache=True)
 def index_is_contained(indices: np.ndarray, index: np.ndarray) -> bool:
-    """ tells weather a single index is contained in the indices
+    """tells weather a single index is contained in the indices
 
     exploits the lexicographical order of the indices to abort early -> not testing all indices
     """
@@ -206,16 +243,16 @@ def index_is_contained(indices: np.ndarray, index: np.ndarray) -> bool:
 
 @njit(B_TYPE(I_2D, I_2D), cache=True)
 def all_indices_are_contained(subset_indices: np.ndarray, indices: np.ndarray) -> bool:
-    """ tells weather a set of indices is a subset (or equal) of another set of indices
+    """tells weather a set of indices is a subset (or equal) of another set of indices
 
     exploits the lexicographical order of the indices to abort early -> not testing all indices
     """
     nr_exp, dim = indices.shape
     nr_exp_subset, dim_subset = subset_indices.shape
     if nr_exp == 0 or nr_exp_subset == 0:
-        raise ValueError('empty index set')
+        raise ValueError("empty index set")
     if dim != dim_subset:
-        raise ValueError('dimensions do not match.')
+        raise ValueError("dimensions do not match.")
     if nr_exp < nr_exp_subset:
         return False
 
@@ -223,7 +260,7 @@ def all_indices_are_contained(subset_indices: np.ndarray, indices: np.ndarray) -
     match_idx = -1
     for i in range(nr_exp_subset):
         candidate_index = subset_indices[i, :]
-        indices2search = indices[match_idx + 1:, :]  # start from the next one
+        indices2search = indices[match_idx + 1 :, :]  # start from the next one
         match_idx = get_match_idx(indices2search, candidate_index)
         if match_idx == NOT_FOUND:
             return False
@@ -244,7 +281,9 @@ def insert_single_index_numba(index2insert, indices, indices_out):
     if bigger_entry_exists:
         # the multi-index should be inserted at the THIS position
         indices_out[:, i] = index2insert
-        indices_out[:, i + 1:] = indices[:, i:]  # fill up the indices with the remaining indices
+        indices_out[:, i + 1 :] = indices[
+            :, i:
+        ]  # fill up the indices with the remaining indices
     else:  # no smaller entry exists, simply insert at the end
         indices_out[:, -1] = index2insert
 
@@ -308,7 +347,7 @@ def fill_exp_matrix(placeholder, lp_degree, poly_degree):
 
 @njit(void(F_3D, I_2D), cache=True)
 def compute_grad_c2c(grad_c2c: np.ndarray, exponents: np.ndarray):
-    """ computes the gradient operator from canonical basis to canonical basis
+    """computes the gradient operator from canonical basis to canonical basis
 
     -> the operator (=tensor) transforming the coefficients of a polynomial
     into the coefficients of its gradient (in canonical basis)
@@ -340,7 +379,7 @@ def compute_grad_c2c(grad_c2c: np.ndarray, exponents: np.ndarray):
 
 @njit(void(F_3D, I_2D, F_2D), cache=True)
 def compute_grad_x2c(grad_x2c: np.ndarray, exponents: np.ndarray, x2c: np.ndarray):
-    """ computes the gradient operator from an origin basis to canonical basis
+    """computes the gradient operator from an origin basis to canonical basis
 
     -> the operator (=tensor) transforming the coefficients of a polynomial
     into the coefficients of its gradient (from a variable basis into canonical basis)
@@ -369,4 +408,6 @@ def compute_grad_x2c(grad_x2c: np.ndarray, exponents: np.ndarray, x2c: np.ndarra
                 # matrix multiplication: C = A @ B
                 # -> C[i,:] += A[i,j] * B[j,:] ("from j to i")
                 # NOTE: addition required!
-                grad_x2c[dim_idx, coeff_idx_to, :] += mon_exp_in_dim * x2c[coeff_idx_from, :]
+                grad_x2c[dim_idx, coeff_idx_to, :] += (
+                    mon_exp_in_dim * x2c[coeff_idx_from, :]
+                )
