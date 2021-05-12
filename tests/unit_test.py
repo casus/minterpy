@@ -5,26 +5,17 @@ from argparse import ArgumentParser
 import matplotlib.pyplot as plt
 import numpy as np
 from auxiliaries import check_different_settings, get_grid, rnd_points
-from test_settings import (
-    DESIRED_PRECISION,
-    NR_SAMPLE_POINTS,
-    RUNGE_FCT_VECTORIZED,
-    TIME_FORMAT_STR,
-)
-
+from test_settings import (DESIRED_PRECISION, NR_SAMPLE_POINTS,
+                           RUNGE_FCT_VECTORIZED, TIME_FORMAT_STR)
 # TODO more sophisticated tests
 # TODO test tree!
 # test if interpolation is globally converging
 # test grid structure
 from transformation_test import check_poly_interpolation
 
-from minterpy import (
-    Grid,
-    LagrangePolynomial,
-    MultiIndex,
-    TransformationLagrangeToNewton,
-    TransformationNewtonToLagrange,
-)
+from minterpy import (Grid, LagrangePolynomial, MultiIndex,
+                      TransformationLagrangeToNewton,
+                      TransformationNewtonToLagrange)
 from minterpy.utils import report_error
 
 

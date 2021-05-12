@@ -6,12 +6,8 @@ import numpy as np
 
 from minterpy.global_settings import DEBUG, FLOAT_DTYPE, INT_DTYPE
 from minterpy.jit_compiled_utils import eval_all_newt_polys, evaluate_multiple
-from minterpy.verification import (
-    check_dtype,
-    convert_eval_output,
-    rectify_eval_input,
-    rectify_query_points,
-)
+from minterpy.verification import (check_dtype, convert_eval_output,
+                                   rectify_eval_input, rectify_query_points)
 
 
 def lp_norm(arr, p, axis=None, keepdims: bool = False):

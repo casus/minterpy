@@ -8,21 +8,15 @@ from auxiliaries import check_different_settings
 from test_settings import TIME_FORMAT_STR
 
 from minterpy import MultiIndex
-from minterpy.jit_compiled_utils import (
-    all_indices_are_contained,
-    have_lexicographical_ordering,
-    index_is_contained,
-    lex_smaller_or_equal,
-)
-from minterpy.multi_index_utils import (
-    _gen_multi_index_exponents,
-    _get_poly_degree,
-    find_match_between,
-    insert_lexicographically,
-    is_lexicographically_complete,
-    make_complete,
-    make_derivable,
-)
+from minterpy.jit_compiled_utils import (all_indices_are_contained,
+                                         have_lexicographical_ordering,
+                                         index_is_contained,
+                                         lex_smaller_or_equal)
+from minterpy.multi_index_utils import (_gen_multi_index_exponents,
+                                        _get_poly_degree, find_match_between,
+                                        insert_lexicographically,
+                                        is_lexicographically_complete,
+                                        make_complete, make_derivable)
 
 random.seed(42)  # for reproducible results
 

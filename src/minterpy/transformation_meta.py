@@ -4,18 +4,14 @@
 TODO make this module obsolete by introducing a global transformer class (s. transformation_abstract.py)
 """
 
-from minterpy import (
-    CanonicalPolynomial,
-    LagrangePolynomial,
-    MultivariatePolynomialABC,
-    NewtonPolynomial,
-    TransformationCanonicalToLagrange,
-    TransformationCanonicalToNewton,
-    TransformationLagrangeToCanonical,
-    TransformationLagrangeToNewton,
-    TransformationNewtonToCanonical,
-    TransformationNewtonToLagrange,
-)
+from minterpy import (CanonicalPolynomial, LagrangePolynomial,
+                      MultivariatePolynomialABC, NewtonPolynomial,
+                      TransformationCanonicalToLagrange,
+                      TransformationCanonicalToNewton,
+                      TransformationLagrangeToCanonical,
+                      TransformationLagrangeToNewton,
+                      TransformationNewtonToCanonical,
+                      TransformationNewtonToLagrange)
 from minterpy.transformation_identity import TransformationIdentity
 
 __author__ = "Jannik Michelfeit"

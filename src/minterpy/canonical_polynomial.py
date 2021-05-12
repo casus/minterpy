@@ -6,12 +6,14 @@ from copy import deepcopy
 import numpy as np
 
 from minterpy.jit_compiled_utils import can_eval_mult
-from minterpy.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC
+from minterpy.multivariate_polynomial_abstract import \
+    MultivariatePolynomialSingleABC
 
 __all__ = ["CanonicalPolynomial"]
 
 from minterpy.global_settings import DEBUG, FLOAT_DTYPE
-from minterpy.verification import convert_eval_output, rectify_eval_input, verify_domain
+from minterpy.verification import (convert_eval_output, rectify_eval_input,
+                                   verify_domain)
 
 
 def dummy():

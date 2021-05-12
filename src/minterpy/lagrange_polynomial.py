@@ -6,10 +6,12 @@ from typing import Optional
 import numpy as np
 
 import minterpy
-from minterpy.canonical_polynomial import _match_dims, _matching_internal_domain
+from minterpy.canonical_polynomial import (_match_dims,
+                                           _matching_internal_domain)
 from minterpy.global_settings import ARRAY
 from minterpy.multi_index_utils import insert_lexicographically
-from minterpy.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC
+from minterpy.multivariate_polynomial_abstract import \
+    MultivariatePolynomialSingleABC
 from minterpy.utils import newt_eval
 from minterpy.verification import verify_domain
 

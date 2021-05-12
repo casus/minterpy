@@ -4,16 +4,12 @@ from typing import Optional, Union
 import numpy as np
 from _warnings import warn
 
-from minterpy.barycentric_conversion import (
-    merge_trafo_dict,
-    merge_trafo_factorised,
-    merge_trafo_piecewise,
-)
+from minterpy.barycentric_conversion import (merge_trafo_dict,
+                                             merge_trafo_factorised,
+                                             merge_trafo_piecewise)
 from minterpy.barycentric_transformation_fcts import (
-    transform_barycentric_dict,
-    transform_barycentric_factorised,
-    transform_barycentric_piecewise,
-)
+    transform_barycentric_dict, transform_barycentric_factorised,
+    transform_barycentric_piecewise)
 from minterpy.global_settings import ARRAY, FLOAT_DTYPE
 from minterpy.transformation_operator_abstract import TransformationOperatorABC
 

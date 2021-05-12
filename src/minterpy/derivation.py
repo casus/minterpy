@@ -6,18 +6,12 @@ from typing import Optional, Type, Union
 
 import numpy as np
 
-from minterpy import (
-    CanonicalPolynomial,
-    MultiIndex,
-    MultivariatePolynomialABC,
-    MultivariatePolynomialSingleABC,
-)
+from minterpy import (CanonicalPolynomial, MultiIndex,
+                      MultivariatePolynomialABC,
+                      MultivariatePolynomialSingleABC)
 from minterpy.global_settings import ARRAY, DEBUG, FLOAT_DTYPE
-from minterpy.jit_compiled_utils import (
-    compute_grad_c2c,
-    compute_grad_x2c,
-    get_match_idx,
-)
+from minterpy.jit_compiled_utils import (compute_grad_c2c, compute_grad_x2c,
+                                         get_match_idx)
 from minterpy.joint_polynomial import JointPolynomial
 from minterpy.transformation_meta import get_transformation
 from minterpy.verification import check_is_square

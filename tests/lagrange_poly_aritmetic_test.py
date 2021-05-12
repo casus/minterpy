@@ -4,14 +4,9 @@ import numpy as np
 from auxiliaries import check_different_settings, rnd_points
 from test_settings import DESIRED_PRECISION
 
-from minterpy import (
-    CanonicalPolynomial,
-    Grid,
-    LagrangePolynomial,
-    MultiIndex,
-    TransformationCanonicalToLagrange,
-    TransformationLagrangeToCanonical,
-)
+from minterpy import (CanonicalPolynomial, Grid, LagrangePolynomial,
+                      MultiIndex, TransformationCanonicalToLagrange,
+                      TransformationLagrangeToCanonical)
 from minterpy.utils import report_error
 
 

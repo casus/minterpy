@@ -6,12 +6,9 @@ import numpy as np
 from scipy.special import binom
 
 from minterpy.global_settings import DEFAULT_LP_DEG, INT_DTYPE
-from minterpy.jit_compiled_utils import (
-    fill_exp_matrix,
-    fill_match_positions,
-    index_is_contained,
-    lex_smaller_or_equal,
-)
+from minterpy.jit_compiled_utils import (fill_exp_matrix, fill_match_positions,
+                                         index_is_contained,
+                                         lex_smaller_or_equal)
 from minterpy.utils import lp_norm
 
 
