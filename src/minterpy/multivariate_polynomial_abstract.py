@@ -1,8 +1,11 @@
 """
-Abstract base class for the various polynomial classes.
+Abstract base class for the various polynomial base classes.
+
+This module contains the abstract base classes, from which all concrete implementations of polynomial classes shall subclass.
+This ensures that all polynomials work with the same interface, so futher features can be formulated without referencing the concrete polynomial implementation. See e.g. :PEP:`3119` for further explanations on that topic.
 """
 import abc
-from copy import deepcopy
+from copy import copy,deepcopy
 from typing import Optional, Union
 
 import numpy as np
@@ -19,14 +22,29 @@ from minterpy.verification import (check_shape, check_type_n_values,
 
 
 class MultivariatePolynomialABC(abc.ABC):
-    """the most general abstract base class for multivariate polynomials
+    """the most general abstract base class for multivariate polynomials.
 
-    defining the attributes and functions a multivariate polynomial must at least have
+    Every data type which needs to behave like abstract polynomial(s) should subclass this class and implement all the abstract methods.
+
+    Attributes
+    ----------
+    coeffs
+    nr_active_monomials
+    spatial_dimension
+    unisolvent_nodes
+
+    Methods
+    -------
+    __call__
     """
 
     @property
     @abc.abstractmethod
     def coeffs(self) -> ARRAY:
+        """Abstract container which stores the coefficients of the polynomial.
+
+        This is a placeholder of the ABC, which is overwritten by the concrete implementation.
+        """
         pass
 
     @coeffs.setter
@@ -36,36 +54,69 @@ class MultivariatePolynomialABC(abc.ABC):
     @property
     @abc.abstractmethod
     def nr_active_monomials(self):
-        """
-        NOTE: this is usually equal to the "amount of coefficients".
-            However the coefficients can also be a 2D array
-            (representing a multitude of polynomials with the same base grid)
-        :return: the amount of monomials
+        """Abstract container for the number of monomials of the polynomial(s).
+
+        Notes
+        -----
+        This is a placeholder of the ABC, which is overwritten by the concrete implementation.
         """
         pass
 
     @property
     @abc.abstractmethod
     def spatial_dimension(self):
-        """the dimensionality of the polynomial"""
+        """Abstract container for the dimension of space where the polynomial(s) live on.
+
+        Notes
+        -----
+        This is a placeholder of the ABC, which is overwritten by the concrete implementation.
+        """
         pass
 
     @property
     @abc.abstractmethod
     def unisolvent_nodes(self):
-        """the points the polynomial is defined on"""
+        """Abstract container for unisolvent nodes the polynomial(s) is(are) defined on.
+
+        Notes
+        -----
+        This is a placeholder of the ABC, which is overwritten by the concrete implementation.
+        """
         pass
 
     @abc.abstractmethod
     def _eval(self, arg) -> Union[float, ARRAY]:
+        """ Abstract evaluation function.
+
+        Notes
+        -----
+        This is a placeholder of the ABC, which is overwritten by the concrete implementation.
+        """
         pass
 
     # TODO *args, **kwargs ?! or rather "point" or "x"
     def __call__(self, arg) -> Union[float, ARRAY]:
-        """NOTE: the output may be a ndarray when multiple sets of coefficients have been stored
+        """ Evaluation of the polynomial.
 
-        :param arg:
-        :return:
+        This function is called, if an instance of the polynomial(s) is called: ``P(x)``
+
+        Parameters
+        ----------
+        arg : np.ndarray
+            Batch array where the polynomial(s) is evaluated. The shape needs to be ``(N,d)`` or ``(N,d,n)``, where ``N`` is the number of points, ``d`` is the dimension of the space and ``n`` is the number of polynomials (if present). Actually, ``arg`` denotes list of `d`-tuples containing the components of the point in space.
+
+        Returns
+        -------
+        np.ndarray
+            The output array of the scalar values of the polynomials the output may be a ndarray when multiple sets of coefficients have been stored
+
+        Notes
+        -----
+        Internally the concrete implementation of the static method ``_eval`` is called.
+
+        See Also
+        --------
+        _eval : concrete implementation of the evaluation of the polynomial(s)
         """
         # TODO built in rescaling between user_domain and internal_domain
         #   IDEA: use sklearn min max scaler (transform() and inverse_transform())
@@ -79,6 +130,23 @@ class MultivariatePolynomialABC(abc.ABC):
 class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
     """abstract base class for "single instance" multivariate polynomials
 
+    Attributes
+    ----------
+    multi_index : MultiIndex
+        The multi-indices of the multivariate polynomial.
+    coeffs : np.ndarray
+
+    internal_domain : array_like
+        The domain the polynomial is defined on (basically the domain of the unisolvent nodes).
+        Either one-dimensional domain (min,max), a stack of domains for each
+        domain with shape (spatial_dimension,2).
+    user_domain : array_like
+        The domain where the polynomial can be evaluated. This will be mapped onto the ``internal_domain``.
+        Either one-dimensional domain ``min,max)`` a stack of domains for each
+        domain with shape ``(spatial_dimension,2)``.
+
+    Notes
+    -----
     the grid with the corresponding indices defines the "basis" or polynomial space a polynomial is part of.
     e.g. also the constraints for a Lagrange polynomial, i.e. on which points they must vanish.
     ATTENTION: the grid might be defined on other indices than multi_index!
@@ -86,43 +154,51 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
       but all indices from multi_index must be contained in the grid!
       this corresponds to polynomials with just some of the Lagrange polynomials of the basis being "active"
     """
+    #__doc__ += __doc_attrs__
 
     _coeffs: Optional[ARRAY] = None
 
     @staticmethod
     @abc.abstractmethod
     def generate_internal_domain(internal_domain, spatial_dimension):
+        #no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
     def generate_user_domain(user_domain, spatial_dimension):
+        #no docstring here, since it is given in the concrete implementation
         pass
 
     # TODO static methods should not have a parameter "self"
     @staticmethod
     @abc.abstractmethod
     def _add(self, other):
+        #no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
     def _sub(self, other):
+        #no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
     def _mul(self, other):
+        #no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
     def _div(self, other):
+        #no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
     def _pow(self, pow):
+        #no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
@@ -211,11 +287,15 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         """constructs a new polynomial instance based on the properties of an input polynomial
 
         useful for copying polynomials of other types
-        NOTE: the coefficients can also be assigned later
+
 
         :param polynomial: input polynomial instance defining the properties to be reused
         :param new_coeffs: the coefficients the new polynomials should have. using `polynomial.coeffs` if `None`
         :return: new polynomial instance with equal properties
+
+        Notes
+        -----
+        The coefficients can also be assigned later.
         """
         p = polynomial
         if new_coeffs is None:  # use the same coefficients
@@ -225,14 +305,49 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
     # Arithmetic operations:
 
     def __neg__(self):
+        """
+        Negation of the polynomial(s).
+
+        Returns
+        -------
+        new polynomial with negated coefficients.
+        """
         return self.__class__(
             -self._coeffs, self.multi_index, self.internal_domain, self.user_domain
         )
 
     def __pos__(self):
+        """
+        Plus signing of polynomial(s).
+
+        Returns
+        -------
+        the same polynomial
+        """
         return self
 
     def __add__(self, other):
+        """Addition of the polynomial(s) with another given polynomial(s).
+
+        This function is called, if two polynomials are added like ``P1 + P2``.
+
+        Parameters
+        ----------
+        other : MultivariatePolynomialSingleABC
+
+        Returns
+        -------
+        MultivariatePolynomialSingleABC
+        The result of ``self + other``.
+
+        Notes
+        -----
+        Internally it calles the static method ``self._add`` from the concrete implementation.
+
+        See Also
+        --------
+        _add : concrete implementation of ``__add__``
+        """
         if self.__class__ != other.__class__:
             raise NotImplementedError(
                 f"Addition operation not implemented for "
@@ -243,6 +358,27 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         return result
 
     def __sub__(self, other):
+        """Substraction of the polynomial(s) with another given polynomial(s).
+
+        This function is called, if two polynomials are substracted like ``P1 - P2``.
+
+        Parameters
+        ----------
+        other : MultivariatePolynomialSingleABC
+
+        Returns
+        -------
+        MultivariatePolynomialSingleABC
+        The result of ``self - other``.
+
+        Notes
+        -----
+        Internally it calles the static method ``self._sub`` from the concrete implementation.
+
+        See Also
+        --------
+        _sub : concrete implementation of ``__sub__``
+        """
         if self.__class__ != other.__class__:
             raise NotImplementedError(
                 f"Subtraction operation not implemented for "
@@ -253,6 +389,27 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         return result
 
     def __mul__(self, other):
+        """Multiplication of the polynomial(s) with another given polynomial(s).
+
+        This function is called, if two polynomials are multiplied like ``P1 * P2``.
+
+        Parameters
+        ----------
+        other : MultivariatePolynomialSingleABC
+
+        Returns
+        -------
+        MultivariatePolynomialSingleABC
+        The result of ``self * other``.
+
+        Notes
+        -----
+        Internally it calles the static method ``self._mul`` from the concrete implementation.
+
+        See Also
+        --------
+        _mul : concrete implementation of ``__mul__``
+        """
         if self.__class__ != other.__class__:
             raise NotImplementedError(
                 f"Multiplication operation not implemented for "
@@ -263,6 +420,27 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         return result
 
     def __radd__(self, other):
+        """Right sided addition of the polynomial(s) with another given polynomial(s).
+
+        This function is called, if two polynomials are added like ``P1 + P2`` from the right side.
+
+        Parameters
+        ----------
+        other : MultivariatePolynomialSingleABC
+
+        Returns
+        -------
+        MultivariatePolynomialSingleABC
+        The result of ``other + self``.
+
+        Notes
+        -----
+        Internally it calles the static method ``self._add`` from the concrete implementation.
+
+        See Also
+        --------
+        _add : concrete implementation of ``__add__``
+        """
         if self.__class__ != other.__class__:
             raise NotImplementedError(
                 f"Addition operation not implemented for "
@@ -273,6 +451,27 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         return result
 
     def __rsub__(self, other):
+        """Right sided difference of the polynomial(s) with another given polynomial(s).
+
+        This function is called, if two polynomials are substracted like ``P1 - P2`` from the right side.
+
+        Parameters
+        ----------
+        other : MultivariatePolynomialSingleABC
+
+        Returns
+        -------
+        MultivariatePolynomialSingleABC
+        The result of ``other - self``.
+
+        Notes
+        -----
+        Internally it calles the static method ``self._add`` from the concrete implementation.
+
+        See Also
+        --------
+        _add : concrete implementation of ``__add__``
+        """
         if self.__class__ != other.__class__:
             raise NotImplementedError(
                 f"Subtraction operation not implemented for "
@@ -295,6 +494,20 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     # copying
     def __copy__(self):
+        """ Creates of a shallow copy.
+
+        This function is called, if one uses the top-level function ``copy()`` on an instance of this class.
+
+        Returns
+        -------
+        MultivariatePolynomialSingleABC
+        The copy of the current instance.
+
+        See Also
+        --------
+        copy.copy
+            copy operator form the python standard library.
+        """
         return self.__class__(
             self._coeffs,
             self.multi_index,
@@ -304,6 +517,21 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         )
 
     def __deepcopy__(self, mem):
+        """ Creates of a deepcopy.
+
+        This function is called, if one uses the top-level function ``deepcopy()`` on an instance of this class.
+
+        Returns
+        -------
+        MultivariatePolynomialSingleABC
+        The deepcopy of the current instance.
+
+        See Also
+        --------
+        copy.deepcopy
+            copy operator form the python standard library.
+
+        """
         return self.__class__(
             deepcopy(self._coeffs),
             deepcopy(self.multi_index),
@@ -314,25 +542,55 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     @property
     def nr_active_monomials(self):
+        """Number of monomials of the polynomial(s).
+
+        Returns
+        -------
+        int
+            Number of monomials
+
+        Notes
+        -----
+        This is usually equal to the "amount of coefficients". However the coefficients can also be a 2D array (representing a multitude of polynomials with the same base grid).
         """
-        NOTE: this is usually equal to the "amount of coefficients".
-            However the coefficients can also be a 2D array
-            (representing a multitude of polynomials with the same base grid)
-        :return: the amount of monomials
-        """
+
         return len(self.multi_index)
 
     @property
     def spatial_dimension(self):
-        """the dimensionality of the polynomial"""
+        """The dimension of space where the polynomial(s) live on.
+
+        Returns
+        -------
+        int
+            Dimension of domain space.
+
+        Notes
+        -----
+        This is propagated from the ``multi_index.spatial_dimension``.
+        """
         return self.multi_index.spatial_dimension
 
     @property
     def coeffs(self) -> Optional[ARRAY]:
         """
-        :returns (N) or (N, p) the coefficients of the multivariate polynomial(s).
-            N = amount of monomials
-            p = amount of polynomials
+        Array which stores the coefficients of the polynomial.
+
+        With shape (N,) or (N, p) the coefficients of the multivariate polynomial(s), where N is the amount of monomials and p is the amount of polynomials.
+
+        Returns
+        -------
+        np.ndarray
+            Array of coefficients.
+
+        Raises
+        ------
+        ValueError
+            Raised if the coeffs are not initialised.
+
+        Notes
+        -----
+        It is allowed to set the coefficients to `None` to represent a not yet initialised polynomial
         """
         if self._coeffs is None:
             raise ValueError(
@@ -342,12 +600,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     @coeffs.setter
     def coeffs(self, value: Optional[ARRAY]):
-        """
-        :param value: (N) or (N, p) the coefficients of the multivariate polynomial(s).
-            N = amount of monomials
-            p = amount of polynomials
-            NOTE: it is allowed to set the coefficients to `None` to represent a not yet initialised polynomial
-        """
+        # setters shall not have docstrings. See numpydoc class example.
         if value is None:
             self._coeffs = None
             return
@@ -361,13 +614,35 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     @property
     def unisolvent_nodes(self):
-        """the points the polynomial is defined on"""
+        """Unisolvent nodes the polynomial(s) is(are) defined on
+
+        Returns
+        -------
+        np.ndarray
+            Array of unisolvent nodes.
+
+        Note
+        ----
+        This is propagated from from ``self.grid.unisolvent_nodes``.
+        """
         return self.grid.unisolvent_nodes
 
     def _new_instance_if_necessary(
         self, new_grid, new_indices: Optional[MultiIndex] = None
     ) -> "MultivariatePolynomialSingleABC":
-        """constructs a new instance only if the multi indices have changed"""
+        """Constructs a new instance only if the multi indices have changed.
+
+        Parameters
+        ----------
+        new_grid : minterpy.Grid
+            Grid instance the polynomial is defined on.
+        new_indices = None : minterpy.MultiIndex
+            MultiIndex instance for the polynomial(s), needs to be a subset of the current ``multi_index``.
+
+        Returns
+        -------
+        Same polynomial instance if ``grid`` and ``multi_index`` stay the same, otherwise new polynomial instance with the new ``grid`` and ``multi_index``.
+        """
         prev_grid = self.grid
         if new_grid is prev_grid:
             return self
@@ -401,9 +676,10 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
     def make_complete(self) -> "MultivariatePolynomialSingleABC":
         """returns a possibly new polynomial instance with a complete multi index set
 
-        NOTE: the active monomials stay equal. only the grid ("basis") changes
-        NOTE: in the case of a Lagrange polynomial this could be done
-            by evaluating the polynomial on the complete grid
+        Notes
+        -----
+        - the active monomials stay equal. only the grid ("basis") changes
+        - in the case of a Lagrange polynomial this could be done by evaluating the polynomial on the complete grid
         """
         grid_completed = self.grid.make_complete()
         return self._new_instance_if_necessary(grid_completed)
@@ -431,7 +707,9 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         Expands the dimension of the polynomial by adding zeros to the multi_indices
         (which is equivalent to the multiplication of ones to each monomial)
 
-        TODO handle grid points.
+        Todos
+        -----
+        handle grid points.
         """
         expand_dim = dim - self.multi_index.spatial_dimension
 

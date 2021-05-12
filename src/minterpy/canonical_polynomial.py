@@ -1,5 +1,6 @@
 """
-CanonicalPolynomial class
+Base class for polynomials in the canonical base.
+
 """
 from copy import deepcopy
 
@@ -17,6 +18,13 @@ from minterpy.verification import (convert_eval_output, rectify_eval_input,
 
 
 def dummy():
+    """ Placeholder function.
+
+
+    Note
+    ----
+    This function is not implemented yet!
+    """
     raise NotImplementedError(f"This feature is not implemented yet.")
 
 
@@ -134,17 +142,17 @@ def _matching_internal_domain(poly1, poly2, tol=None):
 
     Works on polynomial with same spatial_dimension.
 
-        Parameters
-        ----------
-        poly1, poly2 : CanonicalPolynomial
-                Polynomials to check
-        tol : float
-                tolerance for matching floats in the domains. Default tol = 1e-16
+    Parameters
+    ----------
+    poly1, poly2 : CanonicalPolynomial
+            Polynomials to check
+    tol : float
+            tolerance for matching floats in the domains. Default tol = 1e-16
 
-        Returns
-        -------
-        match : bool
-                True if both
+    Returns
+    -------
+    match : bool
+            True if both
     """
     if tol is None:
         tol = 1e-16
@@ -158,9 +166,22 @@ def _canonical_add(poly1, poly2):
     """
     Addition of two polynomials in canonical basis.
 
+    Parameters
+    ----------
+    poly1 : CanonicalPolynomial
+        First summand of the sum
+    poly2 : CanonicalPolynomial
+        Second summand of the sum
+
+    Returns
+    -------
+    summed_polynomial : CanonicalPolynomial
+        The sum of the passed polynomials in canonical base
+
     Note
     ----
-    This works only for the same domains!
+     - This works only for the same domains!
+     - This function will be called on `self,other` if `__add__` is called.
     """
     p1, p2 = _match_dims(poly1, poly2)
     # print(p1.internal_domain,p2.internal_domain) # here is the error!!!!
@@ -182,7 +203,19 @@ def _canonical_add(poly1, poly2):
 
 def _canonical_sub(poly1, poly2):
     """
-    Subtraction of two polynomials in canonical basis.
+    Substraction of two polynomials in canonical basis.
+
+    Parameters
+    ----------
+    poly1 : CanonicalPolynomial
+        Minuend of the difference.
+    poly2 : CanonicalPolynomial
+        Subtrahend of the difference.
+
+    Returns
+    -------
+    difference_polynomial : CanonicalPolynomial
+        The difference of the passed polynomials in canonical base.
 
     Note
     ----
@@ -232,6 +265,9 @@ def can_eval(x, coefficients, exponents, verify_input: bool = False):
 
 
 def canonical_eval(canonical_poly, x: np.ndarray):
+    """
+    This is the doc from the canonical evaluation.
+    """
     coefficients = canonical_poly.coeffs
     exponents = canonical_poly.multi_index.exponents
     return can_eval(x, coefficients, exponents)
@@ -244,9 +280,15 @@ canonical_generate_user_domain = verify_domain
 
 class CanonicalPolynomial(MultivariatePolynomialSingleABC):
     """
-    Canonical polynomial class.
+    Polynomial type in the canonical base.
     """
 
+    __doc__ = """
+    This is the docstring of the canonical base class.
+    """
+
+
+    #__doc__ += MultivariatePolynomialSingleABC.__doc_attrs__
     # Virtual Functions
     _add = staticmethod(_canonical_add)
     _sub = staticmethod(_canonical_sub)

@@ -1,24 +1,10 @@
-
-Welcome to documentation!
-=========================
-
-
-Introduction
-------------
-
-This should be updated!
+######################
+Minterpy Documentation
+######################
 
 .. toctree::
-   :maxdepth: 2
-   :titlesonly:
-   :caption: Contents
-   :glob:
+   :maxdepth: 1
+   :hidden:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   User Guide <usage/intro>
+   API reference <api/index>
