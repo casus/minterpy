@@ -19,7 +19,9 @@ __status__ = "Development"
 
 from minterpy.global_settings import ARRAY
 from minterpy.multivariate_polynomial_abstract import (
-    MultivariatePolynomialABC, MultivariatePolynomialSingleABC)
+    MultivariatePolynomialABC,
+    MultivariatePolynomialSingleABC,
+)
 from minterpy.verification import rectify_query_points
 
 

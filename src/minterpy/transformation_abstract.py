@@ -8,8 +8,7 @@ import numpy as np
 
 from minterpy.grid import Grid
 from minterpy.multi_index import MultiIndex
-from minterpy.multivariate_polynomial_abstract import \
-    MultivariatePolynomialSingleABC
+from minterpy.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC
 from minterpy.transformation_operator_abstract import TransformationOperatorABC
 
 __all__ = ["TransformationABC"]

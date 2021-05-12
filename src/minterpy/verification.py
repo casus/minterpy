@@ -7,8 +7,7 @@ from typing import Optional, Union
 import numpy as np
 from _warnings import warn
 
-from minterpy.global_settings import (DEBUG, DEFAULT_DOMAIN, FLOAT_DTYPE,
-                                      INT_DTYPE)
+from minterpy.global_settings import DEBUG, DEFAULT_DOMAIN, FLOAT_DTYPE, INT_DTYPE
 
 __author__ = "Jannik Michelfeit"
 __copyright__ = "Copyright 2021, minterpy"

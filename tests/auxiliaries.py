@@ -4,11 +4,16 @@ from typing import Iterable, List, Type
 from warnings import warn
 
 import numpy as np
-from test_settings import (DEGREES2TEST, DESIRED_PRECISION, DIMENSIONS2TEST,
-                           LP_DEGREES)
+from test_settings import DEGREES2TEST, DESIRED_PRECISION, DIMENSIONS2TEST, LP_DEGREES
 
-from minterpy import (Derivator, Grid, LagrangePolynomial, MultiIndex,
-                      MultivariatePolynomialSingleABC, TransformationABC)
+from minterpy import (
+    Derivator,
+    Grid,
+    LagrangePolynomial,
+    MultiIndex,
+    MultivariatePolynomialSingleABC,
+    TransformationABC,
+)
 from minterpy.global_settings import INT_DTYPE
 from minterpy.transformation_meta import get_transformation_class
 from minterpy.verification import check_is_square, check_shape

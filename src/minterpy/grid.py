@@ -11,8 +11,7 @@ from minterpy.multi_index import MultiIndex
 from minterpy.multi_index_tree import MultiIndexTree
 from minterpy.multi_index_utils import sort_lexicographically
 from minterpy.utils import gen_chebychev_2nd_order_leja_ordered
-from minterpy.verification import (check_domain_fit, check_shape,
-                                   check_type_n_values)
+from minterpy.verification import check_domain_fit, check_shape, check_type_n_values
 
 __all__ = ["Grid"]
 

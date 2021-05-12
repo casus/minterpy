@@ -14,8 +14,7 @@ from minterpy.multi_index import MultiIndex
 __all__ = ["MultivariatePolynomialABC", "MultivariatePolynomialSingleABC"]
 
 from minterpy.multi_index_utils import find_match_between
-from minterpy.verification import (check_shape, check_type_n_values,
-                                   verify_domain)
+from minterpy.verification import check_shape, check_type_n_values, verify_domain
 
 
 class MultivariatePolynomialABC(abc.ABC):

@@ -2,16 +2,31 @@ import unittest
 from itertools import product
 
 import numpy as np
-from auxiliaries import (all_are_close, almost_equal, check_different_settings,
-                         get_derivator, get_multi_index,
-                         get_separate_indices_poly, rnd_points)
+from auxiliaries import (
+    all_are_close,
+    almost_equal,
+    check_different_settings,
+    get_derivator,
+    get_multi_index,
+    get_separate_indices_poly,
+    rnd_points,
+)
 
-from minterpy import (CanonicalPolynomial, LagrangePolynomial,
-                      NewtonPolynomial, compute_grad_c2c, compute_grad_x2c,
-                      get_transformation)
-from minterpy.derivation import (Derivator, derive_gradient_canonical,
-                                 partial_derivative_canonical,
-                                 tensor_left_product, tensor_right_product)
+from minterpy import (
+    CanonicalPolynomial,
+    LagrangePolynomial,
+    NewtonPolynomial,
+    compute_grad_c2c,
+    compute_grad_x2c,
+    get_transformation,
+)
+from minterpy.derivation import (
+    Derivator,
+    derive_gradient_canonical,
+    partial_derivative_canonical,
+    tensor_left_product,
+    tensor_right_product,
+)
 from minterpy.global_settings import FLOAT_DTYPE
 from minterpy.multi_index_utils import is_lexicographically_complete
 from minterpy.verification import check_shape

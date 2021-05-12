@@ -7,12 +7,18 @@ from typing import Optional
 import numpy as np
 
 from minterpy.global_settings import ARRAY, INT_DTYPE
-from minterpy.jit_compiled_utils import (all_indices_are_contained,
-                                         have_lexicographical_ordering)
-from minterpy.multi_index_utils import (_expand_dim, get_exponent_matrix,
-                                        insert_lexicographically,
-                                        is_lexicographically_complete,
-                                        make_complete, verify_lp_deg)
+from minterpy.jit_compiled_utils import (
+    all_indices_are_contained,
+    have_lexicographical_ordering,
+)
+from minterpy.multi_index_utils import (
+    _expand_dim,
+    get_exponent_matrix,
+    insert_lexicographically,
+    is_lexicographically_complete,
+    make_complete,
+    verify_lp_deg,
+)
 
 __all__ = ["MultiIndex"]
 

@@ -13,8 +13,14 @@ import numpy as np
 from numba import njit
 from numba.typed import List
 
-from minterpy.global_settings import (ARRAY, ARRAY_DICT, INT_DTYPE, INT_SET,
-                                      INT_TUPLE, TYPED_LIST)
+from minterpy.global_settings import (
+    ARRAY,
+    ARRAY_DICT,
+    INT_DTYPE,
+    INT_SET,
+    INT_TUPLE,
+    TYPED_LIST,
+)
 
 __author__ = "Jannik Michelfeit"
 __copyright__ = "Copyright 2021, minterpy"

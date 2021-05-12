@@ -12,14 +12,21 @@ import numpy as np
 from numba import njit
 from numba.typed import List
 
-from minterpy.dds import (dds_1_dimensional, get_direct_child_idxs,
-                          get_leaf_idxs)
-from minterpy.global_settings import (ARRAY, DEBUG, DICT_TRAFO_TYPE,
-                                      FACTORISED_TRAFO_TYPE, FLOAT_DTYPE,
-                                      TRAFO_DICT, TYPED_LIST)
-from minterpy.transformation_operators import (BarycentricDictOperator,
-                                               BarycentricFactorisedOperator,
-                                               BarycentricOperatorABC)
+from minterpy.dds import dds_1_dimensional, get_direct_child_idxs, get_leaf_idxs
+from minterpy.global_settings import (
+    ARRAY,
+    DEBUG,
+    DICT_TRAFO_TYPE,
+    FACTORISED_TRAFO_TYPE,
+    FLOAT_DTYPE,
+    TRAFO_DICT,
+    TYPED_LIST,
+)
+from minterpy.transformation_operators import (
+    BarycentricDictOperator,
+    BarycentricFactorisedOperator,
+    BarycentricOperatorABC,
+)
 from minterpy.utils import eval_newt_polys_on
 
 __author__ = "Jannik Michelfeit"

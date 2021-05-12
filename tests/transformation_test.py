@@ -2,22 +2,38 @@ import unittest
 
 import numpy as np
 import scipy.linalg
-from auxiliaries import (almost_equal, check_different_settings,
-                         check_is_identity, check_transformation_is_inverse,
-                         get_grid, get_separate_indices_poly,
-                         get_transformation, rnd_points)
+from auxiliaries import (
+    almost_equal,
+    check_different_settings,
+    check_is_identity,
+    check_transformation_is_inverse,
+    get_grid,
+    get_separate_indices_poly,
+    get_transformation,
+    rnd_points,
+)
 
-from minterpy import (Grid, LagrangePolynomial, MultiIndex, NewtonPolynomial,
-                      TransformationABC, TransformationCanonicalToNewton,
-                      TransformationLagrangeToNewton,
-                      TransformationNewtonToCanonical,
-                      TransformationNewtonToLagrange)
-from minterpy.barycentric_precomp import (_build_lagrange_to_newton_bary,
-                                          _build_newton_to_lagrange_bary)
+from minterpy import (
+    Grid,
+    LagrangePolynomial,
+    MultiIndex,
+    NewtonPolynomial,
+    TransformationABC,
+    TransformationCanonicalToNewton,
+    TransformationLagrangeToNewton,
+    TransformationNewtonToCanonical,
+    TransformationNewtonToLagrange,
+)
+from minterpy.barycentric_precomp import (
+    _build_lagrange_to_newton_bary,
+    _build_newton_to_lagrange_bary,
+)
 from minterpy.global_settings import ARRAY, FLOAT_DTYPE, INT_DTYPE
 from minterpy.transformation_operator_abstract import TransformationOperatorABC
-from minterpy.transformation_utils import (_build_newton_to_lagrange_naive,
-                                           build_l2n_matrix_dds)
+from minterpy.transformation_utils import (
+    _build_newton_to_lagrange_naive,
+    build_l2n_matrix_dds,
+)
 from minterpy.utils import report_error
 
 

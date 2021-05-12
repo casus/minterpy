@@ -4,12 +4,18 @@ from typing import Optional
 
 import numpy as np
 
-from minterpy.barycentric_precomp import (compute_l2n_dict,
-                                          compute_n2l_factorised)
+from minterpy.barycentric_precomp import compute_l2n_dict, compute_n2l_factorised
 from minterpy.barycentric_transformation_fcts import (
-    transform_barycentric_dict, transform_barycentric_factorised)
-from minterpy.dds import (compile_problem_sizes, compile_splits,
-                          compile_subtree_sizes, jit_dds, precompute_masks)
+    transform_barycentric_dict,
+    transform_barycentric_factorised,
+)
+from minterpy.dds import (
+    compile_problem_sizes,
+    compile_splits,
+    compile_subtree_sizes,
+    jit_dds,
+    precompute_masks,
+)
 from minterpy.global_settings import ARRAY, ARRAY_DICT, FLOAT_DTYPE
 from minterpy.verification import check_shape, check_type_n_values
 

@@ -7,7 +7,9 @@ from minterpy.canonical_polynomial import CanonicalPolynomial
 from minterpy.newton_polynomial import NewtonPolynomial
 from minterpy.transformation_abstract import TransformationABC
 from minterpy.transformation_utils import (
-    _build_lagrange_to_canonical_operator, _build_lagrange_to_newton_operator)
+    _build_lagrange_to_canonical_operator,
+    _build_lagrange_to_newton_operator,
+)
 
 __all__ = ["TransformationLagrangeToNewton", "TransformationLagrangeToCanonical"]
 
