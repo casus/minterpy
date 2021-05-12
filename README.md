@@ -83,7 +83,7 @@ Then take a look into the `scripts` and `notebooks` folders.
    ```
    python setup.py test
    ```
-   if all tests are passed, the tested functions shall run properly. 
+   if all tests are passed, the tested functions shall run properly.
 
 ## Project Organization
 
@@ -121,10 +121,6 @@ Then take a look into the `scripts` and `notebooks` folders.
 └── .pre-commit-config.yaml <- Configuration of pre-commit git hooks.
 ```
 
-## Note
-
-This project has been set up using PyScaffold 3.2.3 and the [dsproject extension] 0.4.
-For details and usage information on PyScaffold see https://pyscaffold.org/.
 
 [conda]: https://docs.conda.io/
 [pre-commit]: https://pre-commit.com/
@@ -132,4 +128,35 @@ For details and usage information on PyScaffold see https://pyscaffold.org/.
 [nbstripout]: https://github.com/kynan/nbstripout
 [Google style]: http://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
 [virtualenv]: https://virtualenv.pypa.io/en/latest/index.html
-[dsproject extension]: https://github.com/pyscaffold/pyscaffoldext-dsproject
+
+
+[![Actions Status][actions-badge]][actions-link]
+[![Documentation Status][rtd-badge]][rtd-link]
+[![Code style: black][black-badge]][black-link]
+
+[![PyPI version][pypi-version]][pypi-link]
+[![Conda-Forge][conda-badge]][conda-link]
+[![PyPI platforms][pypi-platforms]][pypi-link]
+
+[![GitHub Discussion][github-discussions-badge]][github-discussions-link]
+[![Gitter][gitter-badge]][gitter-link]
+
+
+
+
+[actions-badge]:            https://gitlab.hzdr.de/interpol/minterpy/workflows/CI/badge.svg
+[actions-link]:             https://gitlab.hzdr.de/interpol/minterpy/actions
+[black-badge]:              https://img.shields.io/badge/code%20style-black-000000.svg
+[black-link]:               https://github.com/psf/black
+[conda-badge]:              https://img.shields.io/conda/vn/conda-forge/minterpy
+[conda-link]:               https://github.com/conda-forge/minterpy-feedstock
+[github-discussions-badge]: https://img.shields.io/static/v1?label=Discussions&message=Ask&color=blue&logo=github
+[github-discussions-link]:  https://gitlab.hzdr.de/interpol/minterpy/discussions
+[gitter-badge]:             https://badges.gitter.im/https://gitlab.hzdr.de/interpol/minterpy/community.svg
+[gitter-link]:              https://gitter.im/https://gitlab.hzdr.de/interpol/minterpy/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
+[pypi-link]:                https://pypi.org/project/minterpy/
+[pypi-platforms]:           https://img.shields.io/pypi/pyversions/minterpy
+[pypi-version]:             https://badge.fury.io/py/minterpy.svg
+[rtd-badge]:                https://readthedocs.org/projects/minterpy/badge/?version=latest
+[rtd-link]:                 https://minterpy.readthedocs.io/en/latest/?badge=latest
+[sk-badge]:                 https://scikit-hep.org/assets/images/Scikit--HEP-Project-blue.svg
