@@ -1,4 +1,4 @@
-# :construction::construction:This document is under construction :construction::construction:
+# :construction: :construction: This document is under construction :construction: :construction:
 # Contribution guide
 
 # 1. Installation
