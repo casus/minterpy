@@ -18,7 +18,7 @@ git pull origin dev
 Notice: in future it will **not** be allowed to push to dev or master. Please follow the instructions under [Working with git](#git)
 
 ## Virtual environments
-It is stongly recommended to use virtual environments for development and productive runs. This encapsulates the package and all requirements without messing up other python installations.  
+It is stongly recommended to use virtual environments for development and productive runs. This encapsulates the package and all dependencies without messing up other python installations.  
 #### Using [venv](https://docs.python.org/3/tutorial/venv.html) from the python standard library:  
 1. Building the virtual environment:
     ```bash
@@ -65,10 +65,41 @@ It is stongly recommended to use virtual environments for development and produc
 
 
 #### Using [conda](https://conda.io/projects/conda/en/latest/index.html):
-:construction: under construction :construction:
+1. create an environment `minterpy` with the help of [conda],
+   ```bash
+   conda env create -f environment.yaml
+   ```
+2. activate the new environment with
+   ```bash
+   conda activate minterpy
+   ```
+   Maybe you need to `init` the conda env; just follow the instructions printed out or read the conda docs.  
+
+3. To deactivate the conda environment, just hit:
+    ```bash
+    conda deactivate
+    ```
+
+## Dependency Management & Reproducibility (conda)
+
+1. Always keep your abstract (unpinned) dependencies updated in `environment.yaml` and eventually
+   in `setup.cfg` if you want to ship and install your package via `pip` later on.  
+
+2. Create concrete dependencies as `environment.lock.yaml` for the exact reproduction of your
+   environment with:
+   ```bash
+   conda env export -n minterpy -f environment.lock.yaml
+   ```
+   For multi-OS development, consider using `--no-builds` during the export.  
+
+3. Update your current environment with respect to a new `environment.lock.yaml` using:
+   ```bash
+   conda env update -f environment.lock.yaml --prune
+   ```
+
 
 ## Installation
-Installing `minterpy` it is recommended to use [pip](https://pip.pypa.io/en/stable/):  
+Installing `minterpy` it is recommended to use [pip](https://pip.pypa.io/en/stable/) (in the activated environment, see above):  
 ```bash
 pip install [-e] .[all,dev,docs]
 ```
@@ -82,7 +113,7 @@ We use [pytest](https://docs.pytest.org/en/6.2.x/) to run the unit tests of `min
 pytest
 ```
 into the terminal.  
-:construction: Since the whole test environment needs a refactoring, we shall update this section with more detailed informations.
+:construction: :construction: Since the whole test environment needs a refactoring, we shall update this section with more detailed informations. :construction: :construction: 
 
 # 3. Documentation
 ## Building the documentation
