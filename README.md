@@ -18,16 +18,26 @@ Classical interpolation schemes in arbitrary dimensions.
    ```bash
    source <your_venv_name>/bin/activate
    ```
+   so you use the python verion of your virtual environment.    
 
 2. install `minterpy` via pip (in the activated venv):
    ```bash
    pip install [-e] .
    ```
-4. run the unit_tests via setup.py
+   After installation, you might restart your virtual environment:
+   ```bash
+   deactivate && source <your_venv_name>/bin/activate
+   ```
+   or just run
+   ```bash
+   hash -r
+   ```
+   instead.  
+3. run the unit_tests using [pytest].
    ```bash
    pytest
    ```
-   if all tests are passed, the tested functions shall run properly.
+   if all tests are passed, the tested functions shall run properly. Here the restart of your venv mentioned above might be necessary.
 
 
 ## Installation using conda/pip
@@ -73,7 +83,7 @@ Take a quick look into `CONTRIBUTING.md` for more details.
 ├── MANIFEST.in             <- Keep track of (minimal) source distribution files
 ├── CONTRIBUTING.md         <- Contribution guidelines.
 ├── .readthedocs.yml        <- Configuration of readthedocs support
-├── .gitignore             <- ignored files/directories if `git add/commit`
+├── .gitignore              <- ignored files/directories if `git add/commit`
 └── .pre-commit-config.yaml <- Configuration of pre-commit git hooks.
 ```
 
@@ -85,7 +95,7 @@ Take a quick look into `CONTRIBUTING.md` for more details.
 [nbstripout]: https://github.com/kynan/nbstripout
 [Google style]: http://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
 [virtualenv]: https://virtualenv.pypa.io/en/latest/index.html
-
+[pytest]: https://docs.pytest.org/en/6.2.x/
 
 [![Actions Status][actions-badge]][actions-link]
 [![Documentation Status][rtd-badge]][rtd-link]

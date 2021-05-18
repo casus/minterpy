@@ -21,44 +21,62 @@ Notice: in future it will **not** be allowed to push to dev or master. Please fo
 It is stongly recommended to use virtual environments for development and productive runs. This encapsulates the package and all dependencies without messing up other python installations.  
 #### Using [venv](https://docs.python.org/3/tutorial/venv.html) from the python standard library:  
 1. Building the virtual environment:
+
     ```bash
     python -m venv <your_venv_name>
     ```
+
 2. Activate the environment:
+
     ```bash
     source <your_venv_name>/bin/activate
     ```
+
 3. To deactivate the virtual environment, just type  
-    ```bash
-    deactivate
-    ```
-#### Using [virtualenv](https://virtualenv.pypa.io/en/latest/):
-1. Building the virtual environment:
-    ```bash
-    virtualenv <your_venv_name>
-    ```
-2. Activate the environment:
-    ```bash
-    source <your_venv_name>/bin/activate
-    ```
-3. To deactivate the virtual environment, just type  
+
     ```bash
     deactivate
     ```
 
+
+#### Using [virtualenv](https://virtualenv.pypa.io/en/latest/):
+1. Building the virtual environment:
+
+    ```bash
+    virtualenv <your_venv_name>
+    ```
+
+2. Activate the environment:
+
+    ```bash
+    source <your_venv_name>/bin/activate
+    ```
+
+3. To deactivate the virtual environment, just type  
+
+    ```bash
+    deactivate
+    ```
+
+
 #### Using [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv):
 1. Building the virtual environment:
+
     ```bash
     pyenv virtualenv 3.8 <your_venv_name>
     ```
+
 2. Activate the environment in the local directory:
+
     ```bash
     pyenv local <your_venv_name>
     ```
+
     This will create a hidden file `.python_version` containing a 'link' to the actual virtual environment managed by pyenv.
 
 
 3. To 'deactivate' the virtual environment just remove this hidden file:
+
     ```bash
     rm .python_version
     ```
@@ -105,7 +123,16 @@ pip install [-e] .[all,dev,docs]
 ```
 where the flag `-e` means the package is directly linked into the python site-packages.
 The options `[all,dev,docs]` refer to the requirements defined in the `options.extras_require` section in `setup.cfg`.
-One shall not use `python setup.py install`, since the file `setup.py` will not be present for every build of the package.
+One shall **not** use `python setup.py install`, since the file `setup.py` will not be present for every build of the package.  
+
+### Troubleshooting: pytest with venv (not conda)
+After installation, the restart of your virtual environment might be necessary, since the `pytest` command uses the `PYTHONPATH` which is not automatically changed to your venv.  
+
+```bash
+deactivate && source <your_venv_name>/bin/activate
+```
+
+or just run `hash -r` instead. This seems **not** to be an issuse for environments build with conda.
 
 # 2. Testing
 We use [pytest](https://docs.pytest.org/en/6.2.x/) to run the unit tests of `minterpy`. Unit tests itself shall always be placed into the directory `tests`. To run all tests, just type
@@ -113,19 +140,29 @@ We use [pytest](https://docs.pytest.org/en/6.2.x/) to run the unit tests of `min
 pytest
 ```
 into the terminal.  
-:construction: :construction: Since the whole test environment needs a refactoring, we shall update this section with more detailed informations. :construction: :construction: 
+:construction: :construction: Since the whole test environment needs a refactoring, we shall update this section with more detailed informations. :construction: :construction:
 
 # 3. Documentation
+## Install dependencies
+Since building the docs has additional dependencies, we need to separately install them:
+
+```bash
+pip install .[docs]
+```
+
+
 ## Building the documentation
 We use [sphinx](https://www.sphinx-doc.org/en/master/) to build the documentation of `minterpy`. To set the documentation in html, run the command
 ```bash
 sphinx-build -M html docs docs/_build
 ```
 It is also possible to build the documentation directly from the `make` file. For that, you need to navigate to the `docs` directory and run the `make` command:
+
 ```bash
 cd docs
-make html
+ make html
 ```
+
 This generates the documentation, which is stored in `docs/_build` can be accessed through your favorite browser  
 ```bash
 firefox docs/_build/html/index.html
@@ -133,7 +170,7 @@ firefox docs/_build/html/index.html
 It is also possible to automatically generate a PDF of the whole documentation, where `pdflatex` is used:
 ```bash
 cd docs
-make latexpdf
+ make latexpdf
 ```
 The generated PDF will be stored (along with the latex files) in `docs/latex`.
 
