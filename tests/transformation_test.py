@@ -1,24 +1,28 @@
-# -*- coding:utf-8 -*-
 import unittest
 
 import numpy as np
 import scipy.linalg
+from auxiliaries import (almost_equal, check_different_settings,
+                         check_is_identity, check_transformation_is_inverse,
+                         get_grid, get_separate_indices_poly,
+                         get_transformation, rnd_points)
 
-from auxiliaries import check_different_settings, rnd_points, almost_equal, get_transformation, check_is_identity, \
-    check_transformation_is_inverse, get_grid, get_separate_indices_poly
-from minterpy import MultiIndex, Grid, NewtonPolynomial, \
-    TransformationNewtonToCanonical, TransformationCanonicalToNewton, TransformationLagrangeToNewton, \
-    TransformationNewtonToLagrange, LagrangePolynomial, TransformationABC
-from minterpy.barycentric_precomp import _build_lagrange_to_newton_bary, _build_newton_to_lagrange_bary
-from minterpy.global_settings import FLOAT_DTYPE, INT_DTYPE, ARRAY
+from minterpy import (Grid, LagrangePolynomial, MultiIndex, NewtonPolynomial,
+                      TransformationABC, TransformationCanonicalToNewton,
+                      TransformationLagrangeToNewton,
+                      TransformationNewtonToCanonical,
+                      TransformationNewtonToLagrange)
+from minterpy.barycentric_precomp import (_build_lagrange_to_newton_bary,
+                                          _build_newton_to_lagrange_bary)
+from minterpy.global_settings import ARRAY, FLOAT_DTYPE, INT_DTYPE
 from minterpy.transformation_operator_abstract import TransformationOperatorABC
-from minterpy.transformation_utils import build_l2n_matrix_dds, _build_newton_to_lagrange_naive
+from minterpy.transformation_utils import (_build_newton_to_lagrange_naive,
+                                           build_l2n_matrix_dds)
 from minterpy.utils import report_error
 
 
 def check_trafo_general(transformation):
-    """ performs the checks valid for all transformations
-    """
+    """performs the checks valid for all transformations"""
     # all transformations must have a transformation operator
     operator = transformation.transformation_operator
     assert isinstance(operator, TransformationOperatorABC)
@@ -53,7 +57,9 @@ def check_n_l_matrices(n2l_transformation: TransformationABC):
     grid = n2l_transformation.origin_poly.grid
     multi_index = grid.multi_index
 
-    newton_to_lagrange_eval = n2l_transformation.transformation_operator.array_repr_sparse
+    newton_to_lagrange_eval = (
+        n2l_transformation.transformation_operator.array_repr_sparse
+    )
     lagrange_to_newton = scipy.linalg.inv(newton_to_lagrange_eval)
     check_l2n_matrix(lagrange_to_newton, grid)
 
@@ -92,11 +98,13 @@ def check_newt_lagr_poly_equality(lagrange_poly, newton_poly):
     check_transformation_is_inverse(lagrange_to_newton, newton_to_lagrange)
     coeffs_newton_estim = newton_poly2.coeffs
     err = coeffs_newton_estim - coeffs_newton_true
-    report_error(err, f'error of the interpolated Newton coefficients (transformation):')
+    report_error(
+        err, f"error of the interpolated Newton coefficients (transformation):"
+    )
     almost_equal(coeffs_newton_estim, coeffs_newton_true)
     coeffs_lagrange2 = lagrange_poly2.coeffs
     err = coeffs_lagrange - coeffs_lagrange2
-    report_error(err, f'error of the Lagrange coefficients (function values):')
+    report_error(err, f"error of the Lagrange coefficients (function values):")
     almost_equal(coeffs_lagrange, coeffs_lagrange2)
 
 
@@ -121,8 +129,13 @@ def check_poly_interpolation(grid: Grid):
 
 
 def lagrange_n_newton_matrix_test_complete(spatial_dimension, poly_degree, lp_degree):
-    transformation = get_transformation(spatial_dimension, poly_degree, lp_degree, cls_from=NewtonPolynomial,
-                                        cls_to=LagrangePolynomial)
+    transformation = get_transformation(
+        spatial_dimension,
+        poly_degree,
+        lp_degree,
+        cls_from=NewtonPolynomial,
+        cls_to=LagrangePolynomial,
+    )
     check_trafo_general(transformation)
     check_n_l_matrices(transformation)
     grid = transformation.origin_poly.grid
@@ -137,7 +150,9 @@ def lagrange_n_newton_matrix_test_incomplete(spatial_dimension, poly_degree, lp_
     for idx in range(nr_exponents):
         exponents_incomplete = np.delete(exponents, idx, axis=0)
         multi_index_incomplete = MultiIndex(exponents_incomplete)
-        if multi_index_incomplete.is_complete:  # sometimes deleting indices does not create "holes"
+        if (
+            multi_index_incomplete.is_complete
+        ):  # sometimes deleting indices does not create "holes"
             continue
         incomplete_grid = Grid(multi_index_incomplete)
         check_poly_interpolation(incomplete_grid)
@@ -145,8 +160,13 @@ def lagrange_n_newton_matrix_test_incomplete(spatial_dimension, poly_degree, lp_
 
 def check_n2l_barycentric(spatial_dimension, poly_degree, lp_degree):
     # NOTE: these tests are NOT working for incomplete multi index sets
-    transformation = get_transformation(spatial_dimension, poly_degree, lp_degree, cls_from=NewtonPolynomial,
-                                        cls_to=LagrangePolynomial)
+    transformation = get_transformation(
+        spatial_dimension,
+        poly_degree,
+        lp_degree,
+        cls_from=NewtonPolynomial,
+        cls_to=LagrangePolynomial,
+    )
     check_trafo_general(transformation)
 
     grid = transformation.grid
@@ -173,10 +193,14 @@ def check_n2l_barycentric(spatial_dimension, poly_degree, lp_degree):
 
 def check_l2n_barycentric(spatial_dimension, poly_degree, lp_degree):
     # NOTE: these tests are NOT working for incomplete multi index sets
-    transformation = get_transformation(spatial_dimension, poly_degree, lp_degree, cls_from=LagrangePolynomial,
-                                        cls_to=NewtonPolynomial)
+    transformation = get_transformation(
+        spatial_dimension,
+        poly_degree,
+        lp_degree,
+        cls_from=LagrangePolynomial,
+        cls_to=NewtonPolynomial,
+    )
     check_trafo_general(transformation)
-
 
     grid = transformation.grid
     multi_index = grid.multi_index
@@ -218,7 +242,7 @@ def canonical_newton_transformation_test(spatial_dimension, poly_degree, lp_degr
     coeffs_newton_estim = newton_poly2.coeffs
     almost_equal(coeffs_newton_estim, coeffs_newton_true)
     err = coeffs_newton_estim - coeffs_newton_true
-    report_error(err, f'error of the Newton coefficients (transformation):')
+    report_error(err, f"error of the Newton coefficients (transformation):")
 
     n2c = n2c_transformation.transformation_operator.array_repr_sparse
     c2n = c2n_transformation.transformation_operator.array_repr_sparse
@@ -226,7 +250,9 @@ def canonical_newton_transformation_test(spatial_dimension, poly_degree, lp_degr
 
 
 def check_separate_idx_transformation(spatial_dimension, poly_degree, lp_degree):
-    lagr_poly = get_separate_indices_poly(spatial_dimension, poly_degree, lp_degree,cls=LagrangePolynomial)
+    lagr_poly = get_separate_indices_poly(
+        spatial_dimension, poly_degree, lp_degree, cls=LagrangePolynomial
+    )
 
     # just a single active Lagrange polynomial -> one coefficient
     coeffs = np.ones(1, dtype=FLOAT_DTYPE)
@@ -234,7 +260,9 @@ def check_separate_idx_transformation(spatial_dimension, poly_degree, lp_degree)
 
     # transform to Newton basis
     l2n_transformation = TransformationLagrangeToNewton(lagr_poly)
-    newt_poly = l2n_transformation()  # this includes building the transformation matrix!
+    newt_poly = (
+        l2n_transformation()
+    )  # this includes building the transformation matrix!
 
     # due to the properties of Lagrange polynomials and the constraints posed by the "basis",
     # this polynomial should be 0 on all grid points (basis) except the "active" point
@@ -258,37 +286,40 @@ def check_separate_idx_transformation(spatial_dimension, poly_degree, lp_degree)
 
 
 class TransformationTest(unittest.TestCase):
-
     def test_lagrange_newton(self):
-        print('\ntesting Newton to Lagrange transformation matrix computation:')
+        print("\ntesting Newton to Lagrange transformation matrix computation:")
         check_different_settings(lagrange_n_newton_matrix_test_complete)
         # NOTE: the actual test transformation functions are being tests in unit test
         #  (interpolation is equal to the transformation l2n)
 
     def test_lagrange_newton_incomplete(self):
-        print('\ntesting Newton to Lagrange transformation with incomplete multi index sets:')
+        print(
+            "\ntesting Newton to Lagrange transformation with incomplete multi index sets:"
+        )
         check_different_settings(lagrange_n_newton_matrix_test_incomplete)
 
     # TODO test all different transformation formats!
     def test_newton2lagrange_barycentric(self):
-        print('\ntesting the barycentric Lagrange to Newton transformation:')
+        print("\ntesting the barycentric Lagrange to Newton transformation:")
         check_different_settings(check_n2l_barycentric)
 
     def test_lagrange2newton_barycentric(self):
-        print('\ntesting the barycentric Lagrange to Newton transformation:')
+        print("\ntesting the barycentric Lagrange to Newton transformation:")
         check_different_settings(check_l2n_barycentric)
 
     def test_canonical_newton(self):
-        print('\ntesting canonical to and from Newton transformation:')
+        print("\ntesting canonical to and from Newton transformation:")
         check_different_settings(canonical_newton_transformation_test)
 
     def test_separate_idx_transformation(self):
-        print('\ntesting Lagrange to Newton transformation for polynomials with a "separate" basis:')
+        print(
+            '\ntesting Lagrange to Newton transformation for polynomials with a "separate" basis:'
+        )
         check_different_settings(check_separate_idx_transformation)
         # TODO add multiple separate points
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # suite = unittest.TestLoader().loadTestsFromTestCase(HelperTest)
     # unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()

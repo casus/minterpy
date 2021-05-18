@@ -4,15 +4,11 @@ channels:
   - conda-forge
   - pytorch
 dependencies:
-  - python>=3.6
+  - python>=3.8
   - pip
   - numpy
+  - numba
   - scipy
-  - pandas
-  - dask
-  - ipython
-  - tqdm
-  - click
   - matplotlib
   - seaborn
   - altair
@@ -32,3 +28,4 @@ dependencies:
   - nbstripout
   - sphinx
   - recommonmark
+  - scikit-image

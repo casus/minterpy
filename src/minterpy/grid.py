@@ -2,18 +2,19 @@
 Module for the generating points (which provides the unisolvent nodes)
 """
 from copy import deepcopy
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 import numpy as np
 
-from minterpy.global_settings import INT_DTYPE, ARRAY
+from minterpy.global_settings import ARRAY, INT_DTYPE
 from minterpy.multi_index import MultiIndex
 from minterpy.multi_index_tree import MultiIndexTree
 from minterpy.multi_index_utils import sort_lexicographically
 from minterpy.utils import gen_chebychev_2nd_order_leja_ordered
-from minterpy.verification import check_domain_fit, check_type_n_values, check_shape
+from minterpy.verification import (check_domain_fit, check_shape,
+                                   check_type_n_values)
 
-__all__ = ['Grid']
+__all__ = ["Grid"]
 
 
 def _gen_unisolvent_nodes(multi_index, generating_points):
@@ -30,7 +31,7 @@ DEFAULT_GRID_VAL_GEN_FCT = gen_chebychev_2nd_order_leja_ordered
 
 
 def remap_indices(gen_pts_from: ARRAY, gen_pts_to: ARRAY, exponents: ARRAY) -> ARRAY:
-    """ replaces the exponents such that they point to new given generating points (values)
+    """replaces the exponents such that they point to new given generating points (values)
 
     # TODO test
     """
@@ -47,10 +48,14 @@ def remap_indices(gen_pts_from: ARRAY, gen_pts_to: ARRAY, exponents: ARRAY) -> A
             zero_entries = np.isclose(abs_diff, 0.0)
             nr_zero_entries = np.sum(zero_entries)
             if nr_zero_entries == 0:
-                raise ValueError(f'the value {cheby_val} does not appear in the previous generating values. '
-                                 'remapping the indices not possible.')
+                raise ValueError(
+                    f"the value {cheby_val} does not appear in the previous generating values. "
+                    "remapping the indices not possible."
+                )
             if nr_zero_entries > 1:
-                raise ValueError(f'the given generating values are not unique. remapping the indices not possible.')
+                raise ValueError(
+                    f"the given generating values are not unique. remapping the indices not possible."
+                )
             idx_new = np.argmin(abs_diff)
             exponents_remapped[mask, i] = idx_new
 
@@ -60,16 +65,19 @@ def remap_indices(gen_pts_from: ARRAY, gen_pts_to: ARRAY, exponents: ARRAY) -> A
 
 
 # TODO implement comparison operations based on multi index comparison operations and the generating values used
-class Grid(object):
+class Grid:
     # TODO make all attributes read only!
 
     _unisolvent_nodes: Optional[ARRAY] = None
 
-    def __init__(self, multi_index: MultiIndex,
-                 generating_points: Optional[ARRAY] = None,
-                 generating_values: Optional[ARRAY] = None):
+    def __init__(
+        self,
+        multi_index: MultiIndex,
+        generating_points: Optional[ARRAY] = None,
+        generating_values: Optional[ARRAY] = None,
+    ):
         if not isinstance(multi_index, MultiIndex):
-            raise TypeError(f'the indices must be given as {MultiIndex} class instance')
+            raise TypeError(f"the indices must be given as {MultiIndex} class instance")
         # NOTE: the multi indices of a grid must be NOT be 'lexicographically complete in order to form a basis!
         # HOWEVER: building a MultiIndexTree requires complete indices
         self.multi_index: MultiIndex = multi_index
@@ -78,9 +86,13 @@ class Grid(object):
             if generating_values is None:
                 generating_values = DEFAULT_GRID_VAL_GEN_FCT(multi_index.poly_degree)
             spatial_dimension = multi_index.spatial_dimension
-            generating_points = get_points_from_values(spatial_dimension, generating_values)
+            generating_points = get_points_from_values(
+                spatial_dimension, generating_values
+            )
 
-        self.generating_values = generating_values  # perform type checks and assign degree
+        self.generating_values = (
+            generating_values  # perform type checks and assign degree
+        )
 
         check_type_n_values(generating_points)
         check_shape(generating_points, dimensionality=2)
@@ -94,8 +106,11 @@ class Grid(object):
     # TODO rename: name is misleading. a generator is something different in python:
     #   cf. https://wiki.python.org/moin/Generators
     @classmethod
-    def from_generator(cls, multi_index: MultiIndex,
-                       generating_function: Callable = DEFAULT_GRID_VAL_GEN_FCT):
+    def from_generator(
+        cls,
+        multi_index: MultiIndex,
+        generating_function: Callable = DEFAULT_GRID_VAL_GEN_FCT,
+    ):
         generating_values = generating_function(multi_index.poly_degree)
         return cls.from_value_set(multi_index, generating_values)
 
@@ -108,7 +123,9 @@ class Grid(object):
     @property
     def unisolvent_nodes(self):
         if self._unisolvent_nodes is None:  # lazy evaluation
-            self._unisolvent_nodes = _gen_unisolvent_nodes(self.multi_index, self.generating_points)
+            self._unisolvent_nodes = _gen_unisolvent_nodes(
+                self.multi_index, self.generating_points
+            )
         return self._unisolvent_nodes
 
     @property
@@ -126,12 +143,14 @@ class Grid(object):
         values = values.reshape(-1)  # 1D
         nr_gen_vals = len(values)
         if nr_gen_vals == 0:
-            raise ValueError('at least one generating value must be given')
+            raise ValueError("at least one generating value must be given")
         self.poly_degree = nr_gen_vals - 1
         # check if multi index and generating values fit together
         if self.multi_index.poly_degree > self.poly_degree:
-            raise ValueError(f'a grid of degree {self.poly_degree} '
-                             f'cannot consist of indices with degree {self.multi_index.poly_degree}')
+            raise ValueError(
+                f"a grid of degree {self.poly_degree} "
+                f"cannot consist of indices with degree {self.multi_index.poly_degree}"
+            )
         self._unisolvent_nodes = None  # reset the unisolvent nodes
         self._generating_values: ARRAY = values
 
@@ -148,14 +167,20 @@ class Grid(object):
             # special property: the grid of degree n is contained in the grid of degree 2n (when using chebychev values)
             double_degree = self.poly_degree * 2
         generating_values_2n = DEFAULT_GRID_VAL_GEN_FCT(double_degree)
-        generating_points_2n = get_points_from_values(self.spatial_dimension, generating_values_2n)
+        generating_points_2n = get_points_from_values(
+            self.spatial_dimension, generating_values_2n
+        )
         # ATTENTION: the ordering of the grid values might change! remap
         generating_points_n = self.generating_points
-        exponents_remapped = remap_indices(generating_points_n, generating_points_2n, self.multi_index.exponents)
+        exponents_remapped = remap_indices(
+            generating_points_n, generating_points_2n, self.multi_index.exponents
+        )
         # create a new multi index instance
         multi_index_remapped = MultiIndex(exponents_remapped)
         # construct a new instance
-        new_instance = self.__class__(multi_index_remapped, generating_points_2n, generating_values_2n)
+        new_instance = self.__class__(
+            multi_index_remapped, generating_points_2n, generating_values_2n
+        )
         # NOTE: the unisolvent nodes stay equal!
         # NOTE: might not be initialised yet!
         # new_instance._unisolvent_nodes = self.unisolvent_nodes
@@ -166,37 +191,45 @@ class Grid(object):
         # apply func to unisolvent nodes and return the func values, or store them alternatively in out
         raise NotImplementedError
 
-    def _new_instance_if_necessary(self, multi_indices_new: MultiIndex) -> 'Grid':
-        """ constructs new grid instance only if the multi indices have changed
-        """
+    def _new_instance_if_necessary(self, multi_indices_new: MultiIndex) -> "Grid":
+        """constructs new grid instance only if the multi indices have changed"""
         multi_indices_old = self.multi_index
         if multi_indices_new is multi_indices_old:
             return self
         # construct new:
-        return self.__class__(multi_indices_new, self.generating_points, self.generating_values)
+        return self.__class__(
+            multi_indices_new, self.generating_points, self.generating_values
+        )
 
-    def make_complete(self) -> 'Grid':
-        """ completes the multi index
+    def make_complete(self) -> "Grid":
+        """completes the multi index
 
         # NOTE: required e.g. for building a multi index tree (DDS scheme)!
         """
         multi_indices_new = self.multi_index.make_complete()
         return self._new_instance_if_necessary(multi_indices_new)
 
-    def add_points(self, exponents: ARRAY) -> 'Grid':
+    def add_points(self, exponents: ARRAY) -> "Grid":
         exponents = np.require(exponents, dtype=INT_DTYPE)
         if np.max(exponents) > self.poly_degree:
             # TODO 'enlarge' the grid, increase the degree, ATTENTION:
-            raise ValueError(f'trying to add point with exponent {np.max(exponents)} '
-                             f'but the grid is only of degree {self.poly_degree}')
+            raise ValueError(
+                f"trying to add point with exponent {np.max(exponents)} "
+                f"but the grid is only of degree {self.poly_degree}"
+            )
 
         multi_indices_new = self.multi_index.add_exponents(exponents)
         return self._new_instance_if_necessary(multi_indices_new)
 
     # copying
     def __copy__(self):
-        return self.__class__(self.multi_index, self.generating_points, self.generating_values)
+        return self.__class__(
+            self.multi_index, self.generating_points, self.generating_values
+        )
 
     def __deepcopy__(self, mem):
-        return self.__class__(deepcopy(self.multi_index), deepcopy(self.generating_points),
-                              deepcopy(self.generating_values))
+        return self.__class__(
+            deepcopy(self.multi_index),
+            deepcopy(self.generating_points),
+            deepcopy(self.generating_values),
+        )

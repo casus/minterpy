@@ -6,7 +6,7 @@ from typing import Iterable, List
 
 import numpy as np
 
-__all__ = ['JointPolynomial']
+__all__ = ["JointPolynomial"]
 
 __author__ = "Jannik Michelfeit"
 __copyright__ = "Copyright 2021, minterpy"
@@ -18,21 +18,28 @@ __email__ = "jannik@michelfe.it"
 __status__ = "Development"
 
 from minterpy.global_settings import ARRAY
-from minterpy.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC, MultivariatePolynomialABC
+from minterpy.multivariate_polynomial_abstract import (
+    MultivariatePolynomialABC, MultivariatePolynomialSingleABC)
 from minterpy.verification import rectify_query_points
 
 
-def eval_each(polynomials: List[MultivariatePolynomialSingleABC], arg) -> Iterable[float]:
+def eval_each(
+    polynomials: List[MultivariatePolynomialSingleABC], arg
+) -> Iterable[float]:
     for p in polynomials:
         yield p(arg)
 
 
-def nr_mons_of_each(polynomials: List[MultivariatePolynomialSingleABC]) -> Iterable[int]:
+def nr_mons_of_each(
+    polynomials: List[MultivariatePolynomialSingleABC],
+) -> Iterable[int]:
     for p in polynomials:
         yield p.nr_active_monomials
 
 
-def acc_nr_mons_of_each(polynomials: List[MultivariatePolynomialSingleABC]) -> Iterable[int]:
+def acc_nr_mons_of_each(
+    polynomials: List[MultivariatePolynomialSingleABC],
+) -> Iterable[int]:
     # accumulated:
     acc = 0
     for nr_of_monomials in nr_mons_of_each(polynomials):
@@ -41,7 +48,7 @@ def acc_nr_mons_of_each(polynomials: List[MultivariatePolynomialSingleABC]) -> I
 
 
 class JointPolynomial(MultivariatePolynomialABC):
-    """ class for combining multiple polynomials into a single polynomial instance
+    """class for combining multiple polynomials into a single polynomial instance
 
     NOTE: represents the SUM of all given sub-polynomials
 
@@ -62,16 +69,21 @@ class JointPolynomial(MultivariatePolynomialABC):
         for poly in sub_polynomials:
             if not issubclass(type(poly), self.expected_type):
                 raise TypeError(
-                    f'the given input polynomial {poly} is not a subclass of the expected {self.expected_type}')
+                    f"the given input polynomial {poly} is not a subclass of the expected {self.expected_type}"
+                )
             if spatial_dimension is None:
                 spatial_dimension = poly.spatial_dimension
             elif poly.spatial_dimension != spatial_dimension:
-                raise ValueError('all input polynomials must be of the same dimensionality'
-                                 f' ({poly.spatial_dimension} != {spatial_dimension}')
+                raise ValueError(
+                    "all input polynomials must be of the same dimensionality"
+                    f" ({poly.spatial_dimension} != {spatial_dimension}"
+                )
             self.sub_polynomials.append(poly)
         if len(self.sub_polynomials) == 0:
-            raise ValueError('A joint polynomial must consist of at least one polynomial, '
-                             'but no polynomial has been given.')
+            raise ValueError(
+                "A joint polynomial must consist of at least one polynomial, "
+                "but no polynomial has been given."
+            )
 
     def _eval(self, arg) -> float:
         """
@@ -89,8 +101,7 @@ class JointPolynomial(MultivariatePolynomialABC):
 
     @property
     def spatial_dimension(self):
-        """ the dimensionality of the polynomial
-        """
+        """the dimensionality of the polynomial"""
         return self.sub_polynomials[0].spatial_dimension
 
     @property
@@ -102,7 +113,9 @@ class JointPolynomial(MultivariatePolynomialABC):
         for i, poly in enumerate(self.sub_polynomials):
             coeffs = poly.coeffs
             if coeffs is None:
-                raise ValueError('trying to access uninitialized polynomial (coefficients are `None`)')
+                raise ValueError(
+                    "trying to access uninitialized polynomial (coefficients are `None`)"
+                )
             if i == 0:
                 out = coeffs
             else:
@@ -111,7 +124,7 @@ class JointPolynomial(MultivariatePolynomialABC):
 
     @coeffs.setter
     def coeffs(self, value: np.ndarray):
-        """ splits up and assigns the coefficients of each sub-polynomial
+        """splits up and assigns the coefficients of each sub-polynomial
 
         NOTE: important for the regression which is setting the coefficients of the interpolating polynomial
 
@@ -119,9 +132,13 @@ class JointPolynomial(MultivariatePolynomialABC):
             TODO perhaps also allow a list of coefficients for each polynomial
         """
         if value.shape[-1] != self.nr_active_monomials:
-            raise ValueError(f'the given coefficients with shape {value.shape} do not fit '
-                             f'the total amount of monomials {self.nr_active_monomials}')
-        split_positions = np.fromiter(acc_nr_mons_of_each(self.sub_polynomials), dtype=int)
+            raise ValueError(
+                f"the given coefficients with shape {value.shape} do not fit "
+                f"the total amount of monomials {self.nr_active_monomials}"
+            )
+        split_positions = np.fromiter(
+            acc_nr_mons_of_each(self.sub_polynomials), dtype=int
+        )
         # NOTE: do not pass the last split position (would result in an empty last split)
         split_coeffs = np.split(value, split_positions[:-1])
         for coeffs, poly in zip(split_coeffs, self.sub_polynomials):
@@ -129,8 +146,7 @@ class JointPolynomial(MultivariatePolynomialABC):
 
     @property
     def unisolvent_nodes(self) -> ARRAY:
-        """ the points the polynomial is defined on
-        """
+        """the points the polynomial is defined on"""
         out = None
         for i, poly in enumerate(self.sub_polynomials):
             nodes = poly.grid.unisolvent_nodes
@@ -151,7 +167,7 @@ class JointPolynomial(MultivariatePolynomialABC):
         # TODO ATTENTION: different shapes and sets of multi indices!
 
     def eval_lagrange_monomials_on(self, x):
-        """ computes the values of all Lagrange monomials at all k input points
+        """computes the values of all Lagrange monomials at all k input points
 
         NOTE: required for computing the regression transformation matrices
         NOTE: only supported by sub polynomials of type LagrangePolynomial!
@@ -171,6 +187,7 @@ class JointPolynomial(MultivariatePolynomialABC):
             else:
                 out = np.append(out, mon_vals, axis=1)
         return out
+
 
 # class JointLagrangePolynomial(JointPolynomial):
 #     """ class for combining multiple Lagrange polynomials into a single polynomial instance

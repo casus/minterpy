@@ -1,26 +1,30 @@
-from _warnings import warn
 from abc import abstractmethod
 from typing import Optional, Union
 
 import numpy as np
+from _warnings import warn
 
-from minterpy.barycentric_conversion import merge_trafo_dict, merge_trafo_factorised, merge_trafo_piecewise
-from minterpy.barycentric_transformation_fcts import transform_barycentric_dict, transform_barycentric_factorised, \
-    transform_barycentric_piecewise
+from minterpy.barycentric_conversion import (merge_trafo_dict,
+                                             merge_trafo_factorised,
+                                             merge_trafo_piecewise)
+from minterpy.barycentric_transformation_fcts import (
+    transform_barycentric_dict, transform_barycentric_factorised,
+    transform_barycentric_piecewise)
 from minterpy.global_settings import ARRAY, FLOAT_DTYPE
 from minterpy.transformation_operator_abstract import TransformationOperatorABC
 
-__all__ = ['MatrixTransformationOperator']
+__all__ = ["MatrixTransformationOperator"]
 
 
 class MatrixTransformationOperator(TransformationOperatorABC):
-
     def __matmul__(self, other):
         if isinstance(other, TransformationOperatorABC):
             # the input is another transformation
             # instead of an array return another Matrix transformation operator constructed from the matrix product
             # TODO which transformation object should be passed?
-            return MatrixTransformationOperator(self.transformation, self.array_repr_full @ other.array_repr_full)
+            return MatrixTransformationOperator(
+                self.transformation, self.array_repr_full @ other.array_repr_full
+            )
 
         return self.array_repr_sparse @ other
 
@@ -34,7 +38,9 @@ class BarycentricOperatorABC(TransformationOperatorABC):
     @property
     def array_representation(self) -> ARRAY:
         if self._array_representation is None:
-            warn('building a full transformation matrix from a barycentric transformation. this is inefficient.')
+            warn(
+                "building a full transformation matrix from a barycentric transformation. this is inefficient."
+            )
             # NOTE: 'self' arg must not be passed to the the merging fcts (@staticmethod)
             full_array = self.__class__.merging_fct(*self.transformation_data)
             self._array_representation = full_array
@@ -50,13 +56,17 @@ class BarycentricOperatorABC(TransformationOperatorABC):
     def merging_fct(*args):
         pass
 
-    def __matmul__(self, other: Union[TransformationOperatorABC, ARRAY]) -> Union[MatrixTransformationOperator, ARRAY]:
+    def __matmul__(
+        self, other: Union[TransformationOperatorABC, ARRAY]
+    ) -> Union[MatrixTransformationOperator, ARRAY]:
         if isinstance(other, TransformationOperatorABC):
             # the input is another transformation
             # workaround: return matrix operator constructed from the matrix product
             # TODO support this natively
             # TODO which transformation object should be passed?
-            return MatrixTransformationOperator(self.transformation, self.array_repr_full @ other.array_repr_full)
+            return MatrixTransformationOperator(
+                self.transformation, self.array_repr_full @ other.array_repr_full
+            )
 
         # TODO support "separate multi index" transformations
 
@@ -68,7 +78,9 @@ class BarycentricOperatorABC(TransformationOperatorABC):
         # trafo_dict, leaf_positions = self.data_container
 
         # NOTE: 'self' arg must not be passed to the the transformation fcts (@staticmethod)
-        self.__class__.transformation_fct(coeffs_in, coeffs_out_placeholder, *self.transformation_data)
+        self.__class__.transformation_fct(
+            coeffs_in, coeffs_out_placeholder, *self.transformation_data
+        )
         return coeffs_out_placeholder
 
     def _get_array_repr(self):

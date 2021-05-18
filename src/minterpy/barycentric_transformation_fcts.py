@@ -29,9 +29,10 @@ __status__ = "Development"
 
 
 @njit(cache=True)
-def transform_barycentric_dict(coeffs_in: ARRAY, coeffs_out: ARRAY, trafo_dict: TRAFO_DICT,
-                               leaf_positions: ARRAY) -> None:
-    """ performs a "piecewise" transformation (barycentric)
+def transform_barycentric_dict(
+    coeffs_in: ARRAY, coeffs_out: ARRAY, trafo_dict: TRAFO_DICT, leaf_positions: ARRAY
+) -> None:
+    """performs a "piecewise" transformation (barycentric)
 
     TODO
     version using a dictionary encoding the transformation (= a triangular array piece for every leaf node combination)
@@ -65,9 +66,15 @@ def transform_barycentric_dict(coeffs_in: ARRAY, coeffs_out: ARRAY, trafo_dict: 
 
 #  TODO void(F_1D, F_1D, F_2D, F_2D, F_1D, F_1D),
 @njit(cache=True)
-def transform_barycentric_factorised(coeffs_in: ARRAY, coeffs_out_placeholder: ARRAY, first_leaf_solution: ARRAY,
-                                     leaf_factors: ARRAY, leaf_positions: ARRAY, leaf_sizes: ARRAY) -> None:
-    """ performs a "piecewise" barycentric transformation
+def transform_barycentric_factorised(
+    coeffs_in: ARRAY,
+    coeffs_out_placeholder: ARRAY,
+    first_leaf_solution: ARRAY,
+    leaf_factors: ARRAY,
+    leaf_positions: ARRAY,
+    leaf_sizes: ARRAY,
+) -> None:
+    """performs a "piecewise" barycentric transformation
 
     uses an optimised format of storing the transformations:
         just based on a factor for each combination of leaf problems and a single solution 1D problem
@@ -112,9 +119,14 @@ def transform_barycentric_factorised(coeffs_in: ARRAY, coeffs_out_placeholder: A
 
 
 @njit(cache=True)
-def transform_barycentric_piecewise(coeffs_in: ARRAY, coeffs_out: ARRAY, matrix_pieces: TYPED_LIST,
-                                    start_positions_in: ARRAY, start_positions_out: ARRAY) -> None:
-    """ performs a "piecewise" transformation (barycentric)
+def transform_barycentric_piecewise(
+    coeffs_in: ARRAY,
+    coeffs_out: ARRAY,
+    matrix_pieces: TYPED_LIST,
+    start_positions_in: ARRAY,
+    start_positions_out: ARRAY,
+) -> None:
+    """performs a "piecewise" transformation (barycentric)
 
     unused legacy version using the explicitly computed transformation matrix pieces
     NOTE: this format includes a lot of redundancies,
@@ -122,7 +134,9 @@ def transform_barycentric_piecewise(coeffs_in: ARRAY, coeffs_out: ARRAY, matrix_
 
     transform and sum up the respective parts (slices) of the coefficients
     """
-    for matrix_piece, start_pos_in, start_pos_out in zip(matrix_pieces, start_positions_in, start_positions_out):
+    for matrix_piece, start_pos_in, start_pos_out in zip(
+        matrix_pieces, start_positions_in, start_positions_out
+    ):
         # NOTE: the size of the required slices of the coefficient vectors
         # are implicitly encoded in the size of each transformation matrix piece!
         size_out, size_in = matrix_piece.shape

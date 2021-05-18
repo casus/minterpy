@@ -8,10 +8,11 @@ import numpy as np
 
 from minterpy.grid import Grid
 from minterpy.multi_index import MultiIndex
-from minterpy.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC
+from minterpy.multivariate_polynomial_abstract import \
+    MultivariatePolynomialSingleABC
 from minterpy.transformation_operator_abstract import TransformationOperatorABC
 
-__all__ = ['TransformationABC']
+__all__ = ["TransformationABC"]
 
 
 class TransformationABC(ABC):
@@ -23,11 +24,17 @@ class TransformationABC(ABC):
     available_transforms = {}
 
     # TODO remove generating points as input. not required! stored in polynomial!
-    def __init__(self, origin_poly: MultivariatePolynomialSingleABC, generating_points: Optional[np.ndarray] = None):
+    def __init__(
+        self,
+        origin_poly: MultivariatePolynomialSingleABC,
+        generating_points: Optional[np.ndarray] = None,
+    ):
         if not isinstance(origin_poly, MultivariatePolynomialSingleABC):
             raise TypeError(f"<{origin_poly}> is not a Polynomial type.")
         if not isinstance(origin_poly, self.origin_type):
-            raise TypeError(f"<{origin_poly}> is not of the expected type {self.origin_type}.")
+            raise TypeError(
+                f"<{origin_poly}> is not of the expected type {self.origin_type}."
+            )
         self.multi_index: MultiIndex = origin_poly.multi_index
         self.origin_poly = origin_poly
 
@@ -51,7 +58,8 @@ class TransformationABC(ABC):
         # TODO remove?!
         if generating_points is not None:
             raise NotImplementedError(
-                'the generating points should not be passed as input. should be stored in origin polynomial')
+                "the generating points should not be passed as input. should be stored in origin polynomial"
+            )
         # self.generating_points = generating_points
         self._transformation_operator: Optional[np.ndarray] = None
 
@@ -75,7 +83,8 @@ class TransformationABC(ABC):
         # TODO helper fcts equality of bases ("grid") __eq__
         elif type(origin_poly) != self.origin_type:
             raise TypeError(
-                f"Input polynomial type <{type(origin_poly)}> differs from expected polynomial type <{self.origin_type}>")
+                f"Input polynomial type <{type(origin_poly)}> differs from expected polynomial type <{self.origin_type}>"
+            )
         # TODO unsafe. user could input wrong polynomial (e.g. different multi_index!)
         #   or even worse: with same multi index but different grid! (undetected!)
         #   -> test input match!
@@ -103,7 +112,9 @@ class TransformationABC(ABC):
     @property
     def transformation_operator(self) -> TransformationOperatorABC:
         if self._transformation_operator is None:
-            self._transformation_operator: TransformationOperatorABC = self._get_transformation_operator()
+            self._transformation_operator: TransformationOperatorABC = (
+                self._get_transformation_operator()
+            )
         return self._transformation_operator
 
     @property

@@ -1,9 +1,7 @@
-# -*- coding:utf-8 -*-
 import unittest
 
 
 class BaseClassTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         # preparations which have to be made only once
