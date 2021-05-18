@@ -19,7 +19,7 @@ __all__ = ["LagrangePolynomial"]
 
 
 def dummy():
-    """ Placeholder function.
+    """Placeholder function.
 
     Cauton
     ------

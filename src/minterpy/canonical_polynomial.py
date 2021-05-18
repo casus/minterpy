@@ -18,7 +18,7 @@ from minterpy.verification import (convert_eval_output, rectify_eval_input,
 
 
 def dummy():
-    """ Placeholder function.
+    """Placeholder function.
 
 
     Note
@@ -287,8 +287,7 @@ class CanonicalPolynomial(MultivariatePolynomialSingleABC):
     This is the docstring of the canonical base class.
     """
 
-
-    #__doc__ += MultivariatePolynomialSingleABC.__doc_attrs__
+    # __doc__ += MultivariatePolynomialSingleABC.__doc_attrs__
     # Virtual Functions
     _add = staticmethod(_canonical_add)
     _sub = staticmethod(_canonical_sub)

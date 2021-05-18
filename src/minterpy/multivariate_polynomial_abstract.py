@@ -5,7 +5,7 @@ This module contains the abstract base classes, from which all concrete implemen
 This ensures that all polynomials work with the same interface, so futher features can be formulated without referencing the concrete polynomial implementation. See e.g. :PEP:`3119` for further explanations on that topic.
 """
 import abc
-from copy import copy,deepcopy
+from copy import copy, deepcopy
 from typing import Optional, Union
 
 import numpy as np
@@ -86,7 +86,7 @@ class MultivariatePolynomialABC(abc.ABC):
 
     @abc.abstractmethod
     def _eval(self, arg) -> Union[float, ARRAY]:
-        """ Abstract evaluation function.
+        """Abstract evaluation function.
 
         Notes
         -----
@@ -96,7 +96,7 @@ class MultivariatePolynomialABC(abc.ABC):
 
     # TODO *args, **kwargs ?! or rather "point" or "x"
     def __call__(self, arg) -> Union[float, ARRAY]:
-        """ Evaluation of the polynomial.
+        """Evaluation of the polynomial.
 
         This function is called, if an instance of the polynomial(s) is called: ``P(x)``
 
@@ -154,51 +154,52 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
       but all indices from multi_index must be contained in the grid!
       this corresponds to polynomials with just some of the Lagrange polynomials of the basis being "active"
     """
-    #__doc__ += __doc_attrs__
+
+    # __doc__ += __doc_attrs__
 
     _coeffs: Optional[ARRAY] = None
 
     @staticmethod
     @abc.abstractmethod
     def generate_internal_domain(internal_domain, spatial_dimension):
-        #no docstring here, since it is given in the concrete implementation
+        # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
     def generate_user_domain(user_domain, spatial_dimension):
-        #no docstring here, since it is given in the concrete implementation
+        # no docstring here, since it is given in the concrete implementation
         pass
 
     # TODO static methods should not have a parameter "self"
     @staticmethod
     @abc.abstractmethod
     def _add(self, other):
-        #no docstring here, since it is given in the concrete implementation
+        # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
     def _sub(self, other):
-        #no docstring here, since it is given in the concrete implementation
+        # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
     def _mul(self, other):
-        #no docstring here, since it is given in the concrete implementation
+        # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
     def _div(self, other):
-        #no docstring here, since it is given in the concrete implementation
+        # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
     def _pow(self, pow):
-        #no docstring here, since it is given in the concrete implementation
+        # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
@@ -494,7 +495,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     # copying
     def __copy__(self):
-        """ Creates of a shallow copy.
+        """Creates of a shallow copy.
 
         This function is called, if one uses the top-level function ``copy()`` on an instance of this class.
 
@@ -517,7 +518,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         )
 
     def __deepcopy__(self, mem):
-        """ Creates of a deepcopy.
+        """Creates of a deepcopy.
 
         This function is called, if one uses the top-level function ``deepcopy()`` on an instance of this class.
 

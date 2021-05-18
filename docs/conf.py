@@ -28,24 +28,22 @@ extensions = [
     "myst_parser",
     "sphinx.ext.autodoc",
     "numpydoc",
-    'sphinx.ext.autosummary',
+    "sphinx.ext.autosummary",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
     "sphinx_copybutton",
-    "sphinx.ext.intersphinx"
+    "sphinx.ext.intersphinx",
 ]
 
 
 # Intersphinx configuration
 intersphinx_mapping = {
-    'neps': ('https://numpy.org/neps', None),
-    'python': ('https://docs.python.org/dev', None),
-    'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
-    'matplotlib': ('https://matplotlib.org/stable', None),
-    'pytest': ('https://docs.pytest.org/en/stable', None),
+    "neps": ("https://numpy.org/neps", None),
+    "python": ("https://docs.python.org/dev", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
+    "matplotlib": ("https://matplotlib.org/stable", None),
+    "pytest": ("https://docs.pytest.org/en/stable", None),
 }
-
-
 
 
 # configure numpydoc
@@ -74,7 +72,6 @@ html_theme = "sphinx_rtd_theme"
 html_title = f"Minterpy {version[0:3]}"
 
 html_baseurl = "https://minterpy.readthedocs.io/en/latest/"
-
 
 
 # Add any paths that contain custom static files (such as style sheets) here,
