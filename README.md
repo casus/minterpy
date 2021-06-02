@@ -1,6 +1,6 @@
 # minterpy
 
-Classical interpolation schemes in arbitrary dimensions.
+Generalisations of classic Newton & Lagrange interpolation schemes to arbitrary multi-dimensions.
 
 ## Description
 
