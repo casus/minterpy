@@ -4,10 +4,6 @@ Abstract base class for defining transformation operators from one polynomial ba
 This module provides the abstract base class for polynomial basis transformation operators from which all concrete
 implentations are derived.
 
-In the simplest case, polynomial basis transformations can be thought of as a multiplication of the coefficients
-with a transformation matrix. In general, however, the transformation need not be a matrix. This abstraction layer
-makes the interface uniform for all cases, by overloading the matrix multiplication ``@`` operator.
-
 .. todo::
     "inverse" property useful?
 """
@@ -68,7 +64,7 @@ class TransformationOperatorABC(ABC):
         """Array representation of the full transformation ("transformation matrix").
 
         :return: the matrix representation of the transformation.
-        
+
         Notes
         -----
         The output transforms the whole basis (not only the active monomials)!

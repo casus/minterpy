@@ -3,7 +3,7 @@
 .. transformation_operator_abstract:
 
 ###########################
-TransformationOperatorABC
+Transformation Operator ABC
 ###########################
 .. automodule:: minterpy.transformation_operator_abstract
 
