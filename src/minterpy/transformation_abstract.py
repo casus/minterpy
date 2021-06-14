@@ -134,15 +134,6 @@ class TransformationABC(ABC):
         """
         pass
 
-    @property
-    @abstractmethod
-    def _short_name(self):
-        """Abstract container for a short name for the particular transformation that helps in identifying it uniquely.
-
-        This is a placeholder of the ABC, which is overwritten by the concrete implementation.
-        """
-        pass
-
     @abstractmethod
     def _get_transformation_operator(self):
         """Abstract container for storing the transformation operator.

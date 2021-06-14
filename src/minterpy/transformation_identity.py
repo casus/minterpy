@@ -25,7 +25,6 @@ class TransformationIdentity(TransformationABC):
     """Transformation between same basis.
     """
 
-    _short_name = "identity"
     origin_type = MultivariatePolynomialABC
     target_type = MultivariatePolynomialABC
     _get_transformation_operator = _build_identity_transformation_operator
