@@ -33,6 +33,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx_copybutton",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
 ]
 
 

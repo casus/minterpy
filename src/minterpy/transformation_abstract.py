@@ -1,7 +1,7 @@
 """
 Abstract base class for defining transformations from one polynomial basis to another.
 
-This module provides the abstract base class for polynomial basis transformations (origin -> target) from
+This module provides the abstract base class for polynomial basis transformations (origin to target) from
 which all concrete implentations are derived.
 """
 
@@ -30,11 +30,9 @@ class TransformationABC(ABC):
     origin_poly : MultivariatePolynomialSingleABC
         The instance of the polynomial to be transformed.
     multi_index : MultiIndex
-
+        The multi index set of the origin polynomial (and also the target polynomial).
     grid : Grid
-
-    origin_type
-
+        The grid of the origin polynomial.
 
     """
 

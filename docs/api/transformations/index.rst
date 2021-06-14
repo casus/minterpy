@@ -10,3 +10,4 @@ polynomial basis (Canonical, Lagrange, and Newton) are also provided.
    :maxdepth: 2
 
    transformationABC
+   transformOpABC
