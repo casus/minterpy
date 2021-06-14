@@ -1,3 +1,12 @@
+"""
+Concrete implementation of Identity transformation when there is no basis change.
+
+Notes
+-----
+This class is needed for completeness reasons and also to enable the high-level helper functions for polynomial basis
+transformations to handle transformations between identical basis.
+"""
+
 from copy import copy
 
 import numpy as np
@@ -13,8 +22,7 @@ def _build_identity_transformation_operator(transformation):
 
 
 class TransformationIdentity(TransformationABC):
-    """
-    Transformation into the identical basis
+    """Transformation between same basis.
     """
 
     _short_name = "identity"

@@ -13,3 +13,5 @@ polynomial basis (Canonical, Lagrange, and Newton) are also provided.
    transformationCanonical
    transformationNewton
    transformationLagrange
+   transformationIdentity
+   transformationMeta

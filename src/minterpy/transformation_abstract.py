@@ -81,8 +81,10 @@ class TransformationABC(ABC):
     # TODO register the transformation classes to the available_transforms dictionary
     # TODO integrate function to retrieve the proper transformation (cf. transformation_utils.py)
     def __init_subclass__(cls, **kwargs):
+        """Add a concrete implementation to the registry of available transformations
+        """
         super().__init_subclass__(**kwargs)
-        cls.available_transforms[cls._short_name] = cls
+        cls.available_transforms[(cls.origin_type, cls.target_type)] = cls
 
     # TODO: remove argument. store origin poly once and reuse.
     #  otherwise the user could input an incompatible polynomial
