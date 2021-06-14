@@ -11,3 +11,4 @@ This is the API reference of minterpy. Here all exposed functions and classes wi
    :maxdepth: 2
 
    polyBases/index
+   transformations/index
