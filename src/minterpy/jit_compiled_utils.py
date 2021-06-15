@@ -13,14 +13,19 @@ from minterpy.global_settings import (B_TYPE, F_1D, F_2D, F_3D, FLOAT, I_1D,
 def can_eval_mult(x_multiple, coeffs, exponents, result_placeholder):
     """Naive evaluation of polynomials in canonical basis.
 
-    :param x_multiple: set of points where polynomial is to be evaluated. Shape (k x m).
-    :param coeffs: polynomial coefficients in canonical basis. Shape (N x p).
-    :param exponents: exponents for the polynomial. Shape (N x m).
-    :param result_placeholder: placeholder array where the results of evaluation are stored. Shape (k x p).
+    - ``m`` spatial dimension
+    - ``k`` number of points
+    - ``N`` number of monomials
+    - ``p`` number of polynomials
+
+    :param x_multiple: set of points where polynomial is to be evaluated. The shape has to be ``(k x m)``.
+    :param coeffs: polynomial coefficients in canonical basis. The shape has to be ``(N x p)``.
+    :param exponents: exponents for the polynomial. The shape has to be ``(N x m)``.
+    :param result_placeholder: placeholder array where the results of evaluation are stored. The shape has to be ``(k x p)``.
 
     Notes
     -----
-    This is a naive evaluation, a more computationally accurate approach would be to transform to Newton basis and
+    This is a naive evaluation; a more numerically accurate approach would be to transform to Newton basis and
     using the newton evaluation scheme.
 
     Multiple polynomials in the canonical basis can be evaluated at once by having a 2D coeffs array. It is assumed
