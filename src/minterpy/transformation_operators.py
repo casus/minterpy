@@ -1,3 +1,14 @@
+"""
+Concrete implementations for TransformationOperator classes.
+
+The following implementations are provided:
+- MatrixTransformationOperator
+- BarycentricDictOperator
+- BarycentricFactorisedOperator
+- BarycentricPiecewiseOperator
+
+"""
+
 from abc import abstractmethod
 from typing import Optional, Union
 
@@ -17,6 +28,9 @@ __all__ = ["MatrixTransformationOperator"]
 
 
 class MatrixTransformationOperator(TransformationOperatorABC):
+    """Concrete implementation of a TransformationOperator constructed as a matrix.
+    """
+
     def __matmul__(self, other):
         if isinstance(other, TransformationOperatorABC):
             # the input is another transformation

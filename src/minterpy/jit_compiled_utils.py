@@ -1,3 +1,7 @@
+"""
+Module containing several numba optimized functions.
+"""
+
 import numpy as np
 from numba import b1, njit, void
 
@@ -7,6 +11,22 @@ from minterpy.global_settings import (B_TYPE, F_1D, F_2D, F_3D, FLOAT, I_1D,
 
 @njit(void(F_2D, F_2D, I_2D, F_2D), cache=True)
 def can_eval_mult(x_multiple, coeffs, exponents, result_placeholder):
+    """Naive evaluation of polynomials in canonical basis.
+
+    :param x_multiple: set of points where polynomial is to be evaluated. Shape (k x m).
+    :param coeffs: polynomial coefficients in canonical basis. Shape (N x p).
+    :param exponents: exponents for the polynomial. Shape (N x m).
+    :param result_placeholder: placeholder array where the results of evaluation are stored. Shape (k x p).
+
+    Notes
+    -----
+    This is a naive evaluation, a more computationally accurate approach would be to transform to Newton basis and
+    using the newton evaluation scheme.
+
+    Multiple polynomials in the canonical basis can be evaluated at once by having a 2D coeffs array. It is assumed
+    that they all have the same set of exponents.
+
+    """
     nr_coeffs, nr_polys = coeffs.shape
     r = result_placeholder
     nr_points, _ = x_multiple.shape
@@ -23,13 +43,21 @@ def can_eval_mult(x_multiple, coeffs, exponents, result_placeholder):
 # NOTE: the most "fine grained" functions must be defined first
 # in order for Numba to properly infer the function types
 
-
 @njit(FLOAT(F_1D, F_1D), cache=True)  # O(N)
 def single_eval(coefficients, monomial_vals):
-    # single eval with a single point and a single list of coefficients
+    """Evaluation of one polynomial at a single point given the coefficients and monomial evaluations.
+
+    :param coefficients: array of polynomial coefficients
+    :param monomial_vals: array of evaluated monomial values at the point.
+    :return: the value of polynomial evaluated at the point
+
+    Notes
+    -----
+    The value of a polynomial in Newton form is the sum over all coefficients multiplied with the value of the
+    corresponding Newton basis polynomial.
+    """
+
     assert len(coefficients) == len(monomial_vals)
-    # the value of a polynomial in Newton form
-    # is the sum over all coefficients multiplied with the value of the corresponding Newton polynomial
     return np.sum(coefficients * monomial_vals)
 
 
