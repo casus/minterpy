@@ -32,19 +32,19 @@ __status__ = "Development"
 def transform_barycentric_dict(
     coeffs_in: ARRAY, coeffs_out: ARRAY, trafo_dict: TRAFO_DICT, leaf_positions: ARRAY
 ) -> None:
-    """performs a "piecewise" transformation (barycentric)
+    """Transformation using a dictionary encoding (= a triangular array piece for every leaf node combination).
 
-    TODO
-    version using a dictionary encoding the transformation (= a triangular array piece for every leaf node combination)
-    NOTE: this format includes a lot of redundancies,
-        because the matrix pieces are actually just multiples of each other!
+    Notes
+    -----
+    Depending on the problem size it might be more performant
+    to use a different implementation of this transformation!
+    (e.g. regular DDS or leaf level DDS (factorised format)
 
-    NOTE: depending on the problem size it might be more performant
-        to use a different implementation of this transformation!
-        (e.g. regular DDS or leaf level DDS (factorised format)
-
-    transforms and sums up the respective parts (slices) of the coefficients
+    Transforms and sums up the respective parts (slices) of the coefficients.
     """
+
+    # NOTE: this format includes a lot of redundancies,
+    #     because the matrix pieces are actually just multiples of each other!
     for (leaf_idx_l, leaf_idx_r), matrix_piece in trafo_dict.items():
         start_pos_in = leaf_positions[leaf_idx_l]
         start_pos_out = leaf_positions[leaf_idx_r]
@@ -74,19 +74,17 @@ def transform_barycentric_factorised(
     leaf_positions: ARRAY,
     leaf_sizes: ARRAY,
 ) -> None:
-    """performs a "piecewise" barycentric transformation
+    """Transformation based on factorised format that minimises storage.
 
-    uses an optimised format of storing the transformations:
-        just based on a factor for each combination of leaf problems and a single solution 1D problem
-
-    transform and sum up the respective parts (slices) of the coefficients
+    The factorised copies of the basic 1D atomic sub-problem are assigned to each combination of leaf problems.
+    By keeping the decomposition, the transformation acts on the respective parts (slices) of the coefficients.
 
     :param leaf_factors: square array of lower triangular form containing a factor for each combination of leaf nodes.
     :param first_leaf_solution: the solution of the 1D sub-problem (leaf) of maximal size
     :param coeffs_in: the Lagrange coefficients to be transformed
     :param coeffs_out_placeholder: a placeholder for the output coefficients
         NOTE: must be initialised to all 0 and have the equal size as the input coefficients
-    :return: None. the output placeholder will hold the result
+    :return: None. the output placeholder will hold the result.
     """
     nr_of_leaves = len(leaf_positions)
     for node_idx_1 in range(nr_of_leaves):
@@ -126,13 +124,13 @@ def transform_barycentric_piecewise(
     start_positions_in: ARRAY,
     start_positions_out: ARRAY,
 ) -> None:
-    """performs a "piecewise" transformation (barycentric)
+    """Transformation based on piecewise format.
 
-    unused legacy version using the explicitly computed transformation matrix pieces
-    NOTE: this format includes a lot of redundancies,
-        because the matrix pieces are actually just multiples of each other!
-
-    transform and sum up the respective parts (slices) of the coefficients
+    :param coeffs_in: the coefficients to be transformed.
+    :param coeffs_out_placeholder: a placeholder for the output coefficients.
+    :param matrix_pieces: sub transformation matrices.
+    :param start_positions_in: start position for the slice in coefficients to be transformed.
+    :param start_positions_out: start position for the slice in output coefficients.
     """
     for matrix_piece, start_pos_in, start_pos_out in zip(
         matrix_pieces, start_positions_in, start_positions_out

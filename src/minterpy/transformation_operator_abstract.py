@@ -61,7 +61,7 @@ class TransformationOperatorABC(ABC):
 
     @property
     def array_repr_full(self) -> ARRAY:
-        """Array representation of the full transformation ("transformation matrix").
+        """Array representation of the global transformation matrix.
 
         :return: the matrix representation of the transformation.
 
@@ -75,9 +75,14 @@ class TransformationOperatorABC(ABC):
 
     @property
     def array_repr_sparse(self) -> ARRAY:
-        """Array representation of the transformation only for the active monomials.
+        """Array representation of the sub-transformation matrix transforming only the active monomials.
 
         :return: the transformation matrix for the active monomials.
+
+        Notes
+        -----
+        This is an experimental feature which is part of ongoing work.
+
         """
         array_repr = self.array_repr_full
         origin_poly = self.transformation.origin_poly

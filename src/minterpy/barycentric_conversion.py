@@ -23,11 +23,11 @@ from minterpy.global_settings import (ARRAY, FLOAT_DTYPE, INT_DTYPE,
 
 @njit(cache=True)
 def merge_trafo_dict(trafo_dict: TRAFO_DICT, leaf_positions: ARRAY) -> ARRAY:
-    """creates a transformation array of full size from a precomputed barycentric transformation in dictionary format
-
-    TODO use the same merging fct everywhere in order to remove redundancies
-    TODO convert into piecewise format first, create fct for this,
+    """Reconstructing the global transformation matrix from the precomputed transformation in dictionary format.
     """
+    # TODO use the same merging fct everywhere in order to remove redundancies
+    # TODO convert into piecewise format first, create fct for this,
+
     last_leaf_idx = len(leaf_positions) - 1
     last_leaf_pos = leaf_positions[last_leaf_idx]
     last_leaf_size = trafo_dict[last_leaf_idx, last_leaf_idx].shape[0]
@@ -95,11 +95,15 @@ def factorised_2_piecewise(
 def merge_trafo_piecewise(
     matrix_pieces: TYPED_LIST, start_positions_in: ARRAY, start_positions_out: ARRAY
 ) -> ARRAY:
-    """creates a transformation array of full size from a precomputed barycentric transformation in piecewise format
+    """Reconstructing the global transformation matrix from the precomputed transformation in piecewise format.
 
-    used for testing the equality of the transformation matrices of both regular and barycentric computation
-    TODO allow to only create a slice of the total matrix
+    Notes
+    -----
+    This is only used for testing the equality of the transformation matrices of both global and barycentric
+    transformation.
     """
+
+    # TODO allow to only create a slice of the total matrix
     # ATTENTION: the last entry must belong to the last leaf node
     # -> the ordering of the matrix pieces is not irrelevant!
     last_leaf_idx = len(matrix_pieces) - 1
@@ -129,7 +133,7 @@ def merge_trafo_factorised(
     leaf_positions: ARRAY,
     leaf_sizes: ARRAY,
 ) -> ARRAY:
-    """creates a transformation array of full size from a precomputed barycentric transformation in factorised format"""
+    """Reconstructing the global transformation matrix from the precomputed transformation in factorised format."""
     trafo_piecewise = factorised_2_piecewise(
         first_leaf_solution, leaf_factors, leaf_positions, leaf_sizes
     )

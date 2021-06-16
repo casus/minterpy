@@ -2,6 +2,7 @@
 Concrete implementations for TransformationOperator classes.
 
 The following implementations are provided:
+
 - MatrixTransformationOperator
 - BarycentricDictOperator
 - BarycentricFactorisedOperator
@@ -43,14 +44,26 @@ class MatrixTransformationOperator(TransformationOperatorABC):
         return self.array_repr_sparse @ other
 
     def _get_array_repr(self) -> ARRAY:
+        """Returns the matrix representation of the transformation.
+        """
         return self.transformation_data
 
 
 class BarycentricOperatorABC(TransformationOperatorABC):
+    """Abstract base class for the barycentric transformation operators.
+
+    Attributes
+    ----------
+    array_representation
+
+    transformation_fct : Abstract method for executing the potentially decomposed linear transformation.
+    merging_fct : Abstract method for reconstructing the global matrix from the decomposition.
+    """
     _array_representation: Optional[ARRAY] = None
 
     @property
     def array_representation(self) -> ARRAY:
+        """Reconstructs the global transformation matrix."""
         if self._array_representation is None:
             warn(
                 "building a full transformation matrix from a barycentric transformation. this is inefficient."
@@ -102,15 +115,25 @@ class BarycentricOperatorABC(TransformationOperatorABC):
 
 
 class BarycentricDictOperator(BarycentricOperatorABC):
+    """Concrete implementation of the BarycentricOperator given by the edge case given by decomposition to the 1D atomic sub-problems.
+    """
+
     transformation_fct = transform_barycentric_dict
     merging_fct = merge_trafo_dict
 
 
 class BarycentricFactorisedOperator(BarycentricOperatorABC):
+    """Concrete implementation of the BarycentricOperator given by the edge case given by realizing the factorised
+    copied of the basic 1D atomic sub-problem.
+    """
+
     transformation_fct = transform_barycentric_factorised
     merging_fct = merge_trafo_factorised
 
 
 class BarycentricPiecewiseOperator(BarycentricOperatorABC):
+    """Concrete implementation of the BarycentricOperator used to make comparisons with the global matrix possible by zooming into corresponding submatrix.
+    """
+
     transformation_fct = transform_barycentric_piecewise
     merging_fct = merge_trafo_piecewise

@@ -39,11 +39,15 @@ __status__ = "Development"
 def compute_1d_dds_solutions(
     generating_points: ARRAY, problem_sizes: TYPED_LIST
 ) -> TYPED_LIST:
-    """performs all 1D DDS schemes required for the L2N tree
+    """Performs all 1D DDS schemes of maximal required size along each dimension as required in the L2N tree.
 
-    Returns
-    -------
-    a list of the 1D DDS solutions of maximal required size for each dimension
+    :param generating_points: the generating points from the Grid.
+    :param problem_sizes: maximum problem size along each dimension.
+    :return: a list of the 1D DDS solutions of maximal required size for each dimension
+
+    Notes
+    -----
+    This is similar to the precomputation in the Newton evaluation.
     """
     dimensionality = len(problem_sizes)  # TODO rename
     dds_solutions = List()  # use Numba typed list
@@ -72,20 +76,21 @@ def expand_solution(
     subtree_sizes: TYPED_LIST,
     problem_sizes: TYPED_LIST,
 ) -> TRAFO_DICT:
-    """computes the DDS solution of the next lower dimension
+    """Combining the precomputed 1D DDS solutions.
 
-    Parameters
-    ----------
-    prev_solutions: the previous DDS solution of the higher dimension
-        given as a composite triangular matrix encoded by a dictionary
-    dds_solution_max: 1D DDS solution of the lower dimension
-    dim_idx_par: the index of the higher dimension
+    :param prev_solutions: the previous DDS solution of the higher dimension
+                           given as a composite triangular matrix encoded by a dictionary
+    :param dds_solution_max: 1D DDS solution of the lower dimension
+    :param dim_idx_par: the index of the higher dimension
+    :return: a composite triangular matrix representing the DDS solution of the next lower dimension encoded by a
+             dictionary
 
-    Returns
-    -------
-
-    a composite triangular matrix representing the DDS solution of the next lower dimension encoded by a dictionary
+    Notes
+    -----
+    This is similar to the Newton evaluation using the precomputed products.
     """
+    # from Jannik: computes the DDS solution of the next lower dimension
+
     expanded_solutions = dict()  # required Numba numba.typed.Dict
     splits_in_dim = split_positions[dim_idx_par]
     nr_nodes_in_dim = len(splits_in_dim)
