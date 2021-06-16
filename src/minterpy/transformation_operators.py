@@ -56,8 +56,6 @@ class BarycentricOperatorABC(TransformationOperatorABC):
     ----------
     array_representation
 
-    transformation_fct : Abstract method for executing the potentially decomposed linear transformation.
-    merging_fct : Abstract method for reconstructing the global matrix from the decomposition.
     """
     _array_representation: Optional[ARRAY] = None
 
@@ -76,16 +74,22 @@ class BarycentricOperatorABC(TransformationOperatorABC):
     @staticmethod
     @abstractmethod
     def transformation_fct(coeffs_in, coeffs_out_placeholder, *args):
+        """Abstract method for executing the potentially decomposed linear transformation.
+        """
         pass
 
     @staticmethod
     @abstractmethod
     def merging_fct(*args):
+        """Abstract method for reconstructing the global matrix from the decomposition.
+        """
         pass
 
     def __matmul__(
         self, other: Union[TransformationOperatorABC, ARRAY]
     ) -> Union[MatrixTransformationOperator, ARRAY]:
+        """Applies the transformation operator on the input.
+        """
         if isinstance(other, TransformationOperatorABC):
             # the input is another transformation
             # workaround: return matrix operator constructed from the matrix product
@@ -111,11 +115,13 @@ class BarycentricOperatorABC(TransformationOperatorABC):
         return coeffs_out_placeholder
 
     def _get_array_repr(self):
+        """Reconstructs the global transformation matrix."""
         return self.array_representation
 
 
 class BarycentricDictOperator(BarycentricOperatorABC):
-    """Concrete implementation of the BarycentricOperator given by the edge case given by decomposition to the 1D atomic sub-problems.
+    """Concrete implementation of the BarycentricOperator given by the edge case given by decomposition to the 1D
+    atomic sub-problems.
     """
 
     transformation_fct = transform_barycentric_dict
@@ -132,7 +138,8 @@ class BarycentricFactorisedOperator(BarycentricOperatorABC):
 
 
 class BarycentricPiecewiseOperator(BarycentricOperatorABC):
-    """Concrete implementation of the BarycentricOperator used to make comparisons with the global matrix possible by zooming into corresponding submatrix.
+    """Concrete implementation of the BarycentricOperator used to make comparisons with the global matrix possible by
+    zooming into corresponding submatrix.
     """
 
     transformation_fct = transform_barycentric_piecewise

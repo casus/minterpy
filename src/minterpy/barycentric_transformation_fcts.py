@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-""" this module provides the functionality required for performing (precomputed) barycentric transformations
+"""
+This module provides the functionality required for performing (precomputed) barycentric transformations.
 
 TODO use the most performant transformation implementation depending on
 NOTE: TODO the performance of each of the different formats needs to be balanced
@@ -18,21 +18,17 @@ from numba import njit
 
 from minterpy.global_settings import ARRAY, TRAFO_DICT, TYPED_LIST
 
-__author__ = "Jannik Michelfeit"
-__copyright__ = "Copyright 2021, minterpy"
-__credits__ = ["Jannik Michelfeit"]
-# __license__ =
-# __version__ =
-# __maintainer__ =
-__email__ = "jannik@michelfe.it"
-__status__ = "Development"
-
 
 @njit(cache=True)
 def transform_barycentric_dict(
     coeffs_in: ARRAY, coeffs_out: ARRAY, trafo_dict: TRAFO_DICT, leaf_positions: ARRAY
 ) -> None:
     """Transformation using a dictionary encoding (= a triangular array piece for every leaf node combination).
+
+    :param coeffs_in: the coefficients to be transformed
+    :param coeffs_out: a placeholder for the output coefficients
+    :param trafo_dict: dictionary with matrix pieces
+    :param leaf_positions: starting positions in the input and output coeffs arrays
 
     Notes
     -----
@@ -84,7 +80,7 @@ def transform_barycentric_factorised(
     :param coeffs_in: the Lagrange coefficients to be transformed
     :param coeffs_out_placeholder: a placeholder for the output coefficients
         NOTE: must be initialised to all 0 and have the equal size as the input coefficients
-    :return: None. the output placeholder will hold the result.
+
     """
     nr_of_leaves = len(leaf_positions)
     for node_idx_1 in range(nr_of_leaves):
@@ -131,6 +127,7 @@ def transform_barycentric_piecewise(
     :param matrix_pieces: sub transformation matrices.
     :param start_positions_in: start position for the slice in coefficients to be transformed.
     :param start_positions_out: start position for the slice in output coefficients.
+
     """
     for matrix_piece, start_pos_in, start_pos_out in zip(
         matrix_pieces, start_positions_in, start_positions_out

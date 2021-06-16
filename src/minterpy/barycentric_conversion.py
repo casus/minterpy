@@ -1,18 +1,10 @@
-#!/usr/bin/env python
-""" functions required for converting different transformation formats into each other
-    and to construct a full size array for testin purposes (comparison with the regular conversion matrices)
-
-TODO implement all other conversion functions
 """
+Module with functions required for converting different transformation formats into each other
+and to construct a full size array for testing purposes (comparison with the regular conversion matrices).
 
-__author__ = "Jannik Michelfeit"
-__copyright__ = "Copyright 2021, minterpy"
-__credits__ = ["Jannik Michelfeit"]
-# __license__ =
-# __version__ =
-# __maintainer__ =
-__email__ = "jannik@michelfe.it"
-__status__ = "Development"
+.. todo::
+    implement all other conversion functions
+"""
 
 import numpy as np
 from numba import njit
@@ -20,10 +12,14 @@ from numba import njit
 from minterpy.global_settings import (ARRAY, FLOAT_DTYPE, INT_DTYPE,
                                       TRAFO_DICT, TYPED_LIST)
 
-
 @njit(cache=True)
 def merge_trafo_dict(trafo_dict: TRAFO_DICT, leaf_positions: ARRAY) -> ARRAY:
     """Reconstructing the global transformation matrix from the precomputed transformation in dictionary format.
+
+    :param trafo_dict: transformation dictionary
+    :param leaf_positions: leaf positions
+    :return: reconstructed transformation matrix
+
     """
     # TODO use the same merging fct everywhere in order to remove redundancies
     # TODO convert into piecewise format first, create fct for this,
@@ -56,9 +52,17 @@ def merge_trafo_dict(trafo_dict: TRAFO_DICT, leaf_positions: ARRAY) -> ARRAY:
 def factorised_2_piecewise(
     first_leaf_solution, leaf_factors, leaf_positions, leaf_sizes
 ):
-    """computes the actual matrix pieces of a transformation in factorised format explicitly
+    """Computes the actual matrix pieces of a transformation in factorised format explicitly.
 
-    NOTE:  useful e.g. for merging all the pieces into a single matrix
+    :param first_leaf_solution:
+    :param leaf_factors:
+    :param leaf_positions:
+    :param leaf_sizes:
+    :return:
+
+    Notes
+    -----
+    Useful for merging all the pieces into a single matrix.
     """
     matrix_pieces = []
     start_positions_1 = []
@@ -97,6 +101,11 @@ def merge_trafo_piecewise(
 ) -> ARRAY:
     """Reconstructing the global transformation matrix from the precomputed transformation in piecewise format.
 
+    :param matrix_pieces:
+    :param start_positions_in:
+    :param start_positions_out:
+    :return:
+
     Notes
     -----
     This is only used for testing the equality of the transformation matrices of both global and barycentric
@@ -133,7 +142,15 @@ def merge_trafo_factorised(
     leaf_positions: ARRAY,
     leaf_sizes: ARRAY,
 ) -> ARRAY:
-    """Reconstructing the global transformation matrix from the precomputed transformation in factorised format."""
+    """Reconstructing the global transformation matrix from the precomputed transformation in factorised format.
+
+    :param first_leaf_solution:
+    :param leaf_factors:
+    :param leaf_positions:
+    :param leaf_sizes:
+    :return:
+
+    """
     trafo_piecewise = factorised_2_piecewise(
         first_leaf_solution, leaf_factors, leaf_positions, leaf_sizes
     )
