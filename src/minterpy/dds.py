@@ -53,6 +53,11 @@ def find_splits(exponent_row: ARRAY, prev_splits: INT_SET) -> INT_SET:
 
 # @njit(cache=True) # TODO not working.
 def compile_splits(exponents: ARRAY) -> TYPED_LIST:
+    """Identify the split positions (nodes) in the MultiIndexTree
+
+    :param exponents: array of exponents
+    :return: split positions for the given multi index set
+    """
     # NOTE: except for the first entry, the last dimension contains no splits
     # (due to lexicographical ordering all 0 entries will only appear in the beginning of the array)
     prev_splits = set()  # TODO use Numba typed Set. not implemented yet
