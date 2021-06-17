@@ -10,6 +10,7 @@ This is the API reference of minterpy. Here all exposed functions and classes wi
 .. toctree::
    :maxdepth: 2
 
+   MultiIndex/index
    polyBases/index
    transformations/index
    transformOperators/index

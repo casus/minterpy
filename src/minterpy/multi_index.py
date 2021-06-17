@@ -21,6 +21,20 @@ from minterpy.verification import check_shape, check_values
 
 # TODO implement (set) comparison operations based on the multi index utils (>=, == ...)
 class MultiIndex:
+    """ Class representation of the set of multi indices for a polynomial.
+
+    The instances of this class provide storrage for the exponents of a multi variate
+    polynomial independently of the base assumed in the polynomial space. Only
+    the polynomial degree (w.r.t. a given `l_p` norm) as well as the dimension of the space are used to build the set of exponents.
+
+    Attributes
+    ----------
+    exponents
+    lp_degree
+    exponents_completed
+    is_complete
+    spatial_dimension
+    """
     def __init__(self, exponents: ARRAY, lp_degree=None, poly_deg_dtype=None):
         exponents = np.require(exponents, dtype=INT_DTYPE)
         check_shape(exponents, dimensionality=2)
@@ -74,13 +88,26 @@ class MultiIndex:
         self._exponents = _expand_dim(self._exponents, dim)
 
     @property
-    def exponents(
-        self,
-    ):  # read only: must not be altered since transformation matrices etc. depends on this
+    def exponents(self,):
+        """ Array of exponents.
+
+        :return: A 2D :class:`ndarray` which stores the exponents, where the first axis refers to the explicit exponent and the second axis refers to the variable which is powerd by the entry at this array position. These exponents are always lexicographically ordered w.r.t. the first axis.
+
+        :rtype: np.ndarray
+        """
+        # read only: must not be altered since transformation matrices etc. depends on this
+
         return self._exponents
 
     @property
     def exponents_completed(self):
+        """
+        The completed version of the exponent array.
+
+        :return: A complete array of the ``exponents``, i.e. in lexicographical ordering, every exponent which is missing in ``exponents``, will be filled with the right entry.
+        :rtype: np.ndarray
+
+        """
         # NOTE: exponents which are not complete ("with holes") cause problems with DDS, evaluation...
         # compute and store a completed version of the indices for these operations!
         if self._exponents_completed is None:  # lazy evaluation
@@ -92,6 +119,10 @@ class MultiIndex:
 
     @property
     def is_complete(self):
+        """ Returns :class:`True` if the ``exponent`` array is complete.
+
+        :rtype: bool
+        """
         # NOTE: exponents which are not complete ("with holes") cause problems with DDS, evaluation...
         if self._is_complete is None:  # lazy evaluation
             self._is_complete = is_lexicographically_complete(self.exponents)
@@ -101,6 +132,13 @@ class MultiIndex:
 
     @property
     def lp_degree(self):
+        """The degree for the :math:`l_p`-norm used to define the polynomial degree.
+
+        :return: The lp-degree of the :math:`l_p`-norm, which is used to define the polynomial degree.
+        :rtype: int
+
+        :raise ValueError: If a given lp_degree has ``lp_degree<=0``.
+        """
         return self._lp_degree
 
     @lp_degree.setter
@@ -115,6 +153,13 @@ class MultiIndex:
 
     @property
     def spatial_dimension(self):
+        """ The dimentsion of the domain space.
+
+        :return: The dimension of the space, where a polynomial described by this ``multi_index`` lives on. It is equal to the number of powers in each exponent vector.
+
+       :rtype: int
+
+        """
         return self._exponents.shape[1]
 
     def __str__(self):
