@@ -185,21 +185,34 @@ def compile_problem_sizes(
 
 @njit(cache=True)
 def get_node_position(dim_idx: int, node_idx: int, split_positions: TYPED_LIST) -> int:
-    """returns the position of the initial exponent entry corresponding to this node
+    """Returns the position of the initial exponent entry corresponding to this node.
 
-    ATTENTION: due to JIT compilation this might return unexpected results when the input indices are out of bounds!
+    :param dim_idx: dimension
+    :param node_idx: node index
+    :param split_positions: list of all split positions
+    :return: the position of the initial exponent entry corresponding to the node
+
+    Notes
+    -----
+    Due to JIT compilation this might return unexpected results when the input indices are out of bounds!
     """
     return split_positions[dim_idx][node_idx]
 
 
 @njit(cache=True)
 def get_node_size(dim_idx: int, node_idx: int, subtree_sizes: TYPED_LIST) -> int:
-    """returns the size of the specified node
+    """Returns the size of the specified node.
 
-    NOTE: this is equal to the amount of exponents belonging to the corresponding slice/split of the exponent matrix
-        this is equal to the amount of "leaf" nodes which belong to the subtree with the specified node as root node
+    :param dim_idx: dimension
+    :param node_idx: node index
+    :param subtree_sizes: list of sizes for all subtrees
+    :return: problem size of the specified node
 
-    ATTENTION: due to JIT compilation this might return unexpected results when the input indices are out of bounds!
+    Notes
+    -----
+    This is equal to the amount of exponents belonging to the corresponding slice/split of the exponent matrix.
+    This is equal to the amount of "leaf" nodes which belong to the subtree with the specified node as root node.
+    Due to JIT compilation this might return unexpected results when the input indices are out of bounds!
     """
     return subtree_sizes[dim_idx][node_idx]
 
@@ -208,6 +221,14 @@ def get_node_size(dim_idx: int, node_idx: int, subtree_sizes: TYPED_LIST) -> int
 def get_positions(
     dim_idx: int, node_idx: int, split_positions: TYPED_LIST, subtree_sizes: TYPED_LIST
 ) -> INT_TUPLE:
+    """Returns the range of indices in the coeffs array that corresponds to the given node index.
+
+    :param dim_idx: dimension
+    :param node_idx: node index
+    :param split_positions: all split positions
+    :param subtree_sizes: all sub tree sizes
+    :return: the start and end positions in the coeffs array corresponding to this sub problem
+    """
     pos_from = get_node_position(dim_idx, node_idx, split_positions)
     size = get_node_size(dim_idx, node_idx, subtree_sizes)
     pos_to = (
@@ -224,10 +245,15 @@ def get_child_idxs(
     split_positions: TYPED_LIST,
     subtree_sizes: TYPED_LIST,
 ) -> INT_TUPLE:
-    """computes the start and end indices of all nodes in the respective layer belonging to the given subtree
+    """Computes the start and end indices of all nodes in the respective layer belonging to the given subtree.
 
+    :param dim_idx: dimension
+    :param parent_node_idx: index of the parent node
     :param layer_idx: the index of the layer (= dimension) to search in
+    :param split_positions: all split positions
+    :param subtree_sizes: all sub tree sizes
     :return: the indices of the first and last node included in the subtree of the "query root node"
+
     """
     pos_from, pos_to = get_positions(
         dim_idx, parent_node_idx, split_positions, subtree_sizes
@@ -256,6 +282,14 @@ def get_direct_child_idxs(
     split_positions: TYPED_LIST,
     subtree_sizes: TYPED_LIST,
 ):
+    """Computes the start and end indices of all direct child nodes.
+
+    :param dim_idx: dimension
+    :param parent_node_idx: index of the parent node
+    :param split_positions: all split positions
+    :param subtree_sizes: all sub tree sizes
+
+    """
     child_layer = dim_idx - 1  # next "lower" layer
     return get_child_idxs(
         dim_idx, parent_node_idx, child_layer, split_positions, subtree_sizes
@@ -270,6 +304,16 @@ def get_array_slice(
     split_positions: TYPED_LIST,
     subtree_sizes: TYPED_LIST,
 ) -> ARRAY:
+    """Returns the slice of the array corresponding to the given sub problem.
+
+    :param dim_idx: dimension
+    :param node_idx: node index
+    :param array: the coefficients array
+    :param split_positions: all split positions
+    :param subtree_sizes: all sub tree sizes
+    :return: the slice of the coeffs array that correspond to the given sub problem
+
+    """
     pos_from, pos_to = get_positions(dim_idx, node_idx, split_positions, subtree_sizes)
     return array[pos_from:pos_to]
 
@@ -282,6 +326,16 @@ def get_node_positions(
     split_positions: TYPED_LIST,
     subtree_sizes: TYPED_LIST,
 ):
+    """Returns node positions for all the child nodes.
+
+    :param dim_idx: dimension
+    :param node_idx: node index
+    :param layer_idx: layer index
+    :param split_positions: all split positions
+    :param subtree_sizes: all sub tree sizes
+    :return: node positions of all the child nodes
+
+    """
     start_idx, end_idx = get_child_idxs(
         dim_idx, node_idx, layer_idx, split_positions, subtree_sizes
     )
@@ -296,6 +350,15 @@ def get_node_positions(
 def get_leaf_idxs(
     dim_idx: int, node_idx: int, split_positions: TYPED_LIST, subtree_sizes: TYPED_LIST
 ):
+    """Returns node indices of the leaf nodes in the given sub tree.
+
+    :param dim_idx: dimension
+    :param node_idx: node index
+    :param split_positions: all split positions
+    :param subtree_sizes: all sub tree sizes
+    :return: the node indices of leaf nodes in the given sub tree
+
+    """
     leaf_layer = 0  # the "lowest" layer
     start_idx, end_idx = get_child_idxs(
         dim_idx, node_idx, leaf_layer, split_positions, subtree_sizes
@@ -313,6 +376,16 @@ def get_nodes(
     split_positions: TYPED_LIST,
     subtree_sizes: TYPED_LIST,
 ):
+    """Returns the nodes and corresponding problem sizes.
+
+    :param dim_idx: dimesion
+    :param node_idx: node index
+    :param layer_idx: layer index
+    :param split_positions: all split positions
+    :param subtree_sizes: all sub tree sizes
+    :return: the node indices and their respective problem sizes
+
+    """
     start_idx, end_idx = get_child_idxs(
         dim_idx, node_idx, layer_idx, split_positions, subtree_sizes
     )
@@ -329,6 +402,15 @@ def get_nodes(
 def get_leaves(
     dim_idx: int, node_idx: int, split_positions: TYPED_LIST, subtree_sizes: TYPED_LIST
 ):
+    """Returns all the nodes and corresponding problem sizes.
+
+    :param dim_idx: dimesion
+    :param node_idx: node index
+    :param split_positions: all split positions
+    :param subtree_sizes: all sub tree sizes
+    :return: all node indices and their respective problem sizes
+
+    """
     leaf_layer = 0  # the "lowest" layer
     selected_splits, selected_sizes = get_nodes(
         dim_idx, node_idx, leaf_layer, split_positions, subtree_sizes
@@ -345,27 +427,32 @@ def compute_projection_mask(
     subtree_sizes: TYPED_LIST,
     exponents: ARRAY,
 ) -> Optional[ARRAY]:
-    """find the correspondences between exponent entries in the left and the right node
+    """Find the correspondences between exponent entries in the left and the right node.
 
-    NOTE: the left subtree is often much larger than the right subtrees
-        -> avoid creating a very sparse boolean mask
-    instead find the indices of the left leaves (segmented) corresponding to all right leaves (continuous)
-    (store only the matching idxs)
-
-    NOTE: a "left" subtree is always bigger than any subtrees to its right
-
-    this implementation exploits another special property of complete index sets:
-        the corresponding leaves in the left tree will be completely contained in the right subtree
-        and due to the lexicographical ordering the first entries of the leaves will match!
-
-    NOTE: there might be more left leaves as right leaves! -> not a 1:1 correspondence between the leaf nodes!
-        -> correspondence check via the exponents required!
-
+    :param dim_idx: dimension
     :param node_idx_left: the index of the left node to be considered
     :param node_idx_right: the index of the right node to be considered
+    :param split_positions: all split positions
+    :param subtree_sizes: all sub tree sizes
+    :param exponents: the exponents array
     :return: the indices of the entries in the left subtree split
-        corresponding to all entries in the right subtree split
+             corresponding to all entries in the right subtree split
     """
+
+    # NOTE: the left subtree is often much larger than the right subtrees
+    #     -> avoid creating a very sparse boolean mask
+    # instead find the indices of the left leaves (segmented) corresponding to all right leaves (continuous)
+    # (store only the matching idxs)
+    #
+    # NOTE: a "left" subtree is always bigger than any subtrees to its right
+    #
+    # this implementation exploits another special property of complete index sets:
+    #     the corresponding leaves in the left tree will be completely contained in the right subtree
+    #     and due to the lexicographical ordering the first entries of the leaves will match!
+    #
+    # NOTE: there might be more left leaves as right leaves! -> not a 1:1 correspondence between the leaf nodes!
+    #     -> correspondence check via the exponents required!
+
     tree_size_r = get_node_size(dim_idx, node_idx_right, subtree_sizes)
     if (
         tree_size_r == 1
@@ -421,10 +508,12 @@ def compute_projection_mask(
 def precompute_masks(
     split_positions: TYPED_LIST, subtree_sizes: TYPED_LIST, exponents: ARRAY
 ) -> ARRAY_DICT:
-    """computes and stores all required correspondences between nodes in the left and the right of the tree
+    """Computes and stores all required correspondences between nodes in the left and the right of the tree
+    based on the given splitting.
 
-    based on the given splitting
-
+    :param split_positions: all split positions
+    :param subtree_sizes: all sub tree sizes
+    :param exponents: exponents array
     :return: a dictionary of all mappings from left to right
     """
     masks = dict()  # required Numba numba.typed.Dict
@@ -463,22 +552,26 @@ def precompute_masks(
 
 @njit(cache=True)
 def dds_1_dimensional(grid_values: ARRAY, result_placeholder: ARRAY) -> None:
-    """one dimensional divided difference scheme
-
-    refactored version working on a result placeholder
-    NOTE: also works with multiple sets of given input coefficients
-
-    based on:
-        https://en.wikipedia.org/wiki/Divided_differences
-        https://stackoverflow.com/questions/14823891/newton-s-interpolating-polynomial-python
-
-    TODO often used with triangular input -> triangular output
-        optimise for this use case
+    """One dimensional divided difference scheme
 
     :param grid_values: the positions of the interpolation nodes respectively
     :param result_placeholder: 2D array initially containing the function values
     :return: the Newton coefficients corresponding to the interpolating 1D polynomial(s)
+
+    Notes
+    -----
+    Works on a result placeholder. Nothing is returned.
+    Also works with multiple sets of given input coefficients.
+
     """
+
+    # based on:
+    #     https://en.wikipedia.org/wiki/Divided_differences
+    #     https://stackoverflow.com/questions/14823891/newton-s-interpolating-polynomial-python
+    #
+    # TODO often used with triangular input -> triangular output
+    #     optimise for this use case
+
     c = result_placeholder  # alias
     n = len(c)
     # NOTE: the function values get split up. the grid values however do not!
@@ -507,10 +600,22 @@ def project_n_update(
     subtree_sizes: TYPED_LIST,
     masks: ARRAY_DICT,
 ) -> None:
-    """projects v_left onto v_right and computes the divided difference
+    """Projects v_left onto v_right and computes the divided difference.
 
-    each split corresponds to a slice of the function values (v_left and v_right)
-    project a value vector slice belonging to a left subtree onto its correspondence of a right subtree
+    Each split corresponds to a slice of the function values (v_left and v_right).
+    Project a value vector slice belonging to a left subtree onto its correspondence of a right subtree.
+
+    :param dim_idx: dimension
+    :param node_idx_l: the index of the left node
+    :param node_idx_r: the index of the right node
+    :param exponent_l: exponents in the left node
+    :param v_left: slice of the coeffs array on the left
+    :param result_placeholder: placeholder for divided differences
+    :param generating_values: generating values used to create interpolation nodes
+    :param split_positions: all split positions
+    :param subtree_sizes: all subtree sizes
+    :param masks: a dictionary of all precomputed required correspondences between left and right nodes
+
     """
     idx_offset = node_idx_r - node_idx_l
     exponent_r = exponent_l + idx_offset
@@ -545,22 +650,29 @@ def jit_dds(
     masks: ARRAY_DICT,
     exponents: ARRAY,
 ) -> None:
-    """divided difference scheme for multiple dimensions
-
-    refactored version: iterative, working on a result placeholder
-
-    ATTENTION: the ordering of the recursive (sub-) function calls is relevant!
-        this is because the algorithms work on the same result placeholder (<- the views of a single array)!
+    """Divided difference scheme for multiple dimensions
 
     :param result_placeholder: 2D array where the results (=Newton coefficients) should be stored.
         Initially this array must contain the function values on the corresponding unisolvent nodes
         (= Lagrange coefficients).
         This array may contain multiple sets of coefficients (=columns of the input matrix!) at once.
-
+    :param generating_points: generating points for the grid
+    :param split_positions: all the split positions
+    :param subtree_sizes: all sub tree sizes
     :param masks: a dictionary of all precomputed required correspondences between left and right nodes
-    :return: None. finally the `result_placeholder` contains the Newton coefficients of the polynomial
-        which has the input function values at the respective unisolvent nodes
+    :param exponents: the exponents array
+
+    Notes
+    -----
+    Iterative scheme. Works on a result placeholder. Nothing is returned.
+    Finally the ```result_placeholder``` contains the Newton coefficients of the polynomial
+    which has the input function values at the respective unisolvent nodes.
+    which has the input function values at the respective unisolvent nodes.
     """
+
+    # ATTENTION: the ordering of the recursive (sub-) function calls is relevant!
+    #     this is because the algorithms work on the same result placeholder (<- the views of a single array)!
+
     dimensionality = len(split_positions)
     # traverse through the "tree" (mimicking recursion)
     # NOTE: in the last dimension the regular (1D DDS can be used)
@@ -627,6 +739,13 @@ def jit_dds(
 
 
 def dds(fct_values: ARRAY, tree: "MultiIndexTree") -> ARRAY:
+    """Computes the newton coefficients for the multi dimensional polynomial using divided differences.
+
+    :param fct_values: the function values on the unisolvent nodes
+    :param tree: the MultiIndex tree instance
+    :return: the newton coefficients of the polynomial
+
+    """
     # TODO type checking?!
     # check_type_n_values(fct_values)
     # check_shape(fct_values, shape=[len(tree.multi_index)])
