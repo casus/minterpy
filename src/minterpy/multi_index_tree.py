@@ -1,3 +1,6 @@
+"""
+Module defining the base class for MultiIndexTree.
+"""
 __all__ = ["MultiIndexTree"]
 
 from typing import Optional
@@ -15,6 +18,21 @@ from minterpy.verification import check_shape, check_type_n_values
 
 
 class MultiIndexTree:
+    """Base class for MultiIndexTree
+
+    Attributes
+    ----------
+    multi_index : MultiIndex
+
+    grid : Grid
+
+    split_positions : List
+
+    subtree_sizes : List
+
+    problem_sizes : List
+
+    """
     #  TODO prevent dynamic attribute assignment (-> safe memory)
     # __slots__ = ["multi_index", "split_positions", "subtree_sizes", "stored_masks", "generating_points"]
 
@@ -55,10 +73,18 @@ class MultiIndexTree:
 
     @property
     def multi_index(self) -> "MultiIndex":
+        """Returns the multi index set of the grid used to construct the tree.
+
+        :return: the multi index set of the grid
+        """
         return self.grid.multi_index
 
     @property
     def stored_masks(self) -> ARRAY_DICT:  # the intermediary results required for DDS
+        """Returns the stored masks of the tree.
+
+        :return: correspondencies between the left and right nodes of the tree
+        """
         # TODO remove when regular DDS functionality is no longer required (together with the dds module)
         if self._stored_masks is None:  # lazy evaluation
             # based on the splittings one can compute all required correspondences
