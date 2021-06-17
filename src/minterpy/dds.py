@@ -1,10 +1,11 @@
-#!/usr/bin/env python
-""" functions required for the divided difference scheme in multiple dimensions
+"""
+Module with functions required for the divided difference scheme in multiple dimensions.
 
-NOTE: the barycentric transformations provide a similar functionality (L2N transformation) but with reduced time complexity!
-
-this module also includes the functionality for implicitly creating and traversing a "Multi Index Tree".
-the tree structure is being encoded by numpy arrays for increased performance
+Notes
+-----
+The barycentric transformations provide a similar functionality (L2N transformation) but with reduced time complexity!
+This module also includes the functionality for implicitly creating and traversing a "Multi Index Tree".
+The tree structure is being encoded by numpy arrays for increased performance.
 """
 
 from typing import Optional
@@ -16,28 +17,19 @@ from numba.typed import List
 from minterpy.global_settings import (ARRAY, ARRAY_DICT, INT_DTYPE, INT_SET,
                                       INT_TUPLE, TYPED_LIST)
 
-__author__ = "Jannik Michelfeit"
-__copyright__ = "Copyright 2021, minterpy"
-__credits__ = ["Jannik Michelfeit"]
-# __license__ =
-# __version__ =
-# __maintainer__ =
-__email__ = "jannik@michelfe.it"
-__status__ = "Development"
-
 
 @njit(cache=True)
 def find_splits(exponent_row: ARRAY, prev_splits: INT_SET) -> INT_SET:
-    """finds the positions of the "splits" in the exponent row
-
-    ATTENTION: the splits of a "higher" dimension are also included in the lower dimensions
-    (even though they are not detectable by appearing 0s)
+    """Finds the positions of the "splits" in the exponent row.
 
     :param exponent_row: a vector of single exponents in one dimension
         ATTENTION: the first entry must be a 0 (it is being assumed that the 0 vector is always the first exponent!)
     :param prev_splits: the set of split indices found in "higher" dimensions
     :return: the set of all the indices of 0 which appear right of a non zero entry plus the indices of previous splits
     """
+
+    # ATTENTION: the splits of a "higher" dimension are also included in the lower dimensions
+    # (even though they are not detectable by appearing 0s)
     split_positions = prev_splits.copy()  # ATTENTION: independent copy
     non_0_entry_found = True  # in order to register the first split
     for i, exp in enumerate(exponent_row):
@@ -53,7 +45,7 @@ def find_splits(exponent_row: ARRAY, prev_splits: INT_SET) -> INT_SET:
 
 # @njit(cache=True) # TODO not working.
 def compile_splits(exponents: ARRAY) -> TYPED_LIST:
-    """Identify the split positions (nodes) in the MultiIndexTree
+    """Identify the split positions (nodes) in the MultiIndexTree.
 
     :param exponents: array of exponents
     :return: split positions for the given multi index set
@@ -81,7 +73,8 @@ def compile_splits(exponents: ARRAY) -> TYPED_LIST:
 
 @njit(cache=True)
 def compute_sizes(nr_exp_total: int, split_row: ARRAY) -> ARRAY:
-    """
+    """Compute the sizes of all sub problems in a dimension.
+
     :param nr_exp_total: how many multi indices (exponent vectors) there are in total
     :param split_row: the split positions for a single dimension
     :return: an array with the sizes of all sub problems in this dimension
@@ -100,6 +93,12 @@ def compute_sizes(nr_exp_total: int, split_row: ARRAY) -> ARRAY:
 
 @njit(cache=True)
 def compile_subtree_sizes(nr_exponents: int, splits: TYPED_LIST) -> TYPED_LIST:
+    """Compute the sizes of all sub trees.
+
+    :param nr_exponents: number of exponents
+    :param splits: split positions along each dimension
+    :return: the size of all sub trees
+    """
     # independent in each dimension
     sizes = List()  # use Numba typed list
     for row in splits[:-1]:
@@ -116,7 +115,8 @@ def compile_subtree_sizes(nr_exponents: int, splits: TYPED_LIST) -> TYPED_LIST:
 def compute_problem_sizes(
     nr_exponents, split_row_par: ARRAY, split_row_child: ARRAY
 ) -> ARRAY:
-    """
+    """Computes problem sizes of all child nodes of a given parent dimension.
+
     :param split_row_par: the split positions of the nodes in a particular dimension ("parents")
     :param split_row_child: the split positions of the nodes in the next lower dimension ("children")
     :return: an array with the amount of direct child nodes of each node in a given parent dimension
@@ -154,6 +154,13 @@ def compute_problem_sizes(
 def compile_problem_sizes(
     nr_exponents: int, splits: TYPED_LIST, sizes: TYPED_LIST
 ) -> TYPED_LIST:
+    """Computes the sub problem size for each node in the tree.
+
+    :param nr_exponents: number of exponents
+    :param splits: split positions
+    :param sizes: subtree sizes
+    :return: the sub problem size for each node in the tree.
+    """
     # independent in each dimension
     nr_dims = len(splits)
     amounts = List()  # use Numba typed list
