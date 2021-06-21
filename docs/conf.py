@@ -42,6 +42,7 @@ extensions = [
 intersphinx_mapping = {
     "neps": ("https://numpy.org/neps", None),
     "python": ("https://docs.python.org/dev", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
     "matplotlib": ("https://matplotlib.org/stable", None),
     "pytest": ("https://docs.pytest.org/en/stable", None),
@@ -52,6 +53,8 @@ intersphinx_mapping = {
 
 numpydoc_show_class_members = False
 
+# Display todos by setting to True
+todo_include_todos = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = []

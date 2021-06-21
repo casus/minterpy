@@ -12,7 +12,7 @@ Multivariate Polynomial ABC
     :members:
     :private-members:
     :inherited-members:
-    :special-members: __call__
+    :special-members:
 
 .. autoclass:: MultivariatePolynomialSingleABC
     :members:

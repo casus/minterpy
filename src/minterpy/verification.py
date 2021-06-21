@@ -27,22 +27,14 @@ def verify_domain(domain, spatial_dimension):
     dimensional domain, or verifies the domain shape, of a multivariate domain is
     passed. If None is passed, the default domain is build from [-1,1].
 
+    :param domain: Either one-dimensional domain ``(min,max)``, or a stack of domains for each domain with shape ``(spatial_dimension,2)``. If :class:`None` is passed, the ``DEFAULT_DOMAIN`` is repeated for each spatial dimentsion.
+    :type domain: array_like, None
+    :param spatial_dimension: Dimentsion of the domain space.
+    :type spatial_dimension: int
 
-    Parameters
-    ----------
-    domain : array_like or None
-        Either one-dimensional domain (min,max), a stack of domains for each
-        domain with shape (spatial_dimension,2).
-
-    Returns
-    -------
-    verified_domain : array_like
-        Stack of domains for each dimension with shape (spatial_dimension,2).
-
-    Raises
-    ------
-    ValueError
-        when no domain with the expected shape can be constructed from the input.
+    :return verified_domain: Stack of domains for each dimension with shape ``(spatial_dimension,2)``.
+    :rtype: np.ndarray
+    :raise ValueError: If no domain with the expected shape can be constructed from the input.
 
     """
     if domain is None:
@@ -55,6 +47,22 @@ def verify_domain(domain, spatial_dimension):
 
 
 def rectify_query_points(x, m):
+    """Rectify input arguments.
+
+    This function checks if a given input has the correct shape, or if the correct shape can be infered. For the latter it returns a version of the input with the correct shape. Correct shape means here ``(N,m)``, where ``N`` is the number of points and ``m`` the dimentsion of the domain space.
+
+    :param x: Array of arguemnts passed to a function.
+    :type x: np.ndarray
+
+    :param m: Dimension of the domain space.
+    :type m: int
+
+    :raise ValueError: If the input array has not the expected dimensionality. 
+
+    :return: ``(nr_points,x)`` where ``nr_points`` is the number of points and ``x`` is a version of the input array with the correct shape. If ``x`` already had the right shape, it is passed without copying.
+    :rtype: tuple(int,np.ndarray)
+
+    """
     # TODO simplify. always require an unambiguous input shape!
     query_point_shape = x.shape
     if x.ndim == 1:
@@ -79,6 +87,27 @@ def rectify_query_points(x, m):
 
 
 def rectify_eval_input(x, coefficients, exponents, verify_input):
+    """Rectify input for evaluation.
+
+    .. todo::
+        - refac this based on the respective datatypes, e.g. :class:`MultiIndex` etc.
+        - function signature if somewhat misleading.
+
+    :param x:
+    :type x: np.ndarray
+    :param coefficients: The coefficients of the Newton polynomials. Note, format fixed such that 'lagrange2newton' conversion matrices can be passed as the Newton coefficients of all Lagrange monomials of a polynomial without prior transponation
+    :type coefficients: np.ndarray
+    :param exponents: a multi index ``alpha`` for every Newton polynomial corresponding to the exponents of this ``monomial``
+    :type exponents: np.ndarray
+    :param verify_input: weather the data types of the input should be checked.
+    :type verify_input: bool
+
+    :raise ValueError: If the number of coefficients does not match the number of monomials.
+    :raise TypeError: if the input hasn't the expected dtype.
+
+    :return: ``( N, coefficients, m, nr_points, nr_polynomials, x)`` with the rectifyed versions of the ``coefficients`` and the input array ``x``. Furthermore, return the number of exponents ``N``, the dimentsion of the domain space ``m``, the number of passed points ``nr_points`` and the number of polynomials ``nr_polynomials``.
+    :rtype: (int, np.ndarray, int, int, int, np.ndarray)
+    """
     N, m = exponents.shape
     if N == 0:
         raise ValueError("at least 1 monomial must be given")
@@ -112,6 +141,21 @@ def rectify_eval_input(x, coefficients, exponents, verify_input):
 
 
 def convert_eval_output(results_placeholder):
+    """Converts an array to its squeezed version.
+
+    The input array is copyed if necessary and the result is at least 1D.
+
+    :param results_placeholder: Array to be converted.
+    :type results_placeholder: np.ndarray
+
+    :return: A (at least 1D) squeezed version of the input array.
+    :rtype: np.ndarray
+
+    .. todo::
+        - use ``np.atleast_1D`` instead of the size check.
+
+
+    """
     # TODO
     # convert into the expected shape
     out = results_placeholder.squeeze()
@@ -121,6 +165,21 @@ def convert_eval_output(results_placeholder):
 
 
 def check_type(a, expected_type=np.ndarray, *args, **kwargs):
+    """Verify if the input has the expected type.
+
+    :param a: Object to be checked.
+    :type a: Any
+
+    :param expected_type: The type which is check against. Default is ``np.ndarray``
+    :type expected_type: type, optional
+
+    :raise TypeError: if input object hasn't the expected type.
+
+    .. todo::
+        - why not use ``isinstance``?
+        - why pass ``*args, **kwargs``?
+
+    """
     if not issubclass(type(a), expected_type):
         raise TypeError(
             f"input must be given as {expected_type} (encountered {type(a)})"
@@ -128,6 +187,20 @@ def check_type(a, expected_type=np.ndarray, *args, **kwargs):
 
 
 def check_dtype(a: np.ndarray, expected_dtype):
+    """Verify if the input array has the expected dtype.
+
+    :param a: Array to be checked.
+    :type a: np.ndarray
+
+    :param expected_dtype: The dtype which is check against.
+    :type expected_dtype: type
+
+    :raise TypeError: if input array hasn't the expected dtype.
+
+    .. todo::
+        - use ``is not`` instead of ``!=``.
+
+    """
     if a.dtype != expected_dtype:
         raise TypeError(
             f"input must be given as {expected_dtype} (encountered {a.dtype})"
@@ -135,11 +208,36 @@ def check_dtype(a: np.ndarray, expected_dtype):
 
 
 def check_values(a: np.ndarray, *args, **kwargs):
+    """Verify that the input array has neither ``NaN`` nor ``inf`` values.
+
+    :param a: Array to be checked.
+    :type a: np.ndarray
+
+    :raise ValueError: if input array contains either ``NaN`` or ``inf`` values (or both).
+
+    .. todo::
+        - why pass ``*args, **kwargs``?
+
+    """
     if np.any(np.isnan(a)) or np.any(np.isinf(a)):
         raise ValueError("values must not be NaN or infinity!")
 
 
 def check_type_n_values(a: np.ndarray, *args, **kwargs):
+    """Verify that the input array has correct type and does neither contain ``NaN`` nor ``inf`` values.
+
+    :param a: Array to be checked.
+    :type a: np.ndarray
+
+    .. todo::
+        - why pass ``*args, **kwargs``?
+
+    See Also
+    --------
+    check_type : verification of the type
+    check_values : verification of the values
+
+    """
     check_type(a, *args, **kwargs)
     check_values(a, *args, **kwargs)
 
@@ -147,12 +245,19 @@ def check_type_n_values(a: np.ndarray, *args, **kwargs):
 def check_shape(
     a: np.ndarray, shape: Union[list, tuple] = None, dimensionality: int = None
 ):
-    """
-    example : check_shape(input_array, [8, 3, None, None])
-    :param a: array to be checked
-    :param shape: the expected shape.
-        NOTE: non integer values will be interpreted as variable size in the respective dimension
-    :param dimensionality:
+    """Verify the shape of an input array.
+
+
+    :param a: array to be checked.
+    :type a: np.ndarray
+    :param shape: the expected shape.Note, non integer values will be interpreted as variable size in the respective dimension. Default is :class:`None`.
+    :type shape: {None,tuple,list}
+    :param dimensionality: dimension of the domain space (right?). Default is :class:`None`
+    :type dimensionality: {None,int}
+
+    :raise ValueError: If input array hasn't the expected dimensionality.
+    :raise ValueError: If input array hasn't the expected size.
+
     """
     if dimensionality is None:  # check for the dimensionality by the given shape:
         dimensionality = len(shape)
@@ -171,6 +276,21 @@ def check_shape(
 
 
 def check_is_square(a: np.ndarray, size: Optional[int] = None):
+    """Check if input array represents a square matrix.
+
+    This is a special case of ``check_shape`` for ``shape = (size,size)``.
+
+    :param a: Array to be checked
+    :type a: np.ndarray
+
+    :param size: expected length of each axes of the matrix. If :class:`None` is passed, ``size`` is set to the length of the first axis of the input array.
+    :type size: int
+
+    See Also
+    --------
+    check_shape : general verification of array shapes.
+
+    """
     if size is None:
         size = a.shape[0]
     check_shape(a, shape=(size, size))
@@ -184,10 +304,17 @@ DOMAIN_WARN_MSG = (
 
 
 def check_domain_fit(points: np.ndarray):
-    """checks weather a given array of points is properly formatted and spans the standard domain [-1,1]^m
+    """ Checks weather a given array of points is properly formatted and spans the standard domain :math:`[-1,1]^m`.
 
-    :param points: ndarray of shape (m, k) with m being the dimensionality and k the amount of points
-    :raises ValueError or TypeError when any of the criteria are not satisfied
+    .. todo::
+        - maybe remove the warnings.
+        - generalise to custom ``internal_domain``
+
+    :param points: array to be checked. Here ``m`` is the dimenstion of the domain and ``k`` is the number of points.
+    :type points: np.ndarray, shape = (m, k)
+    :raises ValueError: if the grid points do not fit into the domain :math:`[-1;1]^m`.
+    :raises ValueError: if less than one point is passed.
+
     """
     # check first if the sample points are valid
     check_type_n_values(points)

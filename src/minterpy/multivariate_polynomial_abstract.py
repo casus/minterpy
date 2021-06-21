@@ -33,9 +33,6 @@ class MultivariatePolynomialABC(abc.ABC):
     spatial_dimension
     unisolvent_nodes
 
-    Methods
-    -------
-    __call__
     """
 
     @property
@@ -149,10 +146,9 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
     -----
     the grid with the corresponding indices defines the "basis" or polynomial space a polynomial is part of.
     e.g. also the constraints for a Lagrange polynomial, i.e. on which points they must vanish.
-    ATTENTION: the grid might be defined on other indices than multi_index!
-      e.g. useful for defining Lagrange coefficients with "extra constraints"
-      but all indices from multi_index must be contained in the grid!
-      this corresponds to polynomials with just some of the Lagrange polynomials of the basis being "active"
+    ATTENTION: the grid might be defined on other indices than multi_index! e.g. useful for defining Lagrange coefficients with "extra constraints"
+    but all indices from multi_index must be contained in the grid!
+    this corresponds to polynomials with just some of the Lagrange polynomials of the basis being "active"
     """
 
     # __doc__ += __doc_attrs__
@@ -204,6 +200,16 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     @staticmethod
     def _gen_grid_default(multi_index):
+        """Return the default :class:`Grid` for a given :class:`MultiIndex` instance.
+
+        For the default values of the Grid class, see :class:`minterpy.Grid`.
+
+
+        :param multi_index: An instance of :class:`MultiIndex` for which the default :class:`Grid` shall be build
+        :type multi_index: MultiIndex
+        :return: An instance of :class:`Grid` with the default optional parameters.
+        :rtype: Grid
+        """
         return Grid(multi_index)
 
     def __init__(
@@ -272,6 +278,25 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         internal_domain: ARRAY = None,
         user_domain: ARRAY = None,
     ):
+        """Initialise Polynomial from given coefficients and the default construction for given polynomial degree, spatial dimension and :math:`l_p` degree.
+
+        :param coeffs: coefficients of the polynomial. These shall be 1D for a single polynomial, where the length of the array is the number of monomials given by the ``multi_index``. For a set of similar polynomials (with the same number of monomials) the array can also be 2D, where the first axis refers to the monomials and the second axis refers to the polynomials.
+        :type coeffs: np.ndarray
+        :param spatial_dimension: Dimension of the domain space of the polynomial.
+        :type spatial_dimension: int
+
+        :param poly_degree: The degree of the polynomial, i.e. the (integer) supremum of the :math:`l_p` norms of the monomials.
+        :type poly_degree: int
+
+        :param lp_degree: The :math:`l_p` degree used to determine the polynomial degree.
+        :type lp_degree: int
+
+        :param internal_domain: the internal domain (factory) where the polynomials are defined on, e.g. :math:`[-1,1]^d` where :math:`d` is the dimension of the domain space. If a ``callable`` is passed, it shall get the dimension of the domain space and returns the ``internal_domain`` as an :class:`np.ndarray`.
+        :type internal_domain: np.ndarray or callable
+        :param user_domain: the domain window (factory), from which the arguments of a polynomial are transformed to the internal domain. If a ``callable`` is passed, it shall get the dimension of the domain space and returns the ``user_domain`` as an :class:`np.ndarray`.
+        :type user_domain: np.ndarray or callable
+
+        """
         return cls(
             coeffs,
             MultiIndex.from_degree(spatial_dimension, poly_degree, lp_degree),
@@ -309,9 +334,8 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         """
         Negation of the polynomial(s).
 
-        Returns
-        -------
-        new polynomial with negated coefficients.
+        :return: new polynomial with negated coefficients.
+        :rtype: MultivariatePolynomialSingleABC
         """
         return self.__class__(
             -self._coeffs, self.multi_index, self.internal_domain, self.user_domain
@@ -321,9 +345,8 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         """
         Plus signing of polynomial(s).
 
-        Returns
-        -------
-        the same polynomial
+        :return: the same polynomial
+        :rtype: MultivariatePolynomialSingleABC
         """
         return self
 
@@ -332,14 +355,11 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
         This function is called, if two polynomials are added like ``P1 + P2``.
 
-        Parameters
-        ----------
-        other : MultivariatePolynomialSingleABC
+        :param other: the other polynomial, which is added.
+        :type other: MultivariatePolynomialSingleABC
 
-        Returns
-        -------
-        MultivariatePolynomialSingleABC
-        The result of ``self + other``.
+        :return: The result of ``self + other``.
+        :rtype: MultivariatePolynomialSingleABC
 
         Notes
         -----
@@ -363,14 +383,11 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
         This function is called, if two polynomials are substracted like ``P1 - P2``.
 
-        Parameters
-        ----------
-        other : MultivariatePolynomialSingleABC
+        :param other: the other polynomial, which is substracted.
+        :type other:  MultivariatePolynomialSingleABC
 
-        Returns
-        -------
-        MultivariatePolynomialSingleABC
-        The result of ``self - other``.
+        :return: The result of ``self - other``.
+        :rtype: MultivariatePolynomialSingleABC
 
         Notes
         -----
@@ -394,14 +411,11 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
         This function is called, if two polynomials are multiplied like ``P1 * P2``.
 
-        Parameters
-        ----------
-        other : MultivariatePolynomialSingleABC
+        :param other: the other polynomial, which is multiplied.
+        :type other:  MultivariatePolynomialSingleABC
 
-        Returns
-        -------
-        MultivariatePolynomialSingleABC
-        The result of ``self * other``.
+        :return: The result of ``self * other``.
+        :rtype: MultivariatePolynomialSingleABC
 
         Notes
         -----
@@ -425,22 +439,19 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
         This function is called, if two polynomials are added like ``P1 + P2`` from the right side.
 
-        Parameters
-        ----------
-        other : MultivariatePolynomialSingleABC
+        :param other: The other polynomial, where this instance is added on.
+        :type other:  MultivariatePolynomialSingleABC
 
-        Returns
-        -------
-        MultivariatePolynomialSingleABC
-        The result of ``other + self``.
+        :return: The result of ``other + self``.
+        :rtype: MultivariatePolynomialSingleABC
 
         Notes
         -----
-        Internally it calles the static method ``self._add`` from the concrete implementation.
+        Internally it calles the static method ``self._radd`` from the concrete implementation.
 
         See Also
         --------
-        _add : concrete implementation of ``__add__``
+        _radd : concrete implementation of ``__radd__``
         """
         if self.__class__ != other.__class__:
             raise NotImplementedError(
@@ -456,22 +467,19 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
         This function is called, if two polynomials are substracted like ``P1 - P2`` from the right side.
 
-        Parameters
-        ----------
-        other : MultivariatePolynomialSingleABC
+        :param other: The other polynomial, where this instance is substracted from.
+        :type other: MultivariatePolynomialSingleABC
 
-        Returns
-        -------
-        MultivariatePolynomialSingleABC
-        The result of ``other - self``.
+        :return: The result of ``other - self``.
+        :rtype: MultivariatePolynomialSingleABC
 
         Notes
         -----
-        Internally it calles the static method ``self._add`` from the concrete implementation.
+        Internally it calles the static method ``self._rsub`` from the concrete implementation.
 
         See Also
         --------
-        _add : concrete implementation of ``__add__``
+        _rsub : concrete implementation of ``__rsub__``
         """
         if self.__class__ != other.__class__:
             raise NotImplementedError(
@@ -483,6 +491,24 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         return result
 
     def __rmul__(self, other):
+        """Right sided multiplication of the polynomial(s) with another given polynomial(s).
+
+        This function is called, if two polynomials are multiplied like ``P1*P2`` from the right side.
+
+        :param other: The other polynomial, where this instance is multplied on.
+        :type other: MultivariatePolynomialSingleABC
+
+        :return: The result of ``other * self``.
+        :rtype: MultivariatePolynomialSingleABC
+
+        Notes
+        -----
+        Internally it calles the static method ``self._rmul`` from the concrete implementation.
+
+        See Also
+        --------
+        _rmul : concrete implementation of ``__rmul__``
+        """
         if self.__class__ != other.__class__:
             raise NotImplementedError(
                 f"Multiplication operation not implemented for "
@@ -499,10 +525,8 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
         This function is called, if one uses the top-level function ``copy()`` on an instance of this class.
 
-        Returns
-        -------
-        MultivariatePolynomialSingleABC
-        The copy of the current instance.
+        :return: The copy of the current instance.
+        :rtype: MultivariatePolynomialSingleABC
 
         See Also
         --------
@@ -522,10 +546,8 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
         This function is called, if one uses the top-level function ``deepcopy()`` on an instance of this class.
 
-        Returns
-        -------
-        MultivariatePolynomialSingleABC
-        The deepcopy of the current instance.
+        :return: The deepcopy of the current instance.
+        :rtype: MultivariatePolynomialSingleABC
 
         See Also
         --------
@@ -543,12 +565,12 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     @property
     def nr_active_monomials(self):
-        """Number of monomials of the polynomial(s).
+        """Number of active monomials of the polynomial(s).
 
-        Returns
-        -------
-        int
-            Number of monomials
+        For caching and methods based on switching single monomials on and off, it is distigushed between active and passive monomials, where only the active monomials particitpate on exposed functions.
+
+        :return: Number of active monomials.
+        :rtype: int
 
         Notes
         -----
@@ -559,12 +581,12 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     @property
     def spatial_dimension(self):
-        """The dimension of space where the polynomial(s) live on.
+        """Spatial dimension.
 
-        Returns
-        -------
-        int
-            Dimension of domain space.
+        The dimension of space where the polynomial(s) live on.
+
+        :return: Dimension of domain space.
+        :rtype: int
 
         Notes
         -----
@@ -574,20 +596,13 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     @property
     def coeffs(self) -> Optional[ARRAY]:
-        """
-        Array which stores the coefficients of the polynomial.
+        """Array which stores the coefficients of the polynomial.
 
         With shape (N,) or (N, p) the coefficients of the multivariate polynomial(s), where N is the amount of monomials and p is the amount of polynomials.
 
-        Returns
-        -------
-        np.ndarray
-            Array of coefficients.
-
-        Raises
-        ------
-        ValueError
-            Raised if the coeffs are not initialised.
+        :return: Array of coefficients.
+        :rtype: np.ndarray
+        :raise ValueError: Raised if the coeffs are not initialised.
 
         Notes
         -----
@@ -615,12 +630,12 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     @property
     def unisolvent_nodes(self):
-        """Unisolvent nodes the polynomial(s) is(are) defined on
+        """Unisolvent nodes the polynomial(s) is(are) defined on.
 
-        Returns
-        -------
-        np.ndarray
-            Array of unisolvent nodes.
+        For definitions of unisolvent nodes see the mathematical introduction.
+
+        :return: Array of unisolvent nodes.
+        :rtype: np.ndarray
 
         Note
         ----
@@ -633,16 +648,14 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
     ) -> "MultivariatePolynomialSingleABC":
         """Constructs a new instance only if the multi indices have changed.
 
-        Parameters
-        ----------
-        new_grid : minterpy.Grid
-            Grid instance the polynomial is defined on.
-        new_indices = None : minterpy.MultiIndex
-            MultiIndex instance for the polynomial(s), needs to be a subset of the current ``multi_index``.
+        :param new_grid: Grid instance the polynomial is defined on.
+        :type new_grid: Grid
 
-        Returns
-        -------
-        Same polynomial instance if ``grid`` and ``multi_index`` stay the same, otherwise new polynomial instance with the new ``grid`` and ``multi_index``.
+        :param new_indices: :class:`MultiIndex` instance for the polynomial(s), needs to be a subset of the current ``multi_index``. Default is :class:`None`.
+        :type new_indices: MultiIndex, optional
+
+        :return: Same polynomial instance if ``grid`` and ``multi_index`` stay the same, otherwise new polynomial instance with the new ``grid`` and ``multi_index``.
+        :rtype: MultivariatePolynomialSingleABC
         """
         prev_grid = self.grid
         if new_grid is prev_grid:
@@ -675,7 +688,10 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         return new_poly_instance
 
     def make_complete(self) -> "MultivariatePolynomialSingleABC":
-        """returns a possibly new polynomial instance with a complete multi index set
+        """returns a possibly new polynomial instance with a complete multi index set.
+
+        :return: completed polynomial, where additional coefficients setted to zero.
+        :rtype: MultivariatePolynomialSingleABC
 
         Notes
         -----
@@ -686,6 +702,17 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         return self._new_instance_if_necessary(grid_completed)
 
     def add_points(self, exponents: ARRAY) -> "MultivariatePolynomialSingleABC":
+        """ Extend ``grid`` and ``multi_index``
+
+        Adds points ``grid`` and exponents to ``multi_index`` related to a given set of additional exponents.
+
+        :param exponents: Array of exponents added.
+        :type exponents: np.ndarray
+
+        :return: New polynomial with the added exponents.
+        :rtype: MultivariatePolynomialSingleABC
+
+        """
         # replace the grid with an independent copy with the new multi indices
         # ATTENTION: the grid might be defined on other indices than multi_index!
         #   but all indices from multi_index must be contained in the grid!
@@ -703,14 +730,17 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
     #     new_indices = self.multi_index.make_derivable()
     #     return self._new_instance_if_necessary(new_indices)
 
-    def expand_dim(self, dim, extra_internal_domain=None, extra_user_domain=None):
-        """
-        Expands the dimension of the polynomial by adding zeros to the multi_indices
+    def expand_dim(self, dim:int, extra_internal_domain:ARRAY=None, extra_user_domain:ARRAY=None):
+        """Expand the spatial dimention.
+
+        Expands the dimension of the domain space of the polynomial by adding zeros to the multi_indices
         (which is equivalent to the multiplication of ones to each monomial)
 
-        Todos
-        -----
-        handle grid points.
+        :param dim: Number of additional dimensions.
+        :type dim: int
+
+        .. todo::
+            - handle expand of dimentions in ``grid``.
         """
         expand_dim = dim - self.multi_index.spatial_dimension
 

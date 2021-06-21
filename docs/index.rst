@@ -8,3 +8,4 @@ Minterpy Documentation
 
    User Guide <usage/intro>
    API reference <api/index>
+   Todo list <TODO>
