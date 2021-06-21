@@ -173,23 +173,56 @@ class MultiIndex:
         return self._exponents.shape[0]
 
     def union(self):
+        """This function is not implemented yet.
+
+        :raise NotImplementedError: If this function is called.
+
+        """
         raise NotImplementedError("MultiIndex.union() is not implemented yet.")
 
     def __add__(self):
+        """This function is not implemented yet.
+
+        :raise NotImplementedError: If this function is called.
+
+        """
         raise NotImplementedError("MultiIndex.__add__() is not implemented yet.")
 
     def ordering(self, order):
+        """This function is not implemented yet.
+
+        :raise NotImplementedError: If this function is called.
+
+        """
         raise NotImplementedError("MultiIndex.ordering() is not implemented yet.")
 
     # def complete(self, order):
     #     raise NotImplementedError("MultiIndex.complete() is not implemented yet.")
 
     def copy_private_attributes(self, new_instance):
+        """Copys the private attributes to another instance of :class:`MultiIndex`
+
+        .. todo::
+            - use the ``__copy__`` hook instead!
+
+        """
         new_instance._is_complete = self._is_complete
         new_instance._exponents_completed = self._exponents_completed
 
     # copying
     def __copy__(self):
+        """Creates of a shallow copy.
+
+        This function is called, if one uses the top-level function ``copy()`` on an instance of this class.
+
+        :return: The copy of the current instance.
+        :rtype: MultiIndex
+
+        See Also
+        --------
+        copy.copy
+            copy operator form the python standard library.
+        """
         # TODO also copy tree if available
         # TODO maybe use always deepcopy since exponents will be always nested?!
         new_instance = self.__class__(
@@ -199,6 +232,19 @@ class MultiIndex:
         return new_instance
 
     def __deepcopy__(self, memo):
+        """Creates of a deepcopy.
+
+        This function is called, if one uses the top-level function ``deepcopy()`` on an instance of this class.
+
+        :return: The deepcopy of the current instance.
+        :rtype: MultiIndex
+
+        See Also
+        --------
+        copy.deepcopy
+            copy operator form the python standard library.
+
+        """
         new_instance = self.__class__(
             deepcopy(self._exponents),
             deepcopy(self._lp_degree),
@@ -208,16 +254,43 @@ class MultiIndex:
         return new_instance
 
     def contains_these_exponents(self, vectors: ARRAY) -> bool:
+        """Checks if this instance contains a given set of exponents.
+
+        :param vectors: Exponents to be checked.
+        :type vectors: np.ndarray
+
+        """
         return all_indices_are_contained(vectors, self._exponents)
 
     def is_sub_index_set_of(self, super_set: "MultiIndex") -> bool:
+        """Checks if this instance is a subset of the given instance of :class:`MultiIndex`.
+
+        :param super_set: Superset to be checked.
+        :type super_set: MultiIndex
+
+        .. todo::
+            - use comparison hooks for this functionality
+        """
         return super_set.contains_these_exponents(self.exponents)
 
     def is_super_index_set_of(self, sub_set: "MultiIndex") -> bool:
+        """Checks if this instance is a super of the given instance of :class:`MultiIndex`.
+
+        :param sub_set: Subset to be checked.
+        :type super_set: MultiIndex
+
+        .. todo::
+            - use comparison hooks for this functionality
+        """
         return self.contains_these_exponents(sub_set.exponents)
 
     def _new_instance_if_necessary(self, new_exponents: ARRAY) -> "MultiIndex":
-        """constructs a new instance only if the exponents are different"""
+        """constructs a new instance only if the exponents are different
+
+        .. todo::
+            - this should be a separate function rather than a member function.
+            - this should use the comparison hooks instead of attribute checking.
+        """
         old_exponents = self._exponents
         if new_exponents is old_exponents:
             return self
@@ -243,7 +316,20 @@ class MultiIndex:
         check_values(exponents)
         exponents = exponents.reshape(
             -1, self.spatial_dimension
-        )  # convert input to 2D in expected shape
+        )
+        """Insert a set if exponents lexicographically into the exponents of this instance.
+
+        :param exponents: Array of exponents to be inserted.
+        :type exponents: np.ndarray
+
+        :return: New instance of :class:`MultiIndex` (if necessary), where the additional exponents are inserted uniquely.
+        :rtype: MultiIndex
+
+
+        .. todo::
+            - shall be renamed to ``insert_exponents`` or ``insert_multi_index``
+        """
+        # convert input to 2D in expected shape
         #  NOTE: the insertion is expected to return the same identical array instance
         #  if all exponents are already contained!
         # -> no need to check for inclusion first!
@@ -251,6 +337,18 @@ class MultiIndex:
         return self._new_instance_if_necessary(new_exponents)
 
     def make_complete(self) -> "MultiIndex":
+        """Completion of this instance.
+
+        Bulid a new instance of :class:`MultiIndex`, where the exponents are completed, i.e. in lexicographical ordering, there will be no exponent missing.
+
+        :return: Completed version of this instance
+        :rtype: MultiIndex
+
+        .. todo::
+            - since this returns a copy of this instance, maybe this shall be given as a separate function.
+            - why not an implace version of that?
+
+        """
         # ATTENTION: the make_complete() fct should not be called with already complete idx sets (inefficient!)
         # should return the same object if already complete (avoid creation of identical instance)
         if self.is_complete:
