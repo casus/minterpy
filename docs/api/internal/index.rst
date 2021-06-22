@@ -9,5 +9,4 @@ Here, we list all the internal helper functions that minterpy makes use of.
 
    utility functions <utils>
    verification functions <verification>
-   can_eval_mult
-   single_eval
+   numba accelerated utility functions <jit_compiled_utils>

@@ -482,7 +482,7 @@ def fill_exp_matrix(placeholder, lp_degree, poly_degree):
     Notes
     -----
     We do not know the number of exponents apriori, therefore the placeholder array is usually larger than required.
-    
+
     """
     max_nr_exp, spatial_dimension = placeholder.shape
     idx_last_dim = spatial_dimension - 1
@@ -516,7 +516,7 @@ def fill_exp_matrix(placeholder, lp_degree, poly_degree):
 def compute_grad_c2c(grad_c2c: np.ndarray, exponents: np.ndarray):
     """Computes the gradient operator from canonical basis to canonical basis.
 
-    -> the operator (=tensor) transforming the coefficients of a polynomial
+    The operator (=tensor) transforming the coefficients of a polynomial
     into the coefficients of its gradient (in canonical basis)
 
     :param grad_c2c: the empty tensor which should hold the result
@@ -524,10 +524,9 @@ def compute_grad_c2c(grad_c2c: np.ndarray, exponents: np.ndarray):
 
     Notes
     -----
-    Complexity is ``O(m^2 N^2)``.
-    For the canonical case this tensor is sparse!
-    -> obtaining the gradient operator for different bases by matrix multiplications with the transformation matrices
-        is inefficient.
+    - Complexity is ``O(m^2 N^2)``.
+    - For the canonical case this tensor is sparse!
+    - obtaining the gradient operator for different bases by matrix multiplications with the transformation matrices is inefficient.
 
     """
     nr_monomials, dimensionality = exponents.shape
@@ -550,7 +549,7 @@ def compute_grad_c2c(grad_c2c: np.ndarray, exponents: np.ndarray):
 def compute_grad_x2c(grad_x2c: np.ndarray, exponents: np.ndarray, x2c: np.ndarray):
     """Computes the gradient operator from an origin basis to canonical basis.
 
-    -> the operator (=tensor) transforming the coefficients of a polynomial
+    The operator (=tensor) transforming the coefficients of a polynomial
     into the coefficients of its gradient (from a variable basis into canonical basis)
 
     :param grad_x2c: the empty tensor which should hold the result
