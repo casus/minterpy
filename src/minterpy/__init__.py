@@ -19,4 +19,3 @@ from minterpy.transformation_newton import *
 from minterpy.lagrange_polynomial import *
 from minterpy.transformation_canonical import *
 from minterpy.transformation_lagrange import *
-from minterpy.derivation import *

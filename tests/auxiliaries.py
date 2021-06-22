@@ -7,7 +7,7 @@ import numpy as np
 from test_settings import (DEGREES2TEST, DESIRED_PRECISION, DIMENSIONS2TEST,
                            LP_DEGREES)
 
-from minterpy import (Derivator, Grid, LagrangePolynomial, MultiIndex,
+from minterpy import ( Grid, LagrangePolynomial, MultiIndex,
                       MultivariatePolynomialSingleABC, TransformationABC)
 from minterpy.global_settings import INT_DTYPE
 from minterpy.transformation_meta import get_transformation_class
@@ -194,23 +194,3 @@ def get_transformation(
     )
     transformer_cls = get_transformation_class(cls_from, cls_to)
     return transformer_cls(origin_poly=poly)
-
-
-def get_derivator(
-    spatial_dimension,
-    poly_degree,
-    lp_degree,
-    cls_from=LagrangePolynomial,
-    cls_to=LagrangePolynomial,
-    get_incomplete: bool = False,
-    separate_indices: bool = False,
-) -> Derivator:
-    poly = get_poly(
-        spatial_dimension,
-        poly_degree,
-        lp_degree,
-        cls=cls_from,
-        get_incomplete=get_incomplete,
-        separate_indices=separate_indices,
-    )
-    return Derivator(origin_poly=poly, target_type=cls_to)
