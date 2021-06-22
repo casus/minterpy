@@ -38,10 +38,6 @@ class MultiIndex:
     def __init__(self, exponents: ARRAY, lp_degree=None, poly_deg_dtype=None):
         exponents = np.require(exponents, dtype=INT_DTYPE)
         check_shape(exponents, dimensionality=2)
-        if exponents.shape[1] == 0:
-            raise ValueError(
-                f"the dimensionality of the given exponents is 0. shape: {exponents.shape}"
-            )
         if not have_lexicographical_ordering(exponents):
             raise ValueError(
                 "the multi_indices must be ordered lexicographically from last to first column"
