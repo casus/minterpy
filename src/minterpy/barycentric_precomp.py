@@ -39,11 +39,15 @@ __status__ = "Development"
 def compute_1d_dds_solutions(
     generating_points: ARRAY, problem_sizes: TYPED_LIST
 ) -> TYPED_LIST:
-    """performs all 1D DDS schemes required for the L2N tree
+    """Performs all 1D DDS schemes of maximal required size along each dimension as required in the L2N tree.
 
-    Returns
-    -------
-    a list of the 1D DDS solutions of maximal required size for each dimension
+    :param generating_points: the generating points from the Grid.
+    :param problem_sizes: maximum problem size along each dimension.
+    :return: a list of the 1D DDS solutions of maximal required size for each dimension
+
+    Notes
+    -----
+    This is similar to the precomputation in the Newton evaluation.
     """
     dimensionality = len(problem_sizes)  # TODO rename
     dds_solutions = List()  # use Numba typed list
@@ -72,20 +76,21 @@ def expand_solution(
     subtree_sizes: TYPED_LIST,
     problem_sizes: TYPED_LIST,
 ) -> TRAFO_DICT:
-    """computes the DDS solution of the next lower dimension
+    """Combining the precomputed 1D DDS solutions.
 
-    Parameters
-    ----------
-    prev_solutions: the previous DDS solution of the higher dimension
-        given as a composite triangular matrix encoded by a dictionary
-    dds_solution_max: 1D DDS solution of the lower dimension
-    dim_idx_par: the index of the higher dimension
+    :param prev_solutions: the previous DDS solution of the higher dimension
+                           given as a composite triangular matrix encoded by a dictionary
+    :param dds_solution_max: 1D DDS solution of the lower dimension
+    :param dim_idx_par: the index of the higher dimension
+    :return: a composite triangular matrix representing the DDS solution of the next lower dimension encoded by a
+             dictionary
 
-    Returns
-    -------
-
-    a composite triangular matrix representing the DDS solution of the next lower dimension encoded by a dictionary
+    Notes
+    -----
+    This is similar to the Newton evaluation using the precomputed products.
     """
+    # from Jannik: computes the DDS solution of the next lower dimension
+
     expanded_solutions = dict()  # required Numba numba.typed.Dict
     splits_in_dim = split_positions[dim_idx_par]
     nr_nodes_in_dim = len(splits_in_dim)
@@ -142,31 +147,28 @@ def compute_l2n_dict(
     problem_sizes: TYPED_LIST,
     stop_dim_idx: int = 0,
 ) -> DICT_TRAFO_TYPE:
-    """fully barycentric divided difference scheme for multiple dimensions
+    """Fully barycentric divided difference scheme for multiple dimensions.
 
-    modified version using only the regular 1D DDS function ("fully barycentric")
-    using a "top-down" approach starting from an initial 1D DDS solution
-    expands the "nested" DDS solution into the full L2N tree
-    This is the core algorithm for the computation of the barycentric L2N tree
+    :param generating_points: generating points of the grid
+    :param split_positions:
+    :param subtree_sizes:
+    :param problem_sizes:
+    :param stop_dim_idx: the index of the dimension to stop expanding the solution at
+    :return: the fully expanded nested triangular matrix encoded in a dictionary
+              (a triangular array piece for every leaf node combination)
 
-    Parameters
-    ----------
-    generating_points
-    split_positions
-    subtree_sizes
-    problem_sizes
-    stop_dim_idx: the index of the dimension to stop expanding the solution at
-        TODO use to determine the level of "compression".
-        NOTE: dict then needs to be combined with the (remaining) 1D dds results!
+    Notes
+    -----
+    Modified version using only the regular 1D DDS function ("fully barycentric")
+    using a "top-down" approach starting from an initial 1D DDS solution.
+    Expands the "nested" DDS solution into the full L2N tree.
+    This is the core algorithm for the computation of the barycentric L2N tree.
 
-    TODO dds_solutions: TYPED_LIST as input param.
-
-    Returns
-    -------
-
-    the fully expanded nested triangular matrix encoded in a dictionary
-        = a triangular array piece for every leaf node combination
     """
+    # TODO use to determine the level of "compression".
+    #    NOTE: dict then needs to be combined with the (remaining) 1D dds results!
+
+    # TODO dds_solutions: TYPED_LIST as input param.
 
     if stop_dim_idx < 0:
         raise ValueError("the smallest possible dimension to stop is 0.")
@@ -215,6 +217,9 @@ def get_leaf_array_slice(
     split_positions: TYPED_LIST,
     subtree_sizes: TYPED_LIST,
 ) -> ARRAY:
+    """Get leaf slices
+
+    """
     pos_from, pos_to = get_leaf_idxs(dim_idx, node_idx, split_positions, subtree_sizes)
     return array[pos_from:pos_to]
 
@@ -439,6 +444,12 @@ def compute_n2l_factorised(
 def _build_lagrange_to_newton_bary(
     transformation: "TransformationABC",
 ) -> BarycentricOperatorABC:
+    """Construct the barycentric transformation operator for Lagrange to Newton.
+
+    :param transformation: an instance of one of the concrete implementation of TransformationABC
+    :return: a BarycentricOperator for Lagrange to Newton transformation.
+
+    """
     # TODO balancing: deciding on the optimal tree format to use!
     grid = transformation.grid
     tree = grid.tree
@@ -446,6 +457,9 @@ def _build_lagrange_to_newton_bary(
     split_positions = tree.split_positions
     subtree_sizes = tree.subtree_sizes
     problem_sizes = tree.problem_sizes
+
+    # TODO check why dict is used instead of factorised
+
     transformation_data = compute_l2n_dict(
         generating_points, split_positions, subtree_sizes, problem_sizes
     )
@@ -462,6 +476,12 @@ def _build_lagrange_to_newton_bary(
 def _build_newton_to_lagrange_bary(
     transformation: "TransformationABC",
 ) -> BarycentricFactorisedOperator:
+    """Construct the barycentric transformation operator for Newton to Lagrange.
+
+    :param transformation: an instance of one of the concrete implementation of TransformationABC
+    :return: a BarycentricOperator for Newton to Lagrange transformation.
+
+    """
     # TODO balancing: deciding on the optimal tree format to use!
     grid = transformation.grid
     multi_index = grid.multi_index

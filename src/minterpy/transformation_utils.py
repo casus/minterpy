@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-""" functions for computing all required transformation matrices
+"""
+Utility functions for computing matrices for transformation between canonical, lagrange, and newton basis.
 
 """
 

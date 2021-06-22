@@ -135,12 +135,28 @@ deactivate && source <your_venv_name>/bin/activate
 or just run `hash -r` instead. This seems **not** to be an issuse for environments build with conda.
 
 # 2. Testing
+:construction: :construction: :construction: :construction: :construction: :construction: :construction: :construction:  
+Since the whole test environment needs a refactoring, we shall update this section with more detailed informations.
+:construction: :construction: :construction: :construction:  :construction: :construction: :construction: :construction:  
+## Running the unittests
 We use [pytest](https://docs.pytest.org/en/6.2.x/) to run the unit tests of `minterpy`. Unit tests itself shall always be placed into the directory `tests`. To run all tests, just type
 ```bash
 pytest
 ```
-into the terminal.  
-:construction: :construction: Since the whole test environment needs a refactoring, we shall update this section with more detailed informations. :construction: :construction:
+into the terminal. if you want to run tests on single modules, e.g. run
+```bash
+pytest tests/test_multi_index_utils.py
+```
+The coverage test is done automatically if you run `pytest`, a summary of the coverage is printed at the terminal. Furthermore, you found a browser version of the results of the coverage test in `htmmlcov/index.html` which you can open with your favourite browser.  
+## Writing new tests
+It is highly recommended to use the capabilities of `pytest` for writing unittests (see [here](https://docs.pytest.org/en/6.2.x/example/index.html), [here](https://realpython.com/pytest-python-testing/) or [here](https://towardsdatascience.com/testing-best-practices-for-machine-learning-libraries-41b7d0362c95)).  
+There are some points one should always be aware of:
+- the developer of the code shall write the tests
+- test the behaviour you expect from your code, not breaking points
+- use as small samples as possible
+- unittests do **not** test if the code works, they test if the code **still** works
+- the coverage shall always be as high as possible
+- BUT, even 100% coverage does not mean, there is nothing missed (buzz: edge case!)  
 
 # 3. Documentation
 ## Install dependencies

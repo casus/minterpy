@@ -1,3 +1,7 @@
+"""
+Module containing several numba optimized functions.
+"""
+
 import numpy as np
 from numba import b1, njit, void
 
@@ -7,6 +11,29 @@ from minterpy.global_settings import (B_TYPE, F_1D, F_2D, F_3D, FLOAT, I_1D,
 
 @njit(void(F_2D, F_2D, I_2D, F_2D), cache=True)
 def can_eval_mult(x_multiple, coeffs, exponents, result_placeholder):
+    """Naive evaluation of polynomials in canonical basis.
+
+    - ``m`` spatial dimension
+    - ``k`` number of points
+    - ``N`` number of monomials
+    - ``p`` number of polynomials
+
+    :param x_multiple: numpy array with coordinates of points where polynomial is to be evaluated.
+                       The shape has to be ``(k x m)``.
+    :param coeffs: numpy array of polynomial coefficients in canonical basis. The shape has to be ``(N x p)``.
+    :param exponents: numpy array with exponents for the polynomial. The shape has to be ``(N x m)``.
+    :param result_placeholder: placeholder numpy array where the results of evaluation are stored.
+                               The shape has to be ``(k x p)``.
+
+    Notes
+    -----
+    This is a naive evaluation; a more numerically accurate approach would be to transform to Newton basis and
+    using the newton evaluation scheme.
+
+    Multiple polynomials in the canonical basis can be evaluated at once by having a 2D coeffs array. It is assumed
+    that they all have the same set of exponents.
+
+    """
     nr_coeffs, nr_polys = coeffs.shape
     r = result_placeholder
     nr_points, _ = x_multiple.shape
@@ -23,13 +50,23 @@ def can_eval_mult(x_multiple, coeffs, exponents, result_placeholder):
 # NOTE: the most "fine grained" functions must be defined first
 # in order for Numba to properly infer the function types
 
-
 @njit(FLOAT(F_1D, F_1D), cache=True)  # O(N)
 def single_eval(coefficients, monomial_vals):
-    # single eval with a single point and a single list of coefficients
+    """Evaluation of one polynomial at a single point given the coefficients and monomial evaluations.
+
+    - ``N`` number of monomials
+
+    :param coefficients: numpy array of polynomial coefficients. The shape has to be ``N``.
+    :param monomial_vals: numpy array of evaluated monomial values at the point. The shape has to be ``N``.
+    :return: the value of polynomial evaluated at the point
+
+    Notes
+    -----
+    The value of a polynomial in Newton form is the sum over all coefficients multiplied with the value of the
+    corresponding Newton basis polynomial.
+    """
+
     assert len(coefficients) == len(monomial_vals)
-    # the value of a polynomial in Newton form
-    # is the sum over all coefficients multiplied with the value of the corresponding Newton polynomial
     return np.sum(coefficients * monomial_vals)
 
 
@@ -42,23 +79,32 @@ def eval_newton_polynomials(
     prod_placeholder,
     monomial_vals_placeholder,
 ):
-    """precomputes the value of all given Newton polynomials at a fixed point x
+    """Precomputes the value of all given Newton basis polynomials at a point.
 
-    core of the fast polynomial evaluation algorithm
+    Core of the fast polynomial evaluation algorithm.
+    - ``m`` spatial dimension
+    - ``N`` number of monomials
+    - ``n`` maximum exponent in each dimension
 
-    NOTE: coefficient agnostic
-        precompute all the (chained) products required during evaluation. O(mn)
-    NOTE: the maximal exponent might be different in every dimension,
-        in this case the matrix becomes sparse (towards the end)
-    NOTE: avoid index shifting during evaluation (has larger complexity than pre-computation!)
-        by just adding one empty row in front. ATTENTION: these values must not be accessed!
-        -> the exponents of each monomial ("alpha") then match the indices of the required products
+    :param x: coordinates of the point. The shape has to be ``m``.
+    :param exponents: numpy array with exponents for the polynomial. The shape has to be ``(N x m)``.
+    :param generating_points: generating points used to generate the grid. The shape is ``(n x m)``.
+    :param max_exponents: array with maximum exponent in each dimension. The shape has to be ``m``.
+    :param prod_placeholder: a numpy array for storing the (chained) products.
+    :param monomial_vals_placeholder: a numpy array of length N for storing the values of all Newton basis polynomials.
 
-    Parameters
-    ----------
-    prod_placeholder: a numpy array for storing the (chained) products
-    monomial_vals_placeholder: a numpy array of length N for storing the values of all Newton polynomials
+    Notes
+    -----
+    Precompute all the (chained) products required during newton evaluation. Complexity is ``O(mN)``.
+    This precomputation is coefficient agnostic.
+    Results are only stored in the placeholder arrays. Nothing is returned.
     """
+
+    # NOTE: the maximal exponent might be different in every dimension,
+    #    in this case the matrix becomes sparse (towards the end)
+    # NOTE: avoid index shifting during evaluation (has larger complexity than pre-computation!)
+    #    by just adding one empty row in front. ATTENTION: these values must not be accessed!
+    #    -> the exponents of each monomial ("alpha") then match the indices of the required products
 
     m = len(x)
     for i in range(m):
@@ -99,30 +145,44 @@ def eval_all_newt_polys(
     matrix_placeholder,
     triangular=False,
 ):
-    """evaluates all Newton polynomials (monomials) on all given points
+    """Evaluates all Newton basis polynomials (monomials) on all given points.
 
-     N = amount of Newton polynomials
-     k = amount of points
+    - ``m`` spatial dimension
+    - ``k`` number of points
+    - ``N`` number of monomials
+    - ``p`` number of polynomials
+    - ``n`` maximum exponent in each dimension
 
-    :param exponents: array of multi indices defining the newton polynomials. allowed to be incomplete!
-    :param x: points to evaluate on
-    :param triangular: weather or not the output will be of lower triangular form
-        -> will skip the evaluation of some values
-    :return: (k, N) the value of each Newton polynomial at each point.
+    :param x: numpy array with coordinates of points where polynomial is to be evaluated.
+              The shape has to be ``(k x m)``.
+    :param exponents: numpy array with exponents for the polynomial. The shape has to be ``(N x m)``.
+    :param generating_points: generating points used to generate the grid. The shape is ``(n x m)``.
+    :param max_exponents: array with maximum exponent in each dimension. The shape has to be ``m``.
+    :param prod_placeholder: a numpy array for storing the (chained) products.
+    :param matrix_placeholder: placeholder numpy array where the results of evaluation are stored.
+                               The shape has to be ``(k x p)``.
+    :param triangular: whether the output will be of lower triangular form or not.
+                       -> will skip the evaluation of some values
+    :return: the value of each Newton polynomial at each point. The shape will be ``(k x N)``.
+
+    Notes
+    -----
+    ``exponents`` are allowed to be incomplete! Results are stored in the placeholder arrays. Nothing is returned.
+
     """
     nr_points, dimensionality = x.shape
     active_exponents = exponents  # all per default
     for point_nr in range(nr_points):  # evaluate on all given points points
         x_single = x[point_nr, :]
         monomial_vals_placeholder = matrix_placeholder[point_nr]  # row of the matrix
-        if (
-            triangular
-        ):  # only evaluate some polynomials to create a triangular output array
+        if (triangular):
+            # only evaluate some polynomials to create a triangular output array
             nr_active_polys = point_nr + 1
             # IMPORTANT: initialised empty. set all others to 0!
             monomial_vals_placeholder[nr_active_polys:] = 0.0
             monomial_vals_placeholder = monomial_vals_placeholder[:nr_active_polys]
             active_exponents = exponents[:nr_active_polys, :]
+
         eval_newton_polynomials(
             x_single,
             active_exponents,
@@ -144,6 +204,29 @@ def evaluate_multiple(
     monomial_vals_placeholder,
     results_placeholder,
 ):
+    """Newton polynomial evaluation on several points.
+
+    - ``m`` spatial dimension
+    - ``k`` number of points
+    - ``N`` number of monomials
+    - ``p`` number of polynomials
+    - ``n`` maximum exponent in each dimension
+
+    :param x: numpy array with coordinates of points where polynomial is to be evaluated.
+              The shape has to be ``(k x m)``.
+    :param exponents: numpy array with exponents for the polynomial. The shape has to be ``(N x m)``.
+    :param generating_points: generating points used to generate the grid. The shape is ``(n x m)``.
+    :param max_exponents: array with maximum exponent in each dimension. The shape has to be ``m``.
+    :param prod_placeholder: a numpy array for storing the (chained) products.
+    :param monomial_vals_placeholder: a numpy array of length N for storing the values of all Newton basis polynomials.
+    :param results_placeholder: placeholder numpy array where the results of evaluation are stored.
+                                The shape has to be ``(k x p)``.
+
+    Notes
+    -----
+    Results are stored in the placeholder arrays. Nothing is returned.
+
+    """
     nr_points = x.shape[0]
     nr_polynomials = coefficients.shape[1]
     for point_nr in range(nr_points):
@@ -168,6 +251,16 @@ def evaluate_multiple(
 
 @njit(void(F_2D, F_2D, I_2D), cache=True)
 def compute_vandermonde_n2c(V_n2c, nodes, exponents):
+    """Computes the Vandermonde matrix.
+
+    - ``m`` spatial dimension
+    - ``N`` number of monomials
+
+    :param V_n2c: the placeholder array to store the Vandermonde matrix. The shape has to be ``(N x N)``.
+    :param nodes: the unisolvent nodes
+    :param exponents:  numpy array with exponents for the polynomial. The shape has to be ``(N x m)``.
+
+    """
     num_monomials, spatial_dimension = exponents.shape
     for i in range(num_monomials):
         for j in range(1, num_monomials):
@@ -177,7 +270,15 @@ def compute_vandermonde_n2c(V_n2c, nodes, exponents):
 
 @njit(b1(I_1D, I_1D), cache=True)
 def lex_smaller_or_equal(index1: np.ndarray, index2: np.ndarray) -> bool:
-    """tells weather multi-index 1 is lexicographically smaller than or equal to index 2"""
+    """Compares whether multi-index 1 is lexicographically smaller than or equal to multi-index 2.
+
+    - ``m`` spatial dimension
+
+    :param index1: a multi-index entry of shape ``m``.
+    :param index2: another multi-index entry.
+    :return: ``True`` if ``index1 <= index2`` (lexicographically), otherwise ``False``.
+
+    """
     spatial_dimension = len(index1)
     for m in range(spatial_dimension - 1, -1, -1):  # from last to first dimension
         if index1[m] > index2[m]:
@@ -189,7 +290,15 @@ def lex_smaller_or_equal(index1: np.ndarray, index2: np.ndarray) -> bool:
 
 @njit(B_TYPE(I_2D), cache=True)
 def have_lexicographical_ordering(indices: np.ndarray) -> bool:
-    """tells weather an array of indices is ordered lexicographically"""
+    """Checks if an array of indices is ordered lexicographically
+
+    - ``m`` spatial dimension
+    - ``N`` number of monomials
+
+    :param indices: array of multi-indices with shape ``(N x m)``.
+    :return: ``True`` if indices are lexicographically ordered, ``False`` otherwise.
+
+    """
     nr_exponents, spatial_dimension = indices.shape
     if nr_exponents <= 1:
         return True
@@ -206,10 +315,21 @@ def have_lexicographical_ordering(indices: np.ndarray) -> bool:
 
 @njit(INT(I_2D, I_1D), cache=True)
 def get_match_idx(indices: np.ndarray, index: np.ndarray) -> int:
-    """finds the position of a multi index within an exponent matrix
+    """Finds the position of a multi index entry within an exponent matrix.
 
-    exploits the lexicographical order of the indices to abort early -> not testing all indices
-    time complexity: O(mN)
+    - ``m`` spatial dimension
+    - ``N`` number of monomials
+
+    :param indices: array of multi indices with shape ``(N x m)``.
+    :param index: one multi index entry with shape ``m``.
+    :return: if ``index`` is present in ``indices``, the position (array index) where it is found is returned,
+             otherwise a global constant ``NOT_FOUND`` is returned.
+
+    Notes
+    -----
+    Exploits the lexicographical order of the indices to abort early -> not testing all indices.
+    Time complexity: O(mN).
+
     """
     nr_exponents, spatial_dimension = indices.shape
     if nr_exponents == 0:
@@ -234,18 +354,34 @@ def get_match_idx(indices: np.ndarray, index: np.ndarray) -> int:
 
 @njit(B_TYPE(I_2D, I_1D), cache=True)
 def index_is_contained(indices: np.ndarray, index: np.ndarray) -> bool:
-    """tells weather a single index is contained in the indices
+    """Checks if a multi index entry is present in a set of indices.
 
-    exploits the lexicographical order of the indices to abort early -> not testing all indices
+    - ``m`` spatial dimension
+    - ``N`` number of monomials
+
+    :param indices: array of multi indices with shape ``(N x m)``.
+    :param index: one multi index entry with shape ``m``.
+    :return: ``True`` if the ``index`` is present in ``indices``, ``False`` otherwise.
+
+    Notes
+    -----
+    Exploits the lexicographical order of the indices to abort early -> not testing all indices.
+
     """
     return get_match_idx(indices, index) != NOT_FOUND
 
 
 @njit(B_TYPE(I_2D, I_2D), cache=True)
 def all_indices_are_contained(subset_indices: np.ndarray, indices: np.ndarray) -> bool:
-    """tells weather a set of indices is a subset (or equal) of another set of indices
+    """Checks if a set of indices is a subset of (or equal to) another set of indices.
 
-    exploits the lexicographical order of the indices to abort early -> not testing all indices
+    :param subset_indices: one set of multi indices.
+    :param indices: another set of multi indices.
+    :return: ``True`` if ``subset_indices`` is a subset or equal to ``indices``, ``False`` otherwise.
+
+    Notes
+    -----
+    Exploits the lexicographical order of the indices to abort early -> not testing all indices.
     """
     nr_exp, dim = indices.shape
     nr_exp_subset, dim_subset = subset_indices.shape
@@ -269,6 +405,13 @@ def all_indices_are_contained(subset_indices: np.ndarray, indices: np.ndarray) -
 
 @njit(void(I_1D, I_2D, I_2D), cache=True)
 def insert_single_index_numba(index2insert, indices, indices_out):
+    """Insert a multi index entry to a set of indices.
+
+    :param index2insert: the multi index entry to be inserted.
+    :param indices: the set of multi indices given as input.
+    :param indices_out: the resulting multi indices after (lexicographical) insertion.
+
+    """
     i = 0
     bigger_entry_exists = False
     spatial_dimension, nr_exponents = indices.shape
@@ -290,6 +433,14 @@ def insert_single_index_numba(index2insert, indices, indices_out):
 
 @njit(void(I_2D, I_2D, I_1D), cache=True)
 def fill_match_positions(larger_idx_set, smaller_idx_set, positions):
+    """Finds matching positions (array indices) for multi index entries in two multi indices.
+
+    :param larger_idx_set: the larger set of multi indices
+    :param smaller_idx_set: the smaller set of multi indices
+    :param positions: an array with positions (array indices) of multi index entries in `larger_idx_set`` that matches
+                      each of the entry in ``smaller_idx_set``.
+
+    """
     search_pos = -1
     nr_exp_smaller, spatial_dimension = smaller_idx_set.shape
     for i in range(nr_exp_smaller):
@@ -306,8 +457,12 @@ def fill_match_positions(larger_idx_set, smaller_idx_set, positions):
 
 @njit(FLOAT(I_1D, FLOAT), cache=True)
 def lp_norm_for_exponents(exp_vect, p):
-    """
-    Robust lp-norm function. Works essentially like numpy.linalg.norm, but is numerically stable for big arguments.
+    """Robust lp-norm function. Works essentially like numpy.linalg.norm, but is numerically stable for big arguments.
+
+    :param exp_vect: a multi index entry.
+    :param p: a real number
+    :return: the Lp norm of ``exp_vect``.
+
     """
     a = np.abs(exp_vect).max()
     if a == 0:  # NOTE: avoid division by 0
@@ -317,6 +472,18 @@ def lp_norm_for_exponents(exp_vect, p):
 
 @njit(INT(I_2D, FLOAT, INT), cache=True)
 def fill_exp_matrix(placeholder, lp_degree, poly_degree):
+    """Generates the exponent matrix.
+
+    :param placeholder: the placeholder array for storing exponents.
+    :param lp_degree: the lp_degree of the multi index set
+    :param poly_degree: the degree of the polynomial
+    :return: the number of exponents filled in placeholder.
+
+    Notes
+    -----
+    We do not know the number of exponents apriori, therefore the placeholder array is usually larger than required.
+
+    """
     max_nr_exp, spatial_dimension = placeholder.shape
     idx_last_dim = spatial_dimension - 1
     # initialise the first exponent (all 0)
@@ -347,19 +514,20 @@ def fill_exp_matrix(placeholder, lp_degree, poly_degree):
 
 @njit(void(F_3D, I_2D), cache=True)
 def compute_grad_c2c(grad_c2c: np.ndarray, exponents: np.ndarray):
-    """computes the gradient operator from canonical basis to canonical basis
+    """Computes the gradient operator from canonical basis to canonical basis.
 
-    -> the operator (=tensor) transforming the coefficients of a polynomial
+    The operator (=tensor) transforming the coefficients of a polynomial
     into the coefficients of its gradient (in canonical basis)
 
-    O(m^2 N^2)
+    :param grad_c2c: the empty tensor which should hold the result
+    :param exponents: matrix of all exponent vectors
 
-    NOTE: for the canonical case this tensor is sparse!
-    -> obtaining the gradient operator for different bases by matrix multiplications with the transformation matrices
-        is inefficient
+    Notes
+    -----
+    - Complexity is ``O(m^2 N^2)``.
+    - For the canonical case this tensor is sparse!
+    - obtaining the gradient operator for different bases by matrix multiplications with the transformation matrices is inefficient.
 
-    @param grad_c2c: the empty tensor which should hold the result
-    @param exponents: matrix of all exponent vectors
     """
     nr_monomials, dimensionality = exponents.shape
     for coeff_idx_from in range(nr_monomials):  # O(N)
@@ -379,16 +547,19 @@ def compute_grad_c2c(grad_c2c: np.ndarray, exponents: np.ndarray):
 
 @njit(void(F_3D, I_2D, F_2D), cache=True)
 def compute_grad_x2c(grad_x2c: np.ndarray, exponents: np.ndarray, x2c: np.ndarray):
-    """computes the gradient operator from an origin basis to canonical basis
+    """Computes the gradient operator from an origin basis to canonical basis.
 
-    -> the operator (=tensor) transforming the coefficients of a polynomial
+    The operator (=tensor) transforming the coefficients of a polynomial
     into the coefficients of its gradient (from a variable basis into canonical basis)
 
-    NOTE: exploits the sparsity of the canonical gradient operator
+    :param grad_x2c: the empty tensor which should hold the result
+    :param exponents: matrix of all exponent vectors
+    :param x2c: the transformation matrix from origin into canonical basis
 
-    @param grad_x2c: the empty tensor which should hold the result
-    @param exponents: matrix of all exponent vectors
-    @param x2c: the transformation matrix from origin into canonical basis
+    Notes
+    -----
+    Exploits the sparsity of the canonical gradient operator.
+
     """
     nr_monomials, dimensionality = exponents.shape
     for coeff_idx_from in range(nr_monomials):  # deriving every monomial, O(N)

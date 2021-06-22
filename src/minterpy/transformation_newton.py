@@ -1,5 +1,7 @@
 """
-Concrete Transformation classes for the NewtonPolynomials
+Concrete implementations of the Transformation classes for the NewtonPolynomial.
+
+Transformations from Newton basis to Canonical and Lagrange basis are provided.
 """
 
 from minterpy.canonical_polynomial import CanonicalPolynomial
@@ -13,22 +15,18 @@ __all__ = ["TransformationNewtonToCanonical", "TransformationNewtonToLagrange"]
 
 
 class TransformationNewtonToCanonical(TransformationABC):
-    """
-    Transformation from NewtonPolynomial to CanonicalPolynomial
+    """Transformation from NewtonPolynomial to CanonicalPolynomial
     """
 
-    _short_name = "newton2canonical"
     origin_type = NewtonPolynomial
     target_type = CanonicalPolynomial
     _get_transformation_operator = _build_newton_to_canonical_operator
 
 
 class TransformationNewtonToLagrange(TransformationABC):
-    """
-    Transformation from NewtonPolynomial to LagrangePolynomial
+    """Transformation from NewtonPolynomial to LagrangePolynomial
     """
 
-    _short_name = "newton2lagrange"
     origin_type = NewtonPolynomial
     target_type = LagrangePolynomial
     _get_transformation_operator = _build_newton_to_lagrange_operator

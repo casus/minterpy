@@ -1,6 +1,10 @@
 """
-Submodule for the transformation class
+Abstract base class for defining transformations from one polynomial basis to another.
+
+This module provides the abstract base class for polynomial basis transformations (origin to target) from
+which all concrete implentations are derived.
 """
+
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -16,9 +20,20 @@ __all__ = ["TransformationABC"]
 
 
 class TransformationABC(ABC):
-    """
-    Abstract base class for Transformation class.
-    Stores the transformation matrix and associated metadata.
+    """this is the abstract base class for polynomial basis transformations.
+
+    All polynomial basis transformers should be derived from this class to maintain a uniform interface for
+     basis transformations.
+
+    Attributes
+    ----------
+    origin_poly : MultivariatePolynomialSingleABC
+        The instance of the polynomial to be transformed.
+    multi_index : MultiIndex
+        The multi index set of the origin polynomial (and also the target polynomial).
+    grid : Grid
+        The grid of the origin polynomial.
+
     """
 
     available_transforms = {}
@@ -66,8 +81,10 @@ class TransformationABC(ABC):
     # TODO register the transformation classes to the available_transforms dictionary
     # TODO integrate function to retrieve the proper transformation (cf. transformation_utils.py)
     def __init_subclass__(cls, **kwargs):
+        """Add a concrete implementation to the registry of available transformations
+        """
         super().__init_subclass__(**kwargs)
-        cls.available_transforms[cls._short_name] = cls
+        cls.available_transforms[(cls.origin_type, cls.target_type)] = cls
 
     # TODO: remove argument. store origin poly once and reuse.
     #  otherwise the user could input an incompatible polynomial
@@ -77,6 +94,15 @@ class TransformationABC(ABC):
     # on the other hand avoid constructing multiple transformation objects for the same basis
     # just for transforming multiple different polynomioals! -> rather check the validity of the input polynomial basis
     def __call__(self, origin_poly: Optional[MultivariatePolynomialSingleABC] = None):
+        """Transformation of polynomial.
+
+        This function is called when an instance of transformation is called ``T()`` or ``T(x)``. If called without
+        any arguments, the transformation is applied on the origin_poly used to construct the transformation. If an
+        argument is passed, the transformation is applied on the instance passed.
+
+        :param origin_poly: (optional)  an instance of the polynomial to be transformed.
+        :return: an instance of the polynomial in the target basis.
+        """
         if origin_poly is None:
             origin_poly = self.origin_poly
         # TODO check the validity of the basis (basis of the input poly during init, grids match)
@@ -93,24 +119,40 @@ class TransformationABC(ABC):
     @property
     @abstractmethod
     def origin_type(self):
+        """Abstract container that stores the data type of the origin polynomial.
+
+        This is a placeholder of the ABC, which is overwritten by the concrete implementation.
+        """
         pass
 
     @property
     @abstractmethod
     def target_type(self):
-        pass
+        """Abstract container that stores the data type of the target polynomial.
 
-    @property
-    @abstractmethod
-    def _short_name(self):
+        This is a placeholder of the ABC, which is overwritten by the concrete implementation.
+        """
         pass
 
     @abstractmethod
     def _get_transformation_operator(self):
+        """Abstract container for storing the transformation operator.
+
+        This is a placeholder of the ABC, which is overwritten by the concrete implementation.
+        """
         pass
 
     @property
     def transformation_operator(self) -> TransformationOperatorABC:
+        """The polynomial basis transformation operator.
+
+        :return: instance of the transformation operator
+
+        Notes
+        -----
+        The transformation operator once constructed can be reused for transforming other polynomial instance of the
+        origin_poly type, which have the same basis (and grid) as the origin_poly, to the target_poly type.
+        """
         if self._transformation_operator is None:
             self._transformation_operator: TransformationOperatorABC = (
                 self._get_transformation_operator()
@@ -119,20 +161,26 @@ class TransformationABC(ABC):
 
     @property
     def _target_indices(self) -> MultiIndex:
-        """
+        """The MultiIndex of the target_poly.
+
         :return: the indices the target polynomial will have
-
-        NOTE: poly.multi_index and poly.grid.multi_index might not be equal!
-        this is required since e.g. transforming a polynomial in Lagrange basis
-            into Newton basis possibly "activates" all indices of the basis (grid).
-
-        TODO more specifically: only all "previous" = lexicographically smaller indices will be active
-            -> same as completing only the active multi indices.
-        ATTENTION: the multi indices of the basis in use must stay equal!
         """
+
+        # NOTE: poly.multi_index and poly.grid.multi_index might not be equal!
+        # this is required since e.g. transforming a polynomial in Lagrange basis
+        #    into Newton basis possibly "activates" all indices of the basis (grid).
+
+        # TODO more specifically: only all "previous" = lexicographically smaller indices will be active
+        #    -> same as completing only the active multi indices.
+        # ATTENTION: the multi indices of the basis in use must stay equal!
         return self.origin_poly.grid.multi_index
 
     def _apply_transformation(self, origin_poly):
+        """Transforms the polynomial to the target type of the transformation.
+
+        :param origin_poly: instance of the polynomial to be transformed
+        :return: an instance of the transformed polynomial in the target basis
+        """
         # TODO discuss: is it meaningful to create a new polynomial instance every time?
         #  perhaps allow an optional output polynomial as parameter and then just update the coefficients?
         # NOTE: construct a new polynomial from the input polynomial in order to copy all relevant internal attributes!
