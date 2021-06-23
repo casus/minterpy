@@ -100,6 +100,14 @@ nr_similar_polynomials = [None,1,2]
 def NrSimilarPolynomials(request):
     return request.param
 
+#fixture for the number of points for evaluations
+
+nr_pts = [1,2]
+
+@pytest.fixture(params = nr_pts)
+def NrPoints(request):
+    return request.param
+
 
 # some random builder
 

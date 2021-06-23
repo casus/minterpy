@@ -8,7 +8,7 @@ import operator as op
 
 import numpy as np
 import pytest
-from conftest import SpatialDimension,PolyDegree,LpDegree,NrSimilarPolynomials, SEED,assert_polynomial_almost_equal,MultiIndices,build_rnd_coeffs,build_rnd_points
+from conftest import SpatialDimension,PolyDegree,LpDegree,NrSimilarPolynomials,NrPoints, SEED,assert_polynomial_almost_equal,MultiIndices,build_rnd_coeffs,build_rnd_points
 from numpy.testing import assert_,assert_almost_equal
 
 from minterpy import CanonicalPolynomial, MultiIndex
@@ -24,11 +24,6 @@ def test_neg(MultiIndices,NrSimilarPolynomials):
     groundtruth = poly.__class__(groundtruth_coeffs,MultiIndices)
     assert_polynomial_almost_equal(res,groundtruth)
 
-nr_pts = [1,2]
-
-@pytest.fixture(params = nr_pts)
-def NrPoints(request):
-    return request.param
 
 def test_eval(MultiIndices,NrPoints):
     coeffs = build_rnd_coeffs(MultiIndices)
