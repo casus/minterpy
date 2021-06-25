@@ -49,6 +49,8 @@ def _union_of_exponents(exp1, exp2):
     """
     res_exp = insert_lexicographically(exp1.copy(), exp2.copy())
     nr_monomials, _ = res_exp.shape
+    num_exp1, _ = exp1.shape
+    num_exp2, _ = exp2.shape
 
     res_map = np.zeros((nr_monomials, 2)).astype(np.int)
 
@@ -56,12 +58,14 @@ def _union_of_exponents(exp1, exp2):
     pos_exp1 = 0
     pos_exp2 = 0
     for i in range(nr_monomials):
-        if np.array_equal(res_exp[i, :], exp1[pos_exp1, :]):
-            res_map[i, 0] = pos_exp1
-            pos_exp1 += 1
-        if np.array_equal(res_exp[i, :], exp2[pos_exp2, :]):
-            res_map[i, 1] = pos_exp2
-            pos_exp2 += 1
+        if pos_exp1 < num_exp1:
+            if np.array_equal(res_exp[i, :], exp1[pos_exp1, :]):
+                res_map[i, 0] = pos_exp1
+                pos_exp1 += 1
+        if pos_exp2 < num_exp2:
+            if np.array_equal(res_exp[i, :], exp2[pos_exp2, :]):
+                res_map[i, 1] = pos_exp2
+                pos_exp2 += 1
 
     return res_exp, res_map
 

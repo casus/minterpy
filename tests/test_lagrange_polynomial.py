@@ -24,7 +24,7 @@ def test_neg(MultiIndices,NrSimilarPolynomials):
 Mi1 = MultiIndices
 Mi2 = MultiIndices
 
-def test_add_different_poly(Mi1,Mi2):
+def test_add_poly(Mi1,Mi2):
     coeffs1 = build_rnd_coeffs(Mi1)
     coeffs2 = build_rnd_coeffs(Mi2)
 
@@ -44,7 +44,7 @@ def test_add_different_poly(Mi1,Mi2):
     groundtruth_res_poly = can_poly_1 + can_poly_2
     assert_polynomial_almost_equal(groundtruth_res_poly, can_poly_res)
 
-def test_sub_different_poly(Mi1,Mi2):
+def test_sub_poly(Mi1,Mi2):
     coeffs1 = build_rnd_coeffs(Mi1)
     coeffs2 = build_rnd_coeffs(Mi2)
 
@@ -87,3 +87,33 @@ def test_mul():
     groundtruth = CanonicalPolynomial(groundtruth_product_coeffs, groundtruth_mi)
 
     assert_polynomial_almost_equal(groundtruth, res_canonical_poly)
+
+
+# def test_add_different_poly():
+#     mi1 = MultiIndex.from_degree(3, 2, 2.0)
+#     coeffs1 = np.array([1, 2, 0, 4, 3, 0, 5, 0, 0, 0, 0])
+#
+#     mi2 = MultiIndex.from_degree(2, 2, 2.0)
+#     coeffs2 = np.array([1, 2, 0, 3, 4, 0])
+#
+#     can_poly_1 = CanonicalPolynomial(coeffs1, mi1)
+#     can_poly_2 = CanonicalPolynomial(coeffs2, mi2)
+#
+#     transform_c2l_1 = TransformationCanonicalToLagrange(can_poly_1)
+#     transform_c2l_2 = TransformationCanonicalToLagrange(can_poly_2)
+#
+#     lag_poly_1 = transform_c2l_1()
+#     lag_poly_2 = transform_c2l_2()
+#
+#     res = lag_poly_1 + lag_poly_2
+#
+#     groundtruth_coeffs = np.array([2, 4, 0, 7, 7, 0, 5, 0, 0, 0, 0])
+#
+#     groundtruth_multi_index = mi1
+#
+#     groundtruth_canonical = CanonicalPolynomial(groundtruth_coeffs, groundtruth_multi_index)
+#
+#     transform_c2l_res = TransformationCanonicalToLagrange(groundtruth_canonical)
+#     groundtruth = transform_c2l_res()
+#
+#     assert_polynomial_almost_equal(res, groundtruth)
