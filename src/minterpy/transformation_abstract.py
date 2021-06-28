@@ -29,10 +29,9 @@ class TransformationABC(ABC):
     ----------
     origin_poly : MultivariatePolynomialSingleABC
         The instance of the polynomial to be transformed.
-    multi_index : MultiIndex
-        The multi index set of the origin polynomial (and also the target polynomial).
-    grid : Grid
-        The grid of the origin polynomial.
+    multi_index
+    grid
+
 
     """
 
@@ -50,7 +49,6 @@ class TransformationABC(ABC):
             raise TypeError(
                 f"<{origin_poly}> is not of the expected type {self.origin_type}."
             )
-        self.multi_index: MultiIndex = origin_poly.multi_index
         self.origin_poly = origin_poly
 
         # TODO check for index completeness
@@ -61,14 +59,6 @@ class TransformationABC(ABC):
         # self.origin_poly = self.origin_poly.make_complete()
         # raise ValueError('some transformations only work for complete multi index sets!')
 
-        # TODO Check if it is correct to use the default grid in all cases.
-        if origin_poly.grid is None:
-            # The Canonical Polynomial has no grid. generate the default grid
-            # TODO attention. is this intuitive for the user?
-            #  if this is the default, could add it to the polynomial in the first place!
-            self.grid = Grid(self.multi_index)
-        else:
-            self.grid = origin_poly.grid
 
         # TODO remove?!
         if generating_points is not None:
@@ -77,6 +67,17 @@ class TransformationABC(ABC):
             )
         # self.generating_points = generating_points
         self._transformation_operator: Optional[np.ndarray] = None
+
+
+    @property
+    def multi_index(self) -> MultiIndex:
+        """The multi index set of the origin polynomial (and also the target polynomial)."""
+        return self.origin_poly.multi_index
+
+    @property
+    def grid(self) -> Grid:
+        """The grid of the origin polynomial."""
+        return self.origin_poly.grid
 
     # TODO register the transformation classes to the available_transforms dictionary
     # TODO integrate function to retrieve the proper transformation (cf. transformation_utils.py)
