@@ -37,7 +37,7 @@ class MultivariatePolynomialABC(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def coeffs(self) -> ARRAY:
+    def coeffs(self) -> ARRAY: # pragma: no cover
         """Abstract container which stores the coefficients of the polynomial.
 
         This is a placeholder of the ABC, which is overwritten by the concrete implementation.
@@ -50,7 +50,7 @@ class MultivariatePolynomialABC(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def nr_active_monomials(self):
+    def nr_active_monomials(self): # pragma: no cover
         """Abstract container for the number of monomials of the polynomial(s).
 
         Notes
@@ -61,7 +61,7 @@ class MultivariatePolynomialABC(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def spatial_dimension(self):
+    def spatial_dimension(self): # pragma: no cover
         """Abstract container for the dimension of space where the polynomial(s) live on.
 
         Notes
@@ -72,7 +72,7 @@ class MultivariatePolynomialABC(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def unisolvent_nodes(self):
+    def unisolvent_nodes(self): # pragma: no cover
         """Abstract container for unisolvent nodes the polynomial(s) is(are) defined on.
 
         Notes
@@ -82,7 +82,7 @@ class MultivariatePolynomialABC(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _eval(self, arg) -> Union[float, ARRAY]:
+    def _eval(self, arg) -> Union[float, ARRAY]: # pragma: no cover
         """Abstract evaluation function.
 
         Notes
@@ -157,44 +157,44 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     @staticmethod
     @abc.abstractmethod
-    def generate_internal_domain(internal_domain, spatial_dimension):
+    def generate_internal_domain(internal_domain, spatial_dimension): # pragma: no cover
         # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
-    def generate_user_domain(user_domain, spatial_dimension):
+    def generate_user_domain(user_domain, spatial_dimension): # pragma: no cover
         # no docstring here, since it is given in the concrete implementation
         pass
 
     # TODO static methods should not have a parameter "self"
     @staticmethod
     @abc.abstractmethod
-    def _add(self, other):
+    def _add(self, other): # pragma: no cover
         # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
-    def _sub(self, other):
+    def _sub(self, other): # pragma: no cover
         # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
-    def _mul(self, other):
+    def _mul(self, other): # pragma: no cover
         # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
-    def _div(self, other):
+    def _div(self, other): # pragma: no cover
         # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
-    def _pow(self, pow):
+    def _pow(self, pow): # pragma: no cover
         # no docstring here, since it is given in the concrete implementation
         pass
 
