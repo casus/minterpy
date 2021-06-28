@@ -20,15 +20,17 @@ def get_transformation_class(origin_type, target_type) -> TransformationABC:
     :return: the Transformation class that can perform this transformation.
 
     """
-    try:
-        if origin_type == target_type:
-            return TransformationIdentity
-        else:
-            return TransformationABC.available_transforms[(origin_type, target_type)]
-    except IndexError:
+    if origin_type == target_type:
+        return TransformationIdentity
+
+    if (origin_type, target_type) in TransformationABC.available_transforms.keys():
+        return TransformationABC.available_transforms[(origin_type, target_type)]
+    else:
         raise NotImplementedError(
-            f"there is no known transformation from {origin_type} to {target_type}"
+            f"There is no known transformation from {origin_type} to {target_type}. \
+            \nThe available transformations are {[(key1.__name__, key2.__name__) for (key1, key2) in TransformationABC.available_transforms.keys()]}"
         )
+
 
 def get_transformation(origin_polynomial: MultivariatePolynomialSingleABC, target_type) -> TransformationABC:
     """Finds the Transformation class that can transform the basis of the origin_polynomial to the desired target_type.

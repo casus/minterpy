@@ -6,7 +6,7 @@ testing module for Transformation classes.
 
 import pytest
 import numpy as np
-from numpy.testing import assert_, assert_almost_equal
+from numpy.testing import assert_, assert_almost_equal, assert_raises
 from conftest import (assert_call, assert_polynomial_almost_equal, build_rnd_coeffs,
                         SpatialDimension, PolyDegree, LpDegree)
 
@@ -18,7 +18,7 @@ from minterpy import (MultiIndex, CanonicalPolynomial, NewtonPolynomial, Lagrang
                       )
 
 from minterpy.transformation_operator_abstract import TransformationOperatorABC
-from minterpy.transformation_meta import get_transformation
+from minterpy.transformation_meta import get_transformation, get_transformation_class
 from minterpy.transformation_identity import TransformationIdentity
 from minterpy.transformation_utils import (_build_lagrange_to_newton_naive, _build_lagrange_to_newton_bary,
                                             _build_newton_to_lagrange_naive, _build_newton_to_lagrange_bary,
@@ -79,6 +79,10 @@ def test_get_transformation(P1, P2):
     else:
         assert_(isinstance(transform, TransformationABC))
 
+def test_fail_get_transformation_class():
+    """ tests if get_transformation_class throws an error if it cannot find a transforamtion"""
+
+    assert_raises(NotImplementedError, get_transformation_class, None, LagrangePolynomial)
 
 def test_l2n_transform(SpatialDimension, PolyDegree, LpDegree):
     """ testing the naive and bary centric l2n transformations """
