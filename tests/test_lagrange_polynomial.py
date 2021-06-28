@@ -14,10 +14,10 @@ from minterpy import (MultiIndex, CanonicalPolynomial, LagrangePolynomial,
 
 def test_neg(MultiIndices,NrSimilarPolynomials):
     coeffs = build_rnd_coeffs(MultiIndices,NrSimilarPolynomials)
-    poly = LagrangePolynomial(coeffs,MultiIndices)
+    poly = LagrangePolynomial(MultiIndices,coeffs)
     res = -poly
     groundtruth_coeffs = (-1) * coeffs
-    groundtruth = poly.__class__(groundtruth_coeffs,MultiIndices)
+    groundtruth = poly.__class__(MultiIndices,groundtruth_coeffs)
     assert_polynomial_almost_equal(res,groundtruth)
 
 
@@ -28,8 +28,8 @@ def test_add_poly(Mi1,Mi2):
     coeffs1 = build_rnd_coeffs(Mi1)
     coeffs2 = build_rnd_coeffs(Mi2)
 
-    lag_poly_1 = LagrangePolynomial(coeffs1, Mi1)
-    lag_poly_2 = LagrangePolynomial(coeffs2, Mi2)
+    lag_poly_1 = LagrangePolynomial(Mi1, coeffs1)
+    lag_poly_2 = LagrangePolynomial(Mi2, coeffs2)
 
     res = lag_poly_1 + lag_poly_2
 
@@ -48,8 +48,8 @@ def test_sub_poly(Mi1,Mi2):
     coeffs1 = build_rnd_coeffs(Mi1)
     coeffs2 = build_rnd_coeffs(Mi2)
 
-    lag_poly_1 = LagrangePolynomial(coeffs1, Mi1)
-    lag_poly_2 = LagrangePolynomial(coeffs2, Mi2)
+    lag_poly_1 = LagrangePolynomial(Mi1, coeffs1)
+    lag_poly_2 = LagrangePolynomial(Mi2, coeffs2)
 
     res = lag_poly_1 - lag_poly_2
 
@@ -62,15 +62,15 @@ def test_sub_poly(Mi1,Mi2):
     can_poly_res = transform_l2c_res()
 
     groundtruth_res_poly = can_poly_1 - can_poly_2
-    assert_polynomial_almost_equal(groundtruth_res_poly, can_poly_res)
+    assert_polynomial_almost_equal(can_poly_res, groundtruth_res_poly)
 
 def test_mul():
     mi = MultiIndex.from_degree(2, 1, 2.0)
     canonical_coeffs1 = np.array([0, 1, 1])
     canonical_coeffs2 = np.array([0, 1, -1])
 
-    can_poly_1 = CanonicalPolynomial(canonical_coeffs1, mi)
-    can_poly_2 = CanonicalPolynomial(canonical_coeffs2, mi)
+    can_poly_1 = CanonicalPolynomial(mi, canonical_coeffs1)
+    can_poly_2 = CanonicalPolynomial(mi, canonical_coeffs2)
 
     c2l_transformation = TransformationCanonicalToLagrange(can_poly_1)
 
@@ -84,7 +84,7 @@ def test_mul():
 
     groundtruth_product_coeffs = np.array([0, 0, 1, 0, 0, -1])
     groundtruth_mi = MultiIndex.from_degree(2, 2, 4.0)
-    groundtruth = CanonicalPolynomial(groundtruth_product_coeffs, groundtruth_mi)
+    groundtruth = CanonicalPolynomial(groundtruth_mi, groundtruth_product_coeffs)
 
     assert_polynomial_almost_equal(groundtruth, res_canonical_poly)
 

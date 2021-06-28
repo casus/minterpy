@@ -327,7 +327,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         p = polynomial
         if new_coeffs is None:  # use the same coefficients
             new_coeffs = p.coeffs
-        return cls(new_coeffs, p.multi_index, p.internal_domain, p.user_domain, p.grid)
+        return cls(p.multi_index, new_coeffs, p.internal_domain, p.user_domain, p.grid)
 
     # Arithmetic operations:
 
@@ -339,7 +339,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         :rtype: MultivariatePolynomialSingleABC
         """
         return self.__class__(
-            -self._coeffs, self.multi_index, self.internal_domain, self.user_domain
+            self.multi_index, -self._coeffs, self.internal_domain, self.user_domain
         )
 
     def __pos__(self):
@@ -685,7 +685,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
                 )
                 new_coeffs[idxs_of_old] = self._coeffs
 
-        new_poly_instance = self.__class__(new_coeffs, new_indices, grid=new_grid)
+        new_poly_instance = self.__class__(new_indices, new_coeffs, grid=new_grid)
         return new_poly_instance
 
     def make_complete(self) -> "MultivariatePolynomialSingleABC":
