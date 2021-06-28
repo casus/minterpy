@@ -214,8 +214,8 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     def __init__(
         self,
-        coeffs: Optional[ARRAY],
         multi_index: Union[MultiIndex, ARRAY],
+        coeffs: Optional[ARRAY] = None,
         internal_domain: Optional[ARRAY] = None,
         user_domain: Optional[ARRAY] = None,
         grid: Optional[Grid] = None,
@@ -271,17 +271,15 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
     @classmethod
     def from_degree(
         cls,
-        coeffs: Optional[ARRAY],
         spatial_dimension: int,
         poly_degree: int,
         lp_degree: int,
+        coeffs: Optional[ARRAY] = None,
         internal_domain: ARRAY = None,
         user_domain: ARRAY = None,
     ):
         """Initialise Polynomial from given coefficients and the default construction for given polynomial degree, spatial dimension and :math:`l_p` degree.
 
-        :param coeffs: coefficients of the polynomial. These shall be 1D for a single polynomial, where the length of the array is the number of monomials given by the ``multi_index``. For a set of similar polynomials (with the same number of monomials) the array can also be 2D, where the first axis refers to the monomials and the second axis refers to the polynomials.
-        :type coeffs: np.ndarray
         :param spatial_dimension: Dimension of the domain space of the polynomial.
         :type spatial_dimension: int
 
@@ -291,6 +289,9 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         :param lp_degree: The :math:`l_p` degree used to determine the polynomial degree.
         :type lp_degree: int
 
+        :param coeffs: coefficients of the polynomial. These shall be 1D for a single polynomial, where the length of the array is the number of monomials given by the ``multi_index``. For a set of similar polynomials (with the same number of monomials) the array can also be 2D, where the first axis refers to the monomials and the second axis refers to the polynomials.
+        :type coeffs: np.ndarray
+
         :param internal_domain: the internal domain (factory) where the polynomials are defined on, e.g. :math:`[-1,1]^d` where :math:`d` is the dimension of the domain space. If a ``callable`` is passed, it shall get the dimension of the domain space and returns the ``internal_domain`` as an :class:`np.ndarray`.
         :type internal_domain: np.ndarray or callable
         :param user_domain: the domain window (factory), from which the arguments of a polynomial are transformed to the internal domain. If a ``callable`` is passed, it shall get the dimension of the domain space and returns the ``user_domain`` as an :class:`np.ndarray`.
@@ -298,8 +299,8 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
         """
         return cls(
-            coeffs,
             MultiIndex.from_degree(spatial_dimension, poly_degree, lp_degree),
+            coeffs,
             internal_domain,
             user_domain,
         )
@@ -534,8 +535,8 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
             copy operator form the python standard library.
         """
         return self.__class__(
-            self._coeffs,
             self.multi_index,
+            self._coeffs,
             self.internal_domain,
             self.user_domain,
             self.grid,
@@ -556,8 +557,8 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
         """
         return self.__class__(
-            deepcopy(self._coeffs),
             deepcopy(self.multi_index),
+            deepcopy(self._coeffs),
             deepcopy(self.internal_domain),
             deepcopy(self.user_domain),
             deepcopy(self.grid),
