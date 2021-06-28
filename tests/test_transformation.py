@@ -153,28 +153,15 @@ def test_transformation_identity():
     assert_polynomial_almost_equal(res_poly, newt_poly)
 
 
-def test_transformation_newton_canonical(SpatialDimension, PolyDegree, LpDegree):
+def test_transform_back_n_forth(P1,P2,SpatialDimension, PolyDegree, LpDegree):
     mi = MultiIndex.from_degree(SpatialDimension, PolyDegree, LpDegree)
     coeffs = build_rnd_coeffs(mi)
-    newt_poly = NewtonPolynomial(coeffs, mi)
+    origin_poly = P1(coeffs,mi)
 
-    transform_n2c = get_transformation(newt_poly, CanonicalPolynomial)
-    can_poly = transform_n2c()
+    transform_forward = get_transformation(origin_poly,P2)
+    interim_poly = transform_forward()
 
-    transform_c2n = get_transformation(can_poly, NewtonPolynomial)
-    res_poly = transform_c2n()
+    transform_back = get_transformation(interim_poly,P1)
+    final_poly = transform_back()
 
-    assert_polynomial_almost_equal(res_poly, newt_poly)
-
-def test_transformation_lagrange_canonical(SpatialDimension, PolyDegree, LpDegree):
-    mi = MultiIndex.from_degree(SpatialDimension, PolyDegree, LpDegree)
-    coeffs = build_rnd_coeffs(mi)
-    lag_poly = LagrangePolynomial(coeffs, mi)
-
-    transform_l2c = get_transformation(lag_poly, CanonicalPolynomial)
-    can_poly = transform_l2c()
-
-    transform_c2l = get_transformation(can_poly, LagrangePolynomial)
-    res_poly = transform_c2l()
-
-    assert_polynomial_almost_equal(res_poly, lag_poly)
+    assert_polynomial_almost_equal(origin_poly, final_poly)
