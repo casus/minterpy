@@ -107,8 +107,8 @@ def _lagrange_add(poly1, poly2):
             p1.multi_index.exponents, p1.coeffs, p2.multi_index.exponents, p2.coeffs
         )
         return LagrangePolynomial(
-            res_c,
             res_mi,
+            res_c,
             internal_domain=p1.internal_domain,
             user_domain=p1.user_domain,
         )
@@ -136,8 +136,8 @@ def _lagrange_sub(poly1, poly2):
             p1.multi_index.exponents, p1.coeffs, p2.multi_index.exponents, -p2.coeffs
         )
         return LagrangePolynomial(
-            res_c,
             res_mi,
+            res_c,
             internal_domain=p1.internal_domain,
             user_domain=p1.user_domain,
         )
@@ -202,8 +202,8 @@ def _lagrange_mul(poly1, poly2):
         res_c = np.multiply(scale_up_poly1 @ p1.coeffs, scale_up_poly2 @ p2.coeffs)
         print(res_c)
         return LagrangePolynomial(
-            res_c,
             res_mi,
+            res_c,
             internal_domain=p1.internal_domain,
             user_domain=p1.user_domain,
             grid=res_grid,

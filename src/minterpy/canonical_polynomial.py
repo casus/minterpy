@@ -190,8 +190,8 @@ def _canonical_add(poly1, poly2):
             p1.multi_index.exponents, p1.coeffs, p2.multi_index.exponents, p2.coeffs
         )
         return CanonicalPolynomial(
-            res_c,
             res_mi,
+            res_c,
             internal_domain=p1.internal_domain,
             user_domain=p1.user_domain,
         )

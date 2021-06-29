@@ -26,4 +26,4 @@ def test_init_polynomials(Polynom):
 
     mi = MultiIndex.from_degree(2,1,1)
     coeffs = np.arange(len(mi),dtype=float)
-    assert_call(Polynom,coeffs,mi)
+    assert_call(Polynom,mi,coeffs)

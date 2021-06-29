@@ -18,16 +18,16 @@ from minterpy import CanonicalPolynomial, MultiIndex
 
 def test_neg(MultiIndices,NrSimilarPolynomials):
     coeffs = build_rnd_coeffs(MultiIndices,NrSimilarPolynomials)
-    poly = CanonicalPolynomial(coeffs,MultiIndices)
+    poly = CanonicalPolynomial(MultiIndices,coeffs)
     res = -poly
     groundtruth_coeffs = (-1) * coeffs
-    groundtruth = poly.__class__(groundtruth_coeffs,MultiIndices)
+    groundtruth = poly.__class__(MultiIndices,groundtruth_coeffs)
     assert_polynomial_almost_equal(res,groundtruth)
 
 
 def test_eval(MultiIndices,NrPoints):
     coeffs = build_rnd_coeffs(MultiIndices)
-    poly = CanonicalPolynomial(coeffs,MultiIndices)
+    poly = CanonicalPolynomial(MultiIndices,coeffs)
     pts = build_rnd_points(NrPoints,MultiIndices.spatial_dimension)
     res = poly(pts)
     groundtruth =np.dot(np.prod(np.power(pts[:,None,:],MultiIndices.exponents[None,:,:]),axis=-1),coeffs)
@@ -45,7 +45,7 @@ args2 = np.lexsort(exps2.T, axis=-1)
 mi2 = MultiIndex(exps2[args2])
 coeffs2 = np.array([1, 2, 3, 4, 5])
 
-polys = [CanonicalPolynomial(coeffs1[args1], mi1),CanonicalPolynomial(coeffs2[args2], mi2)]
+polys = [CanonicalPolynomial(mi1, coeffs1[args1]),CanonicalPolynomial(mi2, coeffs2[args2])]
 
 @pytest.fixture(params = polys)
 def Poly(request):
@@ -55,7 +55,7 @@ def Poly(request):
 def test_sub_same_poly(Poly):
     res = Poly - Poly
     groundtruth_coeffs = np.zeros(Poly.coeffs.shape)
-    groundtruth = Poly.__class__(groundtruth_coeffs,Poly.multi_index)
+    groundtruth = Poly.__class__(Poly.multi_index,groundtruth_coeffs)
     assert_polynomial_almost_equal(res,groundtruth)
 
 
@@ -81,7 +81,7 @@ def test_add_different_poly(P1,P2):
             ]
         )
     groundtruth_multi_index = MultiIndex(groundtruth_multi_index_exponents)
-    groundtruth = P1.__class__(groundtruth_coeffs,groundtruth_multi_index)
+    groundtruth = P1.__class__(groundtruth_multi_index, groundtruth_coeffs)
     assert_polynomial_almost_equal(res,groundtruth)
 
 
@@ -104,5 +104,5 @@ def test_sub_different_poly():
         ]
     )
     groundtruth_multi_index = MultiIndex(groundtruth_multi_index_exponents)
-    groundtruth = polys[0].__class__(groundtruth_coeffs,groundtruth_multi_index)
+    groundtruth = polys[0].__class__(groundtruth_multi_index, groundtruth_coeffs)
     assert_polynomial_almost_equal(res,groundtruth)

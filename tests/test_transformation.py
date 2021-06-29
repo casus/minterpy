@@ -41,7 +41,7 @@ def test_init_transform(Transform):
     # Test initialization
     mi = MultiIndex.from_degree(2, 2, 1.0)
     coeffs = np.arange(len(mi), dtype=float)
-    poly = Transform.origin_type(coeffs, mi)
+    poly = Transform.origin_type(mi, coeffs)
     assert_call(Transform, poly)
 
     # test transformation call
@@ -70,7 +70,7 @@ def test_get_transformation(P1, P2):
 
     mi = MultiIndex.from_degree(2, 1, 1.0)
     coeffs = np.arange(len(mi), dtype=float)
-    poly = P1(coeffs, mi)
+    poly = P1(mi, coeffs)
 
     transform = get_transformation(poly, P2)
 
@@ -88,19 +88,19 @@ def test_l2n_transform(SpatialDimension, PolyDegree, LpDegree):
     """ testing the naive and bary centric l2n transformations """
     mi = MultiIndex.from_degree(SpatialDimension, PolyDegree, LpDegree)
     coeffs = build_rnd_coeffs(mi)
-    lag_poly = LagrangePolynomial(coeffs, mi)
+    lag_poly = LagrangePolynomial(mi, coeffs)
 
     transformation_l2n = TransformationLagrangeToNewton(lag_poly)
 
     # test naive
     transform_naive = _build_lagrange_to_newton_naive(transformation_l2n)
     newt_coeffs_naive = transform_naive @ lag_poly.coeffs
-    newt_poly_naive = NewtonPolynomial(newt_coeffs_naive, mi)
+    newt_poly_naive = NewtonPolynomial(mi, newt_coeffs_naive)
 
     # test bary dict
     transform_bary = _build_lagrange_to_newton_bary(transformation_l2n)
     newt_coeffs_bary = transform_bary @ lag_poly.coeffs
-    newt_poly_bary = NewtonPolynomial(newt_coeffs_bary, mi)
+    newt_poly_bary = NewtonPolynomial(mi, newt_coeffs_bary)
 
     # compare the result of naive and bary transformation
     assert_polynomial_almost_equal(newt_poly_naive, newt_poly_bary)
@@ -118,19 +118,19 @@ def test_n2l_transform(SpatialDimension, PolyDegree, LpDegree):
     """ testing the naive and bary centric l2n transformations """
     mi = MultiIndex.from_degree(SpatialDimension, PolyDegree, LpDegree)
     coeffs = build_rnd_coeffs(mi)
-    newt_poly = NewtonPolynomial(coeffs, mi)
+    newt_poly = NewtonPolynomial(mi, coeffs)
 
     transformation_n2l = TransformationNewtonToLagrange(newt_poly)
 
     # test naive
     transform_naive = _build_newton_to_lagrange_naive(transformation_n2l)
     lag_coeffs_naive = transform_naive @ newt_poly.coeffs
-    lag_poly_naive = LagrangePolynomial(lag_coeffs_naive, mi)
+    lag_poly_naive = LagrangePolynomial(mi, lag_coeffs_naive)
 
     # test bary dict
     transform_bary = _build_newton_to_lagrange_bary(transformation_n2l)
     lag_coeffs_bary = transform_bary @ newt_poly.coeffs
-    lag_poly_bary = LagrangePolynomial(lag_coeffs_bary, mi)
+    lag_poly_bary = LagrangePolynomial(mi, lag_coeffs_bary)
 
     # compare the result of naive and bary transformation
     assert_polynomial_almost_equal(lag_poly_naive, lag_poly_bary)
@@ -140,7 +140,7 @@ def test_transformation_identity():
 
     mi = MultiIndex.from_degree(2, 1, 1.0)
     coeffs = build_rnd_coeffs(mi)
-    newt_poly = NewtonPolynomial(coeffs, mi)
+    newt_poly = NewtonPolynomial(mi, coeffs)
 
     assert_call(TransformationIdentity, newt_poly)
     transform = TransformationIdentity(newt_poly)
@@ -160,7 +160,7 @@ def test_transformation_identity():
 def test_transform_back_n_forth(P1,P2,SpatialDimension, PolyDegree, LpDegree):
     mi = MultiIndex.from_degree(SpatialDimension, PolyDegree, LpDegree)
     coeffs = build_rnd_coeffs(mi)
-    origin_poly = P1(coeffs,mi)
+    origin_poly = P1(mi, coeffs)
 
     transform_forward = get_transformation(origin_poly,P2)
     interim_poly = transform_forward()

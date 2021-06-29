@@ -13,7 +13,7 @@ from minterpy import TransformationNewtonToCanonical,NewtonPolynomial, MultiInde
 
 def test_eval(MultiIndices,NrPoints):
     coeffs = build_rnd_coeffs(MultiIndices)
-    poly = NewtonPolynomial(coeffs,MultiIndices)
+    poly = NewtonPolynomial(MultiIndices, coeffs)
     pts = build_rnd_points(NrPoints,MultiIndices.spatial_dimension)
     res = poly(pts)
 
