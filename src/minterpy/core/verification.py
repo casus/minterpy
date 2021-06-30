@@ -57,7 +57,7 @@ def rectify_query_points(x, m):
     :param m: Dimension of the domain space.
     :type m: int
 
-    :raise ValueError: If the input array has not the expected dimensionality. 
+    :raise ValueError: If the input array has not the expected dimensionality.
 
     :return: ``(nr_points,x)`` where ``nr_points`` is the number of points and ``x`` is a version of the input array with the correct shape. If ``x`` already had the right shape, it is passed without copying.
     :rtype: tuple(int,np.ndarray)

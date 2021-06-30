@@ -11,15 +11,17 @@ from typing import Optional, Union
 import numpy as np
 
 from minterpy.global_settings import ARRAY
-from minterpy.grid import Grid
-from minterpy.multi_index import MultiIndex
+from ..grid import Grid
+from ..multi_index import MultiIndexSet
 
-__all__ = ["MultivariatePolynomialABC", "MultivariatePolynomialSingleABC"]
 
-from minterpy.multi_index_utils import find_match_between
-from minterpy.verification import (check_shape, check_type_n_values,
+
+from ..utils import find_match_between
+from ..verification import (check_shape, check_type_n_values,
                                    verify_domain)
 
+
+__all__ = ["MultivariatePolynomialABC", "MultivariatePolynomialSingleABC"]
 
 class MultivariatePolynomialABC(abc.ABC):
     """the most general abstract base class for multivariate polynomials.
@@ -129,7 +131,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     Attributes
     ----------
-    multi_index : MultiIndex
+    multi_index : MultiIndexSet
         The multi-indices of the multivariate polynomial.
     coeffs : np.ndarray
 
@@ -200,13 +202,13 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     @staticmethod
     def _gen_grid_default(multi_index):
-        """Return the default :class:`Grid` for a given :class:`MultiIndex` instance.
+        """Return the default :class:`Grid` for a given :class:`MultiIndexSet` instance.
 
         For the default values of the Grid class, see :class:`minterpy.Grid`.
 
 
-        :param multi_index: An instance of :class:`MultiIndex` for which the default :class:`Grid` shall be build
-        :type multi_index: MultiIndex
+        :param multi_index: An instance of :class:`MultiIndexSet` for which the default :class:`Grid` shall be build
+        :type multi_index: MultiIndexSet
         :return: An instance of :class:`Grid` with the default optional parameters.
         :rtype: Grid
         """
@@ -214,20 +216,20 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     def __init__(
         self,
-        multi_index: Union[MultiIndex, ARRAY],
+        multi_index: Union[MultiIndexSet, ARRAY],
         coeffs: Optional[ARRAY] = None,
         internal_domain: Optional[ARRAY] = None,
         user_domain: Optional[ARRAY] = None,
         grid: Optional[Grid] = None,
     ):
 
-        if multi_index.__class__ is MultiIndex:
+        if multi_index.__class__ is MultiIndexSet:
             self.multi_index = multi_index
         else:
             # TODO should passing multi indices as ndarray be supported?
             check_type_n_values(multi_index)  # expected ARRAY
             check_shape(multi_index, dimensionality=2)
-            self.multi_index = MultiIndex(multi_index)
+            self.multi_index = MultiIndexSet(multi_index)
 
         nr_monomials, spatial_dimension = self.multi_index.exponents.shape
         self.coeffs = coeffs  # calls the setter method and checks the input shape
@@ -299,7 +301,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
         """
         return cls(
-            MultiIndex.from_degree(spatial_dimension, poly_degree, lp_degree),
+            MultiIndexSet.from_degree(spatial_dimension, poly_degree, lp_degree),
             coeffs,
             internal_domain,
             user_domain,
@@ -645,15 +647,15 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         return self.grid.unisolvent_nodes
 
     def _new_instance_if_necessary(
-        self, new_grid, new_indices: Optional[MultiIndex] = None
+        self, new_grid, new_indices: Optional[MultiIndexSet] = None
     ) -> "MultivariatePolynomialSingleABC":
         """Constructs a new instance only if the multi indices have changed.
 
         :param new_grid: Grid instance the polynomial is defined on.
         :type new_grid: Grid
 
-        :param new_indices: :class:`MultiIndex` instance for the polynomial(s), needs to be a subset of the current ``multi_index``. Default is :class:`None`.
-        :type new_indices: MultiIndex, optional
+        :param new_indices: :class:`MultiIndexSet` instance for the polynomial(s), needs to be a subset of the current ``multi_index``. Default is :class:`None`.
+        :type new_indices: MultiIndexSet, optional
 
         :return: Same polynomial instance if ``grid`` and ``multi_index`` stay the same, otherwise new polynomial instance with the new ``grid`` and ``multi_index``.
         :rtype: MultivariatePolynomialSingleABC

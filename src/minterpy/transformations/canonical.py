@@ -5,16 +5,16 @@ Transformations from Canonical basis to Newton and Lagrange basis are provided.
 """
 
 from minterpy import CanonicalPolynomial
-from minterpy.lagrange_polynomial import LagrangePolynomial
-from minterpy.newton_polynomial import NewtonPolynomial
-from minterpy.transformation_abstract import TransformationABC
-from minterpy.transformation_utils import (
+from minterpy.polynomials.lagrange_polynomial import LagrangePolynomial
+from minterpy.polynomials.newton_polynomial import NewtonPolynomial
+from minterpy.core.ABC import TransformationABC
+from .utils import (
     _build_canonical_to_lagrange_operator, _build_canonical_to_newton_operator)
 
-__all__ = ["TransformationCanonicalToNewton", "TransformationCanonicalToLagrange"]
+__all__ = ["CanonicalToNewton", "CanonicalToLagrange"]
 
 
-class TransformationCanonicalToNewton(TransformationABC):
+class CanonicalToNewton(TransformationABC):
     """Transformation from CanonicalPolynomial to NewtonPolynomial
     """
 
@@ -23,7 +23,7 @@ class TransformationCanonicalToNewton(TransformationABC):
     _get_transformation_operator = _build_canonical_to_newton_operator
 
 
-class TransformationCanonicalToLagrange(TransformationABC):
+class CanonicalToLagrange(TransformationABC):
     """Transformation from CanonicalPolynomial to LagrangePolynomial
     """
 

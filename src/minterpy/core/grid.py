@@ -6,12 +6,14 @@ from typing import Callable, Optional
 
 import numpy as np
 
+from .tree import MultiIndexTree
+
 from minterpy.global_settings import ARRAY, INT_DTYPE
-from minterpy.multi_index import MultiIndex
-from minterpy.multi_index_tree import MultiIndexTree
-from minterpy.multi_index_utils import sort_lexicographically
+from .multi_index import MultiIndexSet
+
+from .utils import sort_lexicographically
 from minterpy.utils import gen_chebychev_2nd_order_leja_ordered
-from minterpy.verification import (check_domain_fit, check_shape,
+from .verification import (check_domain_fit, check_shape,
                                    check_type_n_values)
 
 __all__ = ["Grid"]
@@ -90,7 +92,7 @@ class Grid:
     spatial_dimension
     generating_values
     tree
-    multi_index : The :class:`MultiIndex` instance this :class:`Grid` is based on.
+    multi_index : The :class:`MultiIndexSet` instance this :class:`Grid` is based on.
     generating_points : The (multivariate) points the grid is based on.
 
     """
@@ -100,15 +102,15 @@ class Grid:
 
     def __init__(
         self,
-        multi_index: MultiIndex,
+        multi_index: MultiIndexSet,
         generating_points: Optional[ARRAY] = None,
         generating_values: Optional[ARRAY] = None,
     ):
-        if not isinstance(multi_index, MultiIndex):
-            raise TypeError(f"the indices must be given as {MultiIndex} class instance")
+        if not isinstance(multi_index, MultiIndexSet):
+            raise TypeError(f"the indices must be given as {MultiIndexSet} class instance")
         # NOTE: the multi indices of a grid must be NOT be 'lexicographically complete in order to form a basis!
         # HOWEVER: building a MultiIndexTree requires complete indices
-        self.multi_index: MultiIndex = multi_index
+        self.multi_index: MultiIndexSet = multi_index
 
         if generating_points is None:
             if generating_values is None:
@@ -136,14 +138,14 @@ class Grid:
     @classmethod
     def from_generator(
         cls,
-        multi_index: MultiIndex,
+        multi_index: MultiIndexSet,
         generating_function: Callable = DEFAULT_GRID_VAL_GEN_FCT,
     ):
         """
         Constructor from a factory method for the ``generating_values``.
 
-        :param multi_index: The :class:`MultiIndex` this ``grid`` is based on.
-        :type multi_index: MultiIndex
+        :param multi_index: The :class:`MultiIndexSet` this ``grid`` is based on.
+        :type multi_index: MultiIndexSet
 
         :param generating_function: Factory method for the ``generating_values``. This functions gets a polynomial degree and returns a set of generating values of this degree.
         :type generating_function: callable
@@ -157,12 +159,12 @@ class Grid:
         return cls.from_value_set(multi_index, generating_values)
 
     @classmethod
-    def from_value_set(cls, multi_index: MultiIndex, generating_values: ARRAY):
+    def from_value_set(cls, multi_index: MultiIndexSet, generating_values: ARRAY):
         """
         Constructor from given ``generating_values``.
 
-        :param multi_index: The :class:`MultiIndex` this ``grid`` is based on.
-        :type multi_index: MultiIndex
+        :param multi_index: The :class:`MultiIndexSet` this ``grid`` is based on.
+        :type multi_index: MultiIndexSet
 
         :param generating_values: Generating values the :class:`Grid` instance shall be based on. The input shape needs to be one-dimensional.
         :type generating_function: np.ndarray
@@ -273,7 +275,7 @@ class Grid:
             generating_points_n, generating_points_2n, self.multi_index.exponents
         )
         # create a new multi index instance
-        multi_index_remapped = MultiIndex(exponents_remapped)
+        multi_index_remapped = MultiIndexSet(exponents_remapped)
         # construct a new instance
         new_instance = self.__class__(
             multi_index_remapped, generating_points_2n, generating_values_2n
@@ -305,11 +307,11 @@ class Grid:
         # apply func to unisolvent nodes and return the func values, or store them alternatively in out
         raise NotImplementedError
 
-    def _new_instance_if_necessary(self, multi_indices_new: MultiIndex) -> "Grid":
+    def _new_instance_if_necessary(self, multi_indices_new: MultiIndexSet) -> "Grid":
         """Constructs new grid instance only if the multi indices have changed
 
-        :param new_indices: :class:`MultiIndex` instance for the ``grid``, needs to be a subset of the current ``multi_index``.
-        :type new_indices: MultiIndex
+        :param new_indices: :class:`MultiIndexSet` instance for the ``grid``, needs to be a subset of the current ``multi_index``.
+        :type new_indices: MultiIndexSet
 
         :return: Same :class:`Grid` instance if ``multi_index`` stays the same, otherwise new polynomial instance with the new ``multi_index``.
         :rtype: Grid

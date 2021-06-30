@@ -16,37 +16,16 @@ from typing import Optional, Union
 import numpy as np
 from _warnings import warn
 
-from minterpy.barycentric_conversion import (merge_trafo_dict,
+from .conversion import (merge_trafo_dict,
                                              merge_trafo_factorised,
                                              merge_trafo_piecewise)
-from minterpy.barycentric_transformation_fcts import (
+from .transformation_fcts import (
     transform_barycentric_dict, transform_barycentric_factorised,
     transform_barycentric_piecewise)
 from minterpy.global_settings import ARRAY, FLOAT_DTYPE
-from minterpy.transformation_operator_abstract import TransformationOperatorABC
+from minterpy.core.ABC import TransformationOperatorABC
+from ..matrix_operator import MatrixTransformationOperator
 
-__all__ = ["MatrixTransformationOperator"]
-
-
-class MatrixTransformationOperator(TransformationOperatorABC):
-    """Concrete implementation of a TransformationOperator constructed as a matrix.
-    """
-
-    def __matmul__(self, other):
-        if isinstance(other, TransformationOperatorABC):
-            # the input is another transformation
-            # instead of an array return another Matrix transformation operator constructed from the matrix product
-            # TODO which transformation object should be passed?
-            return MatrixTransformationOperator(
-                self.transformation, self.array_repr_full @ other.array_repr_full
-            )
-
-        return self.array_repr_sparse @ other
-
-    def _get_array_repr(self) -> ARRAY:
-        """Returns the matrix representation of the transformation.
-        """
-        return self.transformation_data
 
 
 class BarycentricOperatorABC(TransformationOperatorABC):

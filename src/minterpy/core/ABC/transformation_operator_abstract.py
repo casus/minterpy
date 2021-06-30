@@ -11,12 +11,12 @@ implentations are derived.
 
 from abc import ABC, abstractmethod
 
-__all__ = ["TransformationOperatorABC"]
-
 from typing import Optional, Union
 
 from minterpy.global_settings import ARRAY
 
+
+__all__ = ["TransformationOperatorABC"]
 
 class TransformationOperatorABC(ABC):
     """Abstract base class for transformation operators.

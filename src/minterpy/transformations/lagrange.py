@@ -3,18 +3,17 @@ Concrete implementations of the Transformation classes for the LagrangePolynomia
 
 Transformations from Lagrange basis to Newton and Canonical basis are provided.
 """
-
-from minterpy.canonical_polynomial import CanonicalPolynomial
-from minterpy.newton_polynomial import NewtonPolynomial
-from minterpy.lagrange_polynomial import LagrangePolynomial
-from minterpy.transformation_abstract import TransformationABC
-from minterpy.transformation_utils import (
+from minterpy import CanonicalPolynomial
+from minterpy import NewtonPolynomial
+from minterpy.polynomials.lagrange_polynomial import LagrangePolynomial
+from minterpy.core.ABC import TransformationABC
+from .utils import (
     _build_lagrange_to_canonical_operator, _build_lagrange_to_newton_operator)
 
-__all__ = ["TransformationLagrangeToNewton", "TransformationLagrangeToCanonical"]
+__all__ = ["LagrangeToNewton", "LagrangeToCanonical"]
 
 
-class TransformationLagrangeToNewton(TransformationABC):
+class LagrangeToNewton(TransformationABC):
     """Transformation from LagrangePolynomial to NewtonPolynomial
     """
 
@@ -23,7 +22,7 @@ class TransformationLagrangeToNewton(TransformationABC):
     _get_transformation_operator = _build_lagrange_to_newton_operator
 
 
-class TransformationLagrangeToCanonical(TransformationABC):
+class LagrangeToCanonical(TransformationABC):
     """Transformation from LagrangePolynomial to CanonicalPolynomial
     """
 

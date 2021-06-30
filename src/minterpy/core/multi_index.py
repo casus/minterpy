@@ -1,5 +1,5 @@
 """
-Module of the MultiIndex class
+Module of the MultiIndexSet class
 """
 from copy import deepcopy
 from typing import Optional
@@ -9,18 +9,17 @@ import numpy as np
 from minterpy.global_settings import ARRAY, INT_DTYPE
 from minterpy.jit_compiled_utils import (all_indices_are_contained,
                                          have_lexicographical_ordering)
-from minterpy.multi_index_utils import (_expand_dim, get_exponent_matrix,
+from .utils import (_expand_dim, get_exponent_matrix,
                                         insert_lexicographically,
                                         is_lexicographically_complete,
                                         make_complete, verify_lp_deg)
 
-__all__ = ["MultiIndex"]
+from .verification import check_shape, check_values
 
-from minterpy.verification import check_shape, check_values
-
+__all__ = ["MultiIndexSet"]
 
 # TODO implement (set) comparison operations based on the multi index utils (>=, == ...)
-class MultiIndex:
+class MultiIndexSet:
     """ Class representation of the set of multi indices for a polynomial.
 
     The instances of this class provide storrage for the exponents of a multi variate
@@ -159,7 +158,7 @@ class MultiIndex:
         return self._exponents.shape[1]
 
     def __str__(self):
-        return "\n".join(["MultiIndex", str(self._exponents)])
+        return "\n".join(["MultiIndexSet", str(self._exponents)])
 
     def __repr__(self):
         return self.__str__()
@@ -174,7 +173,7 @@ class MultiIndex:
         :raise NotImplementedError: If this function is called.
 
         """
-        raise NotImplementedError("MultiIndex.union() is not implemented yet.")
+        raise NotImplementedError("MultiIndexSet.union() is not implemented yet.")
 
     def __add__(self):
         """This function is not implemented yet.
@@ -182,7 +181,7 @@ class MultiIndex:
         :raise NotImplementedError: If this function is called.
 
         """
-        raise NotImplementedError("MultiIndex.__add__() is not implemented yet.")
+        raise NotImplementedError("MultiIndexSet.__add__() is not implemented yet.")
 
     def ordering(self, order):
         """This function is not implemented yet.
@@ -190,13 +189,13 @@ class MultiIndex:
         :raise NotImplementedError: If this function is called.
 
         """
-        raise NotImplementedError("MultiIndex.ordering() is not implemented yet.")
+        raise NotImplementedError("MultiIndexSet.ordering() is not implemented yet.")
 
     # def complete(self, order):
-    #     raise NotImplementedError("MultiIndex.complete() is not implemented yet.")
+    #     raise NotImplementedError("MultiIndexSet.complete() is not implemented yet.")
 
     def copy_private_attributes(self, new_instance):
-        """Copys the private attributes to another instance of :class:`MultiIndex`
+        """Copys the private attributes to another instance of :class:`MultiIndexSet`
 
         .. todo::
             - use the ``__copy__`` hook instead!
@@ -212,7 +211,7 @@ class MultiIndex:
         This function is called, if one uses the top-level function ``copy()`` on an instance of this class.
 
         :return: The copy of the current instance.
-        :rtype: MultiIndex
+        :rtype: MultiIndexSet
 
         See Also
         --------
@@ -233,7 +232,7 @@ class MultiIndex:
         This function is called, if one uses the top-level function ``deepcopy()`` on an instance of this class.
 
         :return: The deepcopy of the current instance.
-        :rtype: MultiIndex
+        :rtype: MultiIndexSet
 
         See Also
         --------
@@ -258,29 +257,29 @@ class MultiIndex:
         """
         return all_indices_are_contained(vectors, self._exponents)
 
-    def is_sub_index_set_of(self, super_set: "MultiIndex") -> bool:
-        """Checks if this instance is a subset of the given instance of :class:`MultiIndex`.
+    def is_sub_index_set_of(self, super_set: "MultiIndexSet") -> bool:
+        """Checks if this instance is a subset of the given instance of :class:`MultiIndexSet`.
 
         :param super_set: Superset to be checked.
-        :type super_set: MultiIndex
+        :type super_set: MultiIndexSet
 
         .. todo::
             - use comparison hooks for this functionality
         """
         return super_set.contains_these_exponents(self.exponents)
 
-    def is_super_index_set_of(self, sub_set: "MultiIndex") -> bool:
-        """Checks if this instance is a super of the given instance of :class:`MultiIndex`.
+    def is_super_index_set_of(self, sub_set: "MultiIndexSet") -> bool:
+        """Checks if this instance is a super of the given instance of :class:`MultiIndexSet`.
 
         :param sub_set: Subset to be checked.
-        :type super_set: MultiIndex
+        :type super_set: MultiIndexSet
 
         .. todo::
             - use comparison hooks for this functionality
         """
         return self.contains_these_exponents(sub_set.exponents)
 
-    def _new_instance_if_necessary(self, new_exponents: ARRAY) -> "MultiIndex":
+    def _new_instance_if_necessary(self, new_exponents: ARRAY) -> "MultiIndexSet":
         """constructs a new instance only if the exponents are different
 
         .. todo::
@@ -307,7 +306,7 @@ class MultiIndex:
             # new_instance._exponents = _exponents_completed
         return new_instance
 
-    def add_exponents(self, exponents: ARRAY) -> "MultiIndex":
+    def add_exponents(self, exponents: ARRAY) -> "MultiIndexSet":
         exponents = np.require(exponents, dtype=INT_DTYPE)
         check_values(exponents)
         exponents = exponents.reshape(
@@ -318,8 +317,8 @@ class MultiIndex:
         :param exponents: Array of exponents to be inserted.
         :type exponents: np.ndarray
 
-        :return: New instance of :class:`MultiIndex` (if necessary), where the additional exponents are inserted uniquely.
-        :rtype: MultiIndex
+        :return: New instance of :class:`MultiIndexSet` (if necessary), where the additional exponents are inserted uniquely.
+        :rtype: MultiIndexSet
 
 
         .. todo::
@@ -332,13 +331,13 @@ class MultiIndex:
         new_exponents = insert_lexicographically(self._exponents, exponents)
         return self._new_instance_if_necessary(new_exponents)
 
-    def make_complete(self) -> "MultiIndex":
+    def make_complete(self) -> "MultiIndexSet":
         """Completion of this instance.
 
-        Bulid a new instance of :class:`MultiIndex`, where the exponents are completed, i.e. in lexicographical ordering, there will be no exponent missing.
+        Bulid a new instance of :class:`MultiIndexSet`, where the exponents are completed, i.e. in lexicographical ordering, there will be no exponent missing.
 
         :return: Completed version of this instance
-        :rtype: MultiIndex
+        :rtype: MultiIndexSet
 
         .. todo::
             - since this returns a copy of this instance, maybe this shall be given as a separate function.

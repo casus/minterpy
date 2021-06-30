@@ -11,8 +11,11 @@ from copy import copy
 
 import numpy as np
 
-from minterpy import MultivariatePolynomialABC, TransformationABC
-from minterpy.transformation_operators import MatrixTransformationOperator
+from minterpy.core.ABC import MultivariatePolynomialABC, TransformationABC
+from minterpy.schemes.matrix_operator import MatrixTransformationOperator
+
+
+__all__ = ["Identity"]
 
 
 def _build_identity_transformation_operator(transformation):
@@ -21,7 +24,7 @@ def _build_identity_transformation_operator(transformation):
     )
 
 
-class TransformationIdentity(TransformationABC):
+class Identity(TransformationABC):
     """Transformation between same basis.
     """
 

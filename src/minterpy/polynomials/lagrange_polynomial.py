@@ -5,16 +5,16 @@ from typing import Optional
 
 import numpy as np
 
-import minterpy
-from minterpy.canonical_polynomial import (_match_dims,
+from .canonical_polynomial import (_match_dims,
                                            _matching_internal_domain)
 from minterpy.global_settings import ARRAY
-from minterpy.multi_index_utils import insert_lexicographically
-from minterpy.multivariate_polynomial_abstract import \
+from ..core.utils import insert_lexicographically
+from ..core.ABC import \
     MultivariatePolynomialSingleABC
 from minterpy.utils import newt_eval
-from minterpy.verification import verify_domain
-
+from ..core.verification import verify_domain
+from ..core import MultiIndexSet,Grid
+import minterpy
 __all__ = ["LagrangePolynomial"]
 
 
@@ -44,7 +44,7 @@ def _union_of_exponents(exp1, exp2):
     :rtype: (np.ndarray, callable)
 
     .. todo::
-        - implement this as a member function on :class:`MultiIndex`.
+        - implement this as a member function on :class:`MultiIndexSet`.
         - improve performance by using similar functions from ``numpy``.
     """
     res_exp = insert_lexicographically(exp1.copy(), exp2.copy())
@@ -161,8 +161,8 @@ def _lagrange_mul(poly1, poly2):
     """
     p1, p2 = _match_dims(poly1, poly2)
     if _matching_internal_domain(p1, p2):
-        l2n_1 = minterpy.TransformationLagrangeToNewton(p1)
-        l2n_2 = minterpy.TransformationLagrangeToNewton(p2)
+        l2n_1 = minterpy.LagrangeToNewton(p1)
+        l2n_2 = minterpy.LagrangeToNewton(p2)
 
         degree_poly1 = p1.multi_index.poly_degree
         degree_poly2 = p2.multi_index.poly_degree
@@ -172,10 +172,10 @@ def _lagrange_mul(poly1, poly2):
         res_degree = int(degree_poly1 + degree_poly2)
         res_lpdegree = lpdegree_poly1 + lpdegree_poly2
 
-        res_mi = minterpy.MultiIndex.from_degree(
+        res_mi = MultiIndexSet.from_degree(
             p1.spatial_dimension, res_degree, res_lpdegree
         )
-        res_grid = minterpy.Grid(res_mi)
+        res_grid = Grid(res_mi)
 
         num_points_res = res_grid.unisolvent_nodes.shape[0]
 

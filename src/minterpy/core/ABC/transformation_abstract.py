@@ -10,11 +10,12 @@ from typing import Optional
 
 import numpy as np
 
-from minterpy.grid import Grid
-from minterpy.multi_index import MultiIndex
-from minterpy.multivariate_polynomial_abstract import \
+from ..grid import Grid
+from ..multi_index import MultiIndexSet
+
+from .multivariate_polynomial_abstract import \
     MultivariatePolynomialSingleABC
-from minterpy.transformation_operator_abstract import TransformationOperatorABC
+from .transformation_operator_abstract import TransformationOperatorABC
 
 __all__ = ["TransformationABC"]
 
@@ -70,7 +71,7 @@ class TransformationABC(ABC):
 
 
     @property
-    def multi_index(self) -> MultiIndex:
+    def multi_index(self) -> MultiIndexSet:
         """The multi index set of the origin polynomial (and also the target polynomial)."""
         return self.origin_poly.multi_index
 
@@ -161,8 +162,8 @@ class TransformationABC(ABC):
         return self._transformation_operator
 
     @property
-    def _target_indices(self) -> MultiIndex:
-        """The MultiIndex of the target_poly.
+    def _target_indices(self) -> MultiIndexSet:
+        """The MultiIndexSet of the target_poly.
 
         :return: the indices the target polynomial will have
         """
