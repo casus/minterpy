@@ -1,12 +1,11 @@
-.. currentmodule:: minterpy
+.. currentmodule:: minterpy.core.ABC.multivariate_polynomial_abstract
 
-.. multivariate_polynomial_abstract:
 
 ###########################
-Multivariate Polynomial ABC
+Multivariate polynomial ABC
 ###########################
-.. automodule:: minterpy.multivariate_polynomial_abstract
 
+.. automodule:: multivariate_polynomial_abstract
 
 .. autoclass:: MultivariatePolynomialABC
     :members:

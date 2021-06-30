@@ -1,11 +1,11 @@
-.. currentmodule:: minterpy
+.. currentmodule:: minterpy.polynomials
 
 .. lagrange_polynomial.LagrangePolynomial:
 
 ########################
 Lagrange Polynomial Base
 ########################
-.. automodule:: minterpy.lagrange_polynomial
+.. automodule:: minterpy.polynomials.lagrange_polynomial
 
 .. autoclass:: LagrangePolynomial
    :members:

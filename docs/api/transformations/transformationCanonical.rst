@@ -1,20 +1,20 @@
-.. currentmodule:: minterpy
+.. currentmodule:: minterpy.transformations
 
-.. transformation_canonical:
+.. canonical:
 
 ####################
 From Canonical basis
 ####################
-.. automodule:: minterpy.transformation_canonical
+.. automodule:: minterpy.transformations.canonical
 
-.. autoclass:: TransformationCanonicalToNewton
+.. autoclass:: CanonicalToNewton
    :members:
    :show-inheritance:
    :private-members:
    :inherited-members:
    :special-members:
 
-.. autoclass:: TransformationCanonicalToLagrange
+.. autoclass:: CanonicalToLagrange
    :members:
    :show-inheritance:
    :private-members:

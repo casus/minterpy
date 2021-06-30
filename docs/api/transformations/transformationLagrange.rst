@@ -1,20 +1,20 @@
-.. currentmodule:: minterpy
+.. currentmodule:: minterpy.transformations
 
-.. transformation_lagrange:
+.. lagrange:
 
 ####################
 From Lagrange basis
 ####################
-.. automodule:: minterpy.transformation_lagrange
+.. automodule:: minterpy.transformations.lagrange
 
-.. autoclass:: TransformationLagrangeToNewton
+.. autoclass:: LagrangeToNewton
    :members:
    :show-inheritance:
    :private-members:
    :inherited-members:
    :special-members:
 
-.. autoclass:: TransformationLagrangeToCanonical
+.. autoclass:: LagrangeToCanonical
    :members:
    :show-inheritance:
    :private-members:
