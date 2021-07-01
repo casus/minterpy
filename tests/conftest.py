@@ -9,7 +9,7 @@ import numpy as np
 
 from numpy.testing import assert_equal,assert_almost_equal,assert_
 
-from minterpy import MultiIndex
+from minterpy import MultiIndexSet
 # Global seed
 SEED = 12345678
 
@@ -30,7 +30,7 @@ def assert_multi_index_equal(mi1,mi2):
         assert_equal(mi1.lp_degree,mi2.lp_degree)
         assert_equal(mi1.poly_degree,mi2.poly_degree)
     except AssertionError as a:
-        raise AssertionError(f"The two instances of MultiIndex are not equal:\n\n {a}")
+        raise AssertionError(f"The two instances of MultiIndexSet are not equal:\n\n {a}")
 
 #assert if multi_indices are almost equal
 def assert_multi_index_almost_equal(mi1,mi2):
@@ -39,7 +39,7 @@ def assert_multi_index_almost_equal(mi1,mi2):
         assert_almost_equal(mi1.lp_degree,mi2.lp_degree)
         assert_almost_equal(mi1.poly_degree,mi2.poly_degree)
     except AssertionError as a:
-        raise AssertionError(f"The two instances of MultiIndex are not almost equal:\n\n {a}")
+        raise AssertionError(f"The two instances of MultiIndexSet are not almost equal:\n\n {a}")
 
 #assert if polynomials are almost equal
 def assert_polynomial_equal(P1,P2):
@@ -90,7 +90,7 @@ def LpDegree(request):
 
 @pytest.fixture()
 def MultiIndices(SpatialDimension,PolyDegree,LpDegree):
-    return MultiIndex.from_degree(SpatialDimension,PolyDegree,LpDegree)
+    return MultiIndexSet.from_degree(SpatialDimension,PolyDegree,LpDegree)
 
 # fixtures for number of similar polynomials
 
@@ -114,7 +114,7 @@ def NrPoints(request):
 def build_rnd_exponents(dim,n,seed = None):
     """Build random exponents.
 
-    For later use, if ``MultiIndex`` will accept arbitrary exponents again.
+    For later use, if ``MultiIndexSet`` will accept arbitrary exponents again.
 
     :param dim: spatial dimension
     :param n: number of random monomials
@@ -134,8 +134,8 @@ def build_rnd_coeffs(mi,nr_poly=None,seed = None):
 
     For later use.
 
-    :param mi: The :class:`MultiIndex` instance of the respective polynomial.
-    :type mi: MultiIndex
+    :param mi: The :class:`MultiIndexSet` instance of the respective polynomial.
+    :type mi: MultiIndexSet
 
     :param nr_poly: Number of similar polynomials. Default is 1
     :type nr_poly: int, optional
@@ -159,8 +159,8 @@ def build_rnd_points(nr_points,spatial_dimension,nr_poly=None,seed = None):
 
     For later use.
 
-    :param mi: The :class:`MultiIndex` instance of the respective polynomial.
-    :type mi: MultiIndex
+    :param mi: The :class:`MultiIndexSet` instance of the respective polynomial.
+    :type mi: MultiIndexSet
 
     :param nr_poly: Number of similar polynomials. Default is 1
     :type nr_poly: int, optional

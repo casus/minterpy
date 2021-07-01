@@ -7,7 +7,6 @@ As the most general case, minterpy provides an abstract base class as the bluepr
 .. toctree::
    :maxdepth: 2
 
-   polyABC
    canonical
    newton
    lagrange

@@ -11,7 +11,7 @@ import pytest
 from conftest import SpatialDimension,PolyDegree,LpDegree,NrSimilarPolynomials,NrPoints, SEED,assert_polynomial_almost_equal,MultiIndices,build_rnd_coeffs,build_rnd_points
 from numpy.testing import assert_,assert_almost_equal
 
-from minterpy import CanonicalPolynomial, MultiIndex
+from minterpy import CanonicalPolynomial, MultiIndexSet
 
 
 # tests with a single polynomial
@@ -37,12 +37,12 @@ def test_eval(MultiIndices,NrPoints):
 # todo:: find out if there are some more sophisticated tests for that
 exps1 = np.array([[0, 0], [1, 0], [0, 1], [1, 1]])
 args1 = np.lexsort(exps1.T, axis=-1)
-mi1 = MultiIndex(exps1[args1])
+mi1 = MultiIndexSet(exps1[args1])
 coeffs1 = np.array([1, 2, 3, 4])
 
 exps2 = np.array([[0, 0, 0], [2, 0, 0], [1, 1, 0], [0, 2, 0], [0, 0, 2]])
 args2 = np.lexsort(exps2.T, axis=-1)
-mi2 = MultiIndex(exps2[args2])
+mi2 = MultiIndexSet(exps2[args2])
 coeffs2 = np.array([1, 2, 3, 4, 5])
 
 polys = [CanonicalPolynomial(mi1, coeffs1[args1]),CanonicalPolynomial(mi2, coeffs2[args2])]
@@ -80,7 +80,7 @@ def test_add_different_poly(P1,P2):
                 [0, 0, 2],
             ]
         )
-    groundtruth_multi_index = MultiIndex(groundtruth_multi_index_exponents)
+    groundtruth_multi_index = MultiIndexSet(groundtruth_multi_index_exponents)
     groundtruth = P1.__class__(groundtruth_multi_index, groundtruth_coeffs)
     assert_polynomial_almost_equal(res,groundtruth)
 
@@ -103,6 +103,6 @@ def test_sub_different_poly():
             [0, 0, 2],
         ]
     )
-    groundtruth_multi_index = MultiIndex(groundtruth_multi_index_exponents)
+    groundtruth_multi_index = MultiIndexSet(groundtruth_multi_index_exponents)
     groundtruth = polys[0].__class__(groundtruth_multi_index, groundtruth_coeffs)
     assert_polynomial_almost_equal(res,groundtruth)

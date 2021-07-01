@@ -1,11 +1,11 @@
-.. currentmodule:: minterpy
+.. currentmodule:: minterpy.polynomials
 
 .. canonical_polynomial.CanonicalPolynomial:
 
 #########################
 Canonical Polynomial Base
 #########################
-.. automodule:: minterpy.canonical_polynomial
+.. automodule:: minterpy.polynomials.canonical_polynomial
 
 .. autoclass:: CanonicalPolynomial
    :members:

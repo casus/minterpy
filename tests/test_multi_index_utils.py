@@ -6,12 +6,12 @@ import pytest
 from conftest import SpatialDimension, PolyDegree, LpDegree,assert_call,build_rnd_exponents
 from numpy.testing import assert_,assert_equal
 import numpy as np
-from minterpy import MultiIndex
+
 from minterpy.jit_compiled_utils import (all_indices_are_contained,
                                          have_lexicographical_ordering,
                                          index_is_contained,
                                          lex_smaller_or_equal)
-from minterpy.multi_index_utils import _gen_multi_index_exponents,_get_poly_degree,find_match_between,get_exponent_matrix,is_lexicographically_complete,insert_lexicographically,is_lexicographically_complete,make_derivable,make_complete
+from minterpy.core.utils import _gen_multi_index_exponents,_get_poly_degree,find_match_between,get_exponent_matrix,is_lexicographically_complete,insert_lexicographically,is_lexicographically_complete,make_derivable,make_complete
 
 
 MIN_POLY_DEG = 1

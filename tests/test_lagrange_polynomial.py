@@ -8,8 +8,8 @@ import numpy as np
 from conftest import (MultiIndices, NrPoints, NrSimilarPolynomials,
                       build_rnd_coeffs, build_rnd_points, assert_polynomial_almost_equal)
 
-from minterpy import (MultiIndex, CanonicalPolynomial, LagrangePolynomial,
-                      TransformationLagrangeToCanonical, TransformationCanonicalToLagrange)
+from minterpy import (MultiIndexSet, CanonicalPolynomial, LagrangePolynomial)
+from minterpy.transformations import LagrangeToCanonical, CanonicalToLagrange
 
 
 def test_neg(MultiIndices,NrSimilarPolynomials):
@@ -33,9 +33,9 @@ def test_add_poly(Mi1,Mi2):
 
     res = lag_poly_1 + lag_poly_2
 
-    transform_l2c_poly_1 = TransformationLagrangeToCanonical(lag_poly_1)
-    transform_l2c_poly_2 = TransformationLagrangeToCanonical(lag_poly_2)
-    transform_l2c_res = TransformationLagrangeToCanonical(res)
+    transform_l2c_poly_1 = LagrangeToCanonical(lag_poly_1)
+    transform_l2c_poly_2 = LagrangeToCanonical(lag_poly_2)
+    transform_l2c_res = LagrangeToCanonical(res)
 
     can_poly_1 = transform_l2c_poly_1()
     can_poly_2 = transform_l2c_poly_2()
@@ -53,9 +53,9 @@ def test_sub_poly(Mi1,Mi2):
 
     res = lag_poly_1 - lag_poly_2
 
-    transform_l2c_poly_1 = TransformationLagrangeToCanonical(lag_poly_1)
-    transform_l2c_poly_2 = TransformationLagrangeToCanonical(lag_poly_2)
-    transform_l2c_res = TransformationLagrangeToCanonical(res)
+    transform_l2c_poly_1 = LagrangeToCanonical(lag_poly_1)
+    transform_l2c_poly_2 = LagrangeToCanonical(lag_poly_2)
+    transform_l2c_res = LagrangeToCanonical(res)
 
     can_poly_1 = transform_l2c_poly_1()
     can_poly_2 = transform_l2c_poly_2()
@@ -65,42 +65,42 @@ def test_sub_poly(Mi1,Mi2):
     assert_polynomial_almost_equal(can_poly_res, groundtruth_res_poly)
 
 def test_mul():
-    mi = MultiIndex.from_degree(2, 1, 2.0)
+    mi = MultiIndexSet.from_degree(2, 1, 2.0)
     canonical_coeffs1 = np.array([0, 1, 1])
     canonical_coeffs2 = np.array([0, 1, -1])
 
     can_poly_1 = CanonicalPolynomial(mi, canonical_coeffs1)
     can_poly_2 = CanonicalPolynomial(mi, canonical_coeffs2)
 
-    c2l_transformation = TransformationCanonicalToLagrange(can_poly_1)
+    c2l_transformation = CanonicalToLagrange(can_poly_1)
 
     lagrange_poly1 = c2l_transformation(can_poly_1)
     lagrange_poly2 = c2l_transformation(can_poly_2)
 
     res_lagrange_poly = lagrange_poly1 * lagrange_poly2
 
-    l2c_transformation = TransformationLagrangeToCanonical(res_lagrange_poly)
+    l2c_transformation = LagrangeToCanonical(res_lagrange_poly)
     res_canonical_poly = l2c_transformation()
 
     groundtruth_product_coeffs = np.array([0, 0, 1, 0, 0, -1])
-    groundtruth_mi = MultiIndex.from_degree(2, 2, 4.0)
+    groundtruth_mi = MultiIndexSet.from_degree(2, 2, 4.0)
     groundtruth = CanonicalPolynomial(groundtruth_mi, groundtruth_product_coeffs)
 
     assert_polynomial_almost_equal(groundtruth, res_canonical_poly)
 
 
 # def test_add_different_poly():
-#     mi1 = MultiIndex.from_degree(3, 2, 2.0)
+#     mi1 = MultiIndexSet.from_degree(3, 2, 2.0)
 #     coeffs1 = np.array([1, 2, 0, 4, 3, 0, 5, 0, 0, 0, 0])
 #
-#     mi2 = MultiIndex.from_degree(2, 2, 2.0)
+#     mi2 = MultiIndexSet.from_degree(2, 2, 2.0)
 #     coeffs2 = np.array([1, 2, 0, 3, 4, 0])
 #
 #     can_poly_1 = CanonicalPolynomial(coeffs1, mi1)
 #     can_poly_2 = CanonicalPolynomial(coeffs2, mi2)
 #
-#     transform_c2l_1 = TransformationCanonicalToLagrange(can_poly_1)
-#     transform_c2l_2 = TransformationCanonicalToLagrange(can_poly_2)
+#     transform_c2l_1 = CanonicalToLagrange(can_poly_1)
+#     transform_c2l_2 = CanonicalToLagrange(can_poly_2)
 #
 #     lag_poly_1 = transform_c2l_1()
 #     lag_poly_2 = transform_c2l_2()
@@ -113,7 +113,7 @@ def test_mul():
 #
 #     groundtruth_canonical = CanonicalPolynomial(groundtruth_coeffs, groundtruth_multi_index)
 #
-#     transform_c2l_res = TransformationCanonicalToLagrange(groundtruth_canonical)
+#     transform_c2l_res = CanonicalToLagrange(groundtruth_canonical)
 #     groundtruth = transform_c2l_res()
 #
 #     assert_polynomial_almost_equal(res, groundtruth)

@@ -3,5 +3,5 @@
 verification functions
 ######################
 
-.. automodule:: minterpy.verification
+.. automodule:: minterpy.core.verification
     :members:

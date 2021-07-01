@@ -1,6 +1,4 @@
-.. currentmodule:: minterpy.transformation_operators
-
-.. transformation_operators:
+.. currentmodule:: minterpy.schemes.matrix_operator
 
 ###############
 Matrix Operator
