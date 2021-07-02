@@ -26,6 +26,13 @@ from .transformations import *
 __all__+=transformations.__all__
 
 
+from . import interpolation
+from .interpolation import *
+
+__all__+=interpolation.__all__
+
+
+
 """
 from minterpy.multivariate_polynomial_abstract import *
 from minterpy.multi_index import *

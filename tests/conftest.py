@@ -5,11 +5,12 @@ Within a pytest run, this module is loaded first. That means here all global fix
 """
 
 import pytest
+import inspect
 import numpy as np
 
 from numpy.testing import assert_equal,assert_almost_equal,assert_
 
-from minterpy import MultiIndexSet
+from minterpy import MultiIndexSet, NewtonPolynomial
 # Global seed
 SEED = 12345678
 
@@ -26,6 +27,7 @@ def assert_call(fct,*args,**kwargs):
 #assert if multi_indices are equal
 def assert_multi_index_equal(mi1,mi2):
     try:
+        assert_(isinstance(mi1,type(mi2)))
         assert_equal(mi1.exponents,mi2.exponents)
         assert_equal(mi1.lp_degree,mi2.lp_degree)
         assert_equal(mi1.poly_degree,mi2.poly_degree)
@@ -35,11 +37,36 @@ def assert_multi_index_equal(mi1,mi2):
 #assert if multi_indices are almost equal
 def assert_multi_index_almost_equal(mi1,mi2):
     try:
+        assert_(isinstance(mi1,type(mi2)))
         assert_almost_equal(mi1.exponents,mi2.exponents)
         assert_almost_equal(mi1.lp_degree,mi2.lp_degree)
         assert_almost_equal(mi1.poly_degree,mi2.poly_degree)
     except AssertionError as a:
         raise AssertionError(f"The two instances of MultiIndexSet are not almost equal:\n\n {a}")
+
+# assert if two grids are equal
+def assert_grid_equal(grid1,grid2):
+    try:
+        assert_(isinstance(grid1,type(grid2)))
+        assert_equal(grid1.unisolvent_nodes,grid2.unisolvent_nodes)
+        assert_equal(grid1.spatial_dimension,grid2.spatial_dimension)
+        assert_equal(grid1.generating_values,grid2.generating_values)
+        assert_equal(grid1.generating_values,grid2.generating_values)
+        assert_multi_index_equal(grid1.multi_index,grid2.multi_index)
+    except AssertionError as a:
+        raise AssertionError(f"The two instances of Grid are not equal:\n\n {a}")
+
+# assert if two grids are almost equal
+def assert_grid_almost_equal(grid1,grid2):
+    try:
+        assert_(isinstance(grid1,type(grid2)))
+        assert_almost_equal(grid1.unisolvent_nodes,grid2.unisolvent_nodes)
+        assert_almost_equal(grid1.spatial_dimension,grid2.spatial_dimension)
+        assert_almost_equal(grid1.generating_values,grid2.generating_values)
+        assert_almost_equal(grid1.generating_values,grid2.generating_values)
+        assert_multi_index_almost_equal(grid1.multi_index,grid2.multi_index)
+    except AssertionError as a:
+        raise AssertionError(f"The two instances of Grid are not almost equal:\n\n {a}")
 
 #assert if polynomials are almost equal
 def assert_polynomial_equal(P1,P2):
@@ -59,6 +86,54 @@ def assert_polynomial_almost_equal(P1,P2):
     except AssertionError as a:
         raise AssertionError(f"The two instances of {P1.__class__.__name__} are not almost equal:\n\n {a}")
 
+# assert if two functions have the same object code
+def assert_function_object_code_equal(fct1,fct2):
+    try:
+        assert_(fct1.__code__.co_code == fct2.__code__.co_code)
+    except AssertionError as a:
+        raise AssertionError(f"The object_code of {fct1} is not equal to the object_code of {fct2}:\n\n {inspect.getsource(fct1)}\n\n{inspect.getsource(fct2)}")
+
+#assert if interpolators are equal
+def assert_interpolator_equal(interpolator1,interpolator2):
+    try:
+        assert_(isinstance(interpolator1,type(interpolator2)))
+        assert_equal(interpolator1.spatial_dimension,interpolator2.spatial_dimension)
+        assert_equal(interpolator1.poly_degree,interpolator2.poly_degree)
+        assert_equal(interpolator1.lp_degree,interpolator2.lp_degree)
+        assert_multi_index_equal(interpolator1.multi_index,interpolator2.multi_index)
+        assert_grid_equal(interpolator1.grid,interpolator2.grid)
+    except AssertionError as a:
+        raise AssertionError(f"The two instances of {interpolator1.__class__.__name__} are not equal:\n\n {a}")
+
+#assert if interpolators are almost equal
+def assert_interpolator_almost_equal(interpolator1,interpolator2):
+    try:
+        assert_(isinstance(interpolator1,type(interpolator2)))
+        assert_almost_equal(interpolator1.spatial_dimension,interpolator2.spatial_dimension)
+        assert_almost_equal(interpolator1.poly_degree,interpolator2.poly_degree)
+        assert_almost_equal(interpolator1.lp_degree,interpolator2.lp_degree)
+        assert_multi_index_almost_equal(interpolator1.multi_index,interpolator2.multi_index)
+        assert_grid_almost_equal(interpolator1.grid,interpolator2.grid)
+    except AssertionError as a:
+        raise AssertionError(f"The two instances of {interpolator1.__class__.__name__} are not almost equal:\n\n {a}")
+
+#assert if interpolants are equal
+def assert_interpolant_equal(interpolant1,interpolant2):
+    try:
+        assert_(isinstance(interpolator1,type(interpolator2)))
+        assert_function_object_code_equal(interpolant1.fct,interpolant2.fct)
+        assert_interpolator_equal(interpolant1.interpolator,interpolant2.interpolator)
+    except AssertionError as a:
+        raise AssertionError(f"The two instances of {interpolant1.__class__.__name__} are not equal:\n\n {a}")
+
+#assert if interpolants are almost equal
+def assert_interpolant_almost_equal(interpolant1,interpolant2):
+    try:
+        assert_(isinstance(interpolant1,type(interpolant2)))
+        assert_function_object_code_equal(interpolant1.fct,interpolant2.fct)
+        assert_interpolator_almost_equal(interpolant1.interpolator,interpolant2.interpolator)
+    except AssertionError as a:
+        raise AssertionError(f"The two instances of {interpolant1.__class__.__name__} are not almost equal:\n\n {a}")
 
 
 
@@ -155,17 +230,23 @@ def build_rnd_coeffs(mi,nr_poly=None,seed = None):
 
 
 def build_rnd_points(nr_points,spatial_dimension,nr_poly=None,seed = None):
-    """Build random coefficients.
+    """Build random points in space.
 
-    For later use.
+    Return a batch of `nr_points` vectors in the real vector space of dimension ``spatial_dimension``.
 
-    :param mi: The :class:`MultiIndexSet` instance of the respective polynomial.
-    :type mi: MultiIndexSet
+    :param nr_points: Number of points
+    :type nr_points: int
+
+    :param spatial_dimension: Dimension of domain space.
+    :type spatial_dimension: int
 
     :param nr_poly: Number of similar polynomials. Default is 1
     :type nr_poly: int, optional
 
-    :return: Random array of shape ``(nr of monomials,nr of similar polys)`` usable as coefficients.
+    :param seed: Seed used for the random generation. Default is SEED.
+    :type seed: int
+
+    :return: Array of shape ``(nr_points,spatial_dimension[,nr_poly])`` containig random real values (distributed in the intervall :math:`[-1,1]`).
     :rtype: np.ndarray
 
     """
@@ -176,4 +257,28 @@ def build_rnd_points(nr_points,spatial_dimension,nr_poly=None,seed = None):
     if seed is None:
         seed = SEED
     np.random.seed(seed)
-    return np.random.random((nr_points,spatial_dimension)+ additional_coeff_shape)
+    return np.random.uniform(-1,1,size = (nr_points,spatial_dimension)+ additional_coeff_shape)
+
+
+def build_random_newton_polynom(dim: int, deg: int, lp: int,seed = None) -> NewtonPolynomial:
+    """Build a random Newton polynomial.
+
+    Return a :class:`NewtonPolynomial` with a lexicographically complete :class:`MultiIndex` (initiated from ``(dim,deg,lp)``) and randomly generated coefficients (uniformly distributes in the intervall :math:`[-1,1]`).
+
+    :param dim: dimension of the domain space.
+    :type dim: int
+    :param deg: degree of the interpolation polynomials
+    :type deg: int
+    :param lp: degree of the :math:`l_p` norm used to determine the `poly_degree`.
+    :type lp: int
+
+    :return: Newton polynomial with random coefficients.
+    :rtype: NewtonPolynomial
+
+    """
+    mi =  MultiIndexSet.from_degree(dim, deg, lp )
+    if seed is None:
+        seed = SEED
+
+    rnd_coeffs = np.random.uniform(-1,1,size =  len(mi))
+    return NewtonPolynomial(mi,rnd_coeffs)
