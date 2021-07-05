@@ -1,12 +1,12 @@
-.. currentmodule:: minterpy.core.ABC.transformation_operator_abstract
+.. currentmodule:: minterpy.core.ABC.operator_abstract
 
 ############
 Operator ABC
 ############
 
-.. automodule:: transformation_operator_abstract
+.. automodule:: minterpy.core.ABC.operator_abstract
 
-.. autoclass:: TransformationOperatorABC
+.. autoclass:: OperatorABC
     :members:
     :private-members:
     :inherited-members:

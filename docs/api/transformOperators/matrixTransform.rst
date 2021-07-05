@@ -4,7 +4,7 @@
 Matrix Operator
 ###############
 
-.. autoclass:: MatrixTransformationOperator
+.. autoclass:: MatrixOperator
    :members:
    :show-inheritance:
    :private-members:

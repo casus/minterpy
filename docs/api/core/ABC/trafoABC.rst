@@ -5,7 +5,7 @@
 Transformation ABC
 ##################
 
-.. automodule:: transformation_abstract
+.. automodule:: minterpy.core.ABC.transformation_abstract
 
 .. autoclass:: TransformationABC
     :members:

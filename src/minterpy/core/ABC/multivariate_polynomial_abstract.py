@@ -640,8 +640,8 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         :return: Array of unisolvent nodes.
         :rtype: np.ndarray
 
-        Note
-        ----
+        Notes
+        -----
         This is propagated from from ``self.grid.unisolvent_nodes``.
         """
         return self.grid.unisolvent_nodes

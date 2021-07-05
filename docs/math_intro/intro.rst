@@ -8,8 +8,10 @@ Multivariate Polynomial Interpolation - A Short Survey
 ======================================================
 
 
-Polynomial interpolation goes back to Newton, Lagrange, and others :cite:`meijering2002`, and its fundamental importance for mathematics and computing is undisputed.
-Interpolation is based on the fact that, in 1D, one and only one polynomial :math:`Q_{f,n}` of degree :math:`n` can interpolate a function :math:`f : \mathbb{R} \longrightarrow \mathbb{R}` on :math:`n+1` distinct
+Polynomial interpolation goes back to Newton, Lagrange, and others :cite:`meijering2002`, and its fundamental
+importance for mathematics and computing is undisputed.
+Interpolation is based on the fact that, in 1D, one and only one polynomial :math:`Q_{f,n}` of degree :math:`n` can
+interpolate a function :math:`f : \mathbb{R} \longrightarrow \mathbb{R}` on :math:`n+1` distinct
 *unisolvent interpolation nodes*
 :math:`P_n \subseteq \mathbb{R}` , i.e.,
 
@@ -17,24 +19,35 @@ Interpolation is based on the fact that, in 1D, one and only one polynomial :mat
 
   Q_{f,n}(p_i) = f(p_i)\,, \quad \text{for all} \quad  p_i \in P_n \,, 0 \leq i \leq n\,.
 
-This makes interpolation fundamentally different from approximation. For the latter, the famous *Weierstrass Approximation Theorem* :cite:`weierstrass1885` states that any continuous function
-:math:`f : \Omega =[-1,1]^m \longrightarrow \mathbb{R}` can be uniformly approximated by polynomials :cite:`debranges1959`. However, the Weierstrass Approximation Theorem does not require the polynomials  to coincide with :math:`f` at all, i.e., it is possible that there is a sequence of multivariate polynomials :math:`Q_{f,n}`, :math:`n \in \mathbb{N}` with :math:`Q_{f,n}(x) \not = f(x)` for all :math:`x \in \Omega`, but still
+This makes interpolation fundamentally different from approximation. For the latter, the famous
+*Weierstrass Approximation Theorem* :cite:`weierstrass1885` states that any continuous function
+:math:`f : \Omega =[-1,1]^m \longrightarrow \mathbb{R}` can be uniformly approximated by polynomials
+:cite:`debranges1959`. However, the Weierstrass Approximation Theorem does not require the polynomials
+to coincide with :math:`f` at all, i.e., it is possible that there is a sequence of multivariate polynomials
+:math:`Q_{f,n}`, :math:`n \in \mathbb{N}` with :math:`Q_{f,n}(x) \not = f(x)` for all :math:`x \in \Omega`,
+but still
 
 .. math::
 
   Q_{f,n} \xrightarrow[n \rightarrow \infty]{} f \quad \text{uniformly on} \quad \Omega\,.
 
-Even though there are several constructive versions of the Weierstrass Approximation Theorem, with the earliest given by Serge Bernstein :cite:`bernstein1912`,
-providing an algorithm for computing such approximations it only delivers a slow (inverse linear) convergence rate. In 1D, however, interpolation on **Chebyshev and Legendre nodes** is known to yield exponential approximation rates :cite:`trefethen2019` for analytic functions, which is much faster than what has been shown possible by Weierstrass-type approximations :cite:`bernstein1912`.
-There has therefore been much research into extending :math:`1`\ D Newton or Lagrange interpolation schemes to multi–dimensions (mD) by maintaining their computational power.
-Any approach that addresses this problem has to guarantee uniform approximation of the interpolation target :math:`f` and resist the curse of dimensionality. That is:
+Even though there are several constructive versions of the Weierstrass Approximation Theorem, with the earliest given
+by Serge Bernstein :cite:`bernstein1912`, providing an algorithm for computing such approximations it only delivers a
+slow (inverse linear) convergence rate. In 1D, however, interpolation on **Chebyshev and Legendre nodes** is known to
+yield exponential approximation rates :cite:`trefethen2019` for analytic functions, which is much faster than what has
+been shown possible by Weierstrass-type approximations :cite:`bernstein1912`. There has therefore been much research
+into extending :math:`1`\ D Newton or Lagrange interpolation schemes to multi–dimensions (mD) by maintaining their
+computational power. Any approach that addresses this problem has to guarantee uniform approximation of the
+interpolation target :math:`f` and resist the curse of dimensionality. That is:
 
 .. figure:: mip_approximation.png
   :align: center
 
   Approximation errors rates for interpolating the Runge function in dimension m = 4.
 
-We consider the :math:`l_p\text{-norm}\|x\|_p = \big(\sum_{i=1}^m x_i^p\big)^{1/p}`, :math:`x = (x_1,\dots,x_m) \in\mathbb{R}^m`, :math:`m \in \mathbb{N}` and the **lexicographical ordered multi-index sets**
+We consider the :math:`l_p\text{-norm}\|x\|_p = \big(\sum_{i=1}^m x_i^p\big)^{1/p}`,
+:math:`x = (x_1,\dots,x_m) \in\mathbb{R}^m`, :math:`m \in \mathbb{N}` and the
+**lexicographical ordered multi-index sets** (see :doc:`../api/core/multi_index`).
 
 .. math::
   :label: eq_A
@@ -42,7 +55,8 @@ We consider the :math:`l_p\text{-norm}\|x\|_p = \big(\sum_{i=1}^m x_i^p\big)^{1/
   A=A_{m,n,p} = \left\{\alpha \in \mathbb{N}^m | \|\alpha\|_p \leq n \right\}\,, \quad m,n \in \mathbb{N}\,, p \geq 1\,.
 
 
-This notion generalises the 1D notion of polynomial degree to multi-dimensional :math:`l_p`-degree, i.e, we consider the polynomial spaces spanned by all monomials of bounded :math:`l_p`-degree
+This notion generalises the 1D notion of polynomial degree to multi-dimensional :math:`l_p`-degree, i.e, we consider
+the polynomial spaces spanned by all monomials of bounded :math:`l_p`-degree
 
 .. math::
 
@@ -51,20 +65,33 @@ This notion generalises the 1D notion of polynomial degree to multi-dimensional 
 
 Given :math:`A=A_{m,n,p}` we ask for:
 
-i) Unisolvent interpolation nodes :math:`P_A` that uniquely determine the interpolant :math:`Q_{f,A} \in \Pi_A` by satisfying :math:`Q_{f,A}(p_{\alpha}) = f(p_{\alpha})`, :math:`\forall p_{\alpha} \in P_A`, :math:`\alpha \in A`.
-ii) An interpolation scheme **MIP/DDS** that computes the uniquely determined interpolant :math:`Q_{f,A} \in \Pi_A` efficiently and numerically accurate (with machine precision).
-iii) The unisolvent nodes :math:`P_A` that scale sub-exponentially with the space dimension :math:`m \in \mathbb{N}`, :math:`|P_A| \in o(n^m)` and guarantee uniform approximation of even strongly varying functions (avoiding over fitting)  as the Runge function :math:`f_R(x) = 1/(1+\|x\|_2^2)` by fast (exponential) approximation rates.
+i) Unisolvent interpolation nodes :math:`P_A` that uniquely determine the interpolant :math:`Q_{f,A} \in \Pi_A` by
+   satisfying :math:`Q_{f,A}(p_{\alpha}) = f(p_{\alpha})`, :math:`\forall p_{\alpha} \in P_A`, :math:`\alpha \in A`.
+ii) An interpolation scheme **MIP/DDS** that computes the uniquely determined interpolant :math:`Q_{f,A} \in \Pi_A`
+    efficiently and numerically accurate (with machine precision).
+iii) The unisolvent nodes :math:`P_A` that scale sub-exponentially with the space dimension :math:`m \in \mathbb{N}`,
+     :math:`|P_A| \in o(n^m)` and guarantee uniform approximation of even strongly varying functions (avoiding over
+     fitting) as the Runge function :math:`f_R(x) = 1/(1+\|x\|_2^2)` by fast (exponential) approximation rates.
 
 
-In fact, the results of :cite:`hecht2020` suggest that the therein presented algorithm MIP resolves issues i) - iii) by choosing :math:`p=2`, i.e., yields :math:`|P_{A_{m,n,2}}| \approx \frac{(n+1)^m }{\sqrt{\pi m}} (\frac{\pi \mathrm{e}}{2m})^{m/2} \in o(n^m)` and
+In fact, the results of :cite:`hecht2020` suggest that the therein presented algorithm MIP resolves issues i) - iii)
+by choosing :math:`p=2`, i.e., yields
+:math:`|P_{A_{m,n,2}}| \approx \frac{(n+1)^m }{\sqrt{\pi m}} (\frac{\pi \mathrm{e}}{2m})^{m/2} \in o(n^m)` and
 
 .. math::
 
-  Q_{f,A_{m,n,2}} \xrightarrow[n\rightarrow]{} f \quad \text{uniformly and fast (exponentially) on} \,\,\, \Omega\,.
+  Q_{f,A_{m,n,2}} \xrightarrow[n\rightarrow \infty]{} f \quad \text{uniformly and fast (exponentially) on} \,\,\, \Omega\,.
 
 
-Figure 1 shows the approximation rates of the classic Runge function :cite:`runge1901` in dimension :math:`m=4`, which is known to cause over fitting when interpolated naively. There is an optimal approximation rate known :cite:`trefethen2017`, which we call the Trefethen rate. Spline-type interpolation is based on works of by Carl de Boor et al. :cite:`deboor1972, deboor1977, deboor2010, deboor1978` is limited to reach only polynomial approximation rates :cite:`deboor1988`.
-Similarly, interpolation by rational functions as in Floater-Hormann interpolation :cite:`cirillo2017, floater2007` and tensorial Chebyshev interpolation, relying on :math:`l_{\infty}`-degree, :cite:`gaure2018` miss optimality. In contrast MIP reaches optimality. While relying on interpolating with respect to :math:`l_2`-degree instead of :math:`l_{\infty}`-degree MIP reduces the amount of samples needed to reach machine precision  compared to tensorial Chebyshev interpolation by about :math:`\sim 5 \cdot 10^7` samples in that case.
+Figure 1 shows the approximation rates of the classic Runge function :cite:`runge1901` in dimension :math:`m=4`, which
+is known to cause over fitting when interpolated naively. There is an optimal approximation rate known
+:cite:`trefethen2017`, which we call the Trefethen rate. Spline-type interpolation is based on works of by Carl de Boor
+et al. :cite:`deboor1972, deboor1977, deboor2010, deboor1978` is limited to reach only polynomial approximation rates
+:cite:`deboor1988`. Similarly, interpolation by rational functions as in Floater-Hormann interpolation
+:cite:`cirillo2017, floater2007` and tensorial Chebyshev interpolation, relying on :math:`l_{\infty}`-degree,
+:cite:`gaure2018` miss optimality. In contrast MIP reaches optimality. While relying on interpolating with respect
+to :math:`l_2`-degree instead of :math:`l_{\infty}`-degree MIP reduces the amount of samples needed to reach machine
+precision  compared to tensorial Chebyshev interpolation by about :math:`\sim 5 \cdot 10^7` samples in that case.
 
 
 
@@ -73,7 +100,10 @@ Similarly, interpolation by rational functions as in Floater-Hormann interpolati
 Newton and Lagrange Interpolation on Unisolvent Nodes
 =====================================================
 
-For :math:`A= A_{m,n,p}`, :math:`m,n \in \mathbb{N}`, :math:`p\geq1` we assign the **unisolvent nodes** :math:`P_A` given by choosing :math:`n+1` **genrerating nodes** :math:`P_i \subseteq \mathbb{R}`, :math:`|P_i| = n+1` for each dimension :math:`1 \leq i \leq m` and generate the non-tensorial (non-symmetric) grid
+For :math:`A= A_{m,n,p}`, :math:`m,n \in \mathbb{N}`, :math:`p\geq1` we assign the **unisolvent nodes**
+(See :doc:`../api/core/grid`) :math:`P_A` given by choosing :math:`n+1` **genrerating nodes**
+:math:`P_i \subseteq \mathbb{R}`, :math:`|P_i| = n+1` for each dimension :math:`1 \leq i \leq m` and generate the
+non-tensorial (non-symmetric) grid
 
 .. math::
   :label: eq_PA
@@ -90,7 +120,8 @@ By default the  :math:`P_i = (-1)^i\mathrm{Cheb}_n^{0}` are chosen as the Chebys
 
 **Give an example of the nodes**
 
-Polynomial interpolation goes back to Newton, Lagrange, and others :cite:`meijering2002`, and its fundamental importance for mathematics and computing is undisputed. We derive a multivariate generalisation by defining:
+Polynomial interpolation goes back to Newton, Lagrange, and others :cite:`meijering2002`, and its fundamental
+importance for mathematics and computing is undisputed. We derive a multivariate generalisation by defining:
 
 **Definition 1 (Multivariate polynomials)** Let :math:`A= A_{m,n,p}` and :math:`P_A\subseteq \mathbb{R}^m` be as in Eq. :eq:`eq_A`, :eq:`eq_PA`. Then, we define the **multivariate Lagrange polynomials** as
 
@@ -98,25 +129,31 @@ Polynomial interpolation goes back to Newton, Lagrange, and others :cite:`meijer
 
   L_{\alpha} \in \Pi_{P_A}\ \quad \text{with}\quad L_{\alpha}(p_\beta)= \delta_{\alpha,\beta}\, , \,\,\, \alpha,\beta \in A\,,
 
-where :math:`\delta_{\cdot,\cdot}` is the Kronecker delta. The **multivariate Newton polynomials** are given by
+where :math:`\delta_{\cdot,\cdot}` is the Kronecker delta. The **multivariate Newton polynomials**
+(see :doc:`../api/polyBases/newton`) are given by
 
 .. math::
 
   N_\alpha(x) = \prod_{i=1}^m\prod_{j=0}^{\alpha_i-1}(x_i-p_{j,i}) \,, \quad \alpha \in A\,.
 
 
-Finally, we call the monomials :math:`x^\alpha = \prod_{i=1}^m x^{\alpha_i}_{i}`, :math:`\alpha \in A` the **canonical basis** of :math:`\Pi_{A}`.
+Finally, we call the monomials :math:`x^\alpha = \prod_{i=1}^m x^{\alpha_i}_{i}`, :math:`\alpha \in A` the
+**canonical basis** (see :doc:`../api/polyBases/canonical`) of :math:`\Pi_{A}`.
 
 
-Indeed, in dimension :math:`m=1` this reduces to the classic definition of Lagrange and Newton polynomials :cite:`gautschi2012, stoer2002, trefethen2019`. Moreover, also the Newton and Lagrange polynomials are bases of :math:`\Pi_A` :cite:`hecht2020`.
-Therefore, the unique  Lagrange interpolant :math:`Q_{f,A} \in \Pi_A` of a function :math:`f : \Omega \longrightarrow \mathbb{R}` on :math:`P_A` is given by
+Indeed, in dimension :math:`m=1` this reduces to the classic definition of Lagrange and Newton polynomials
+:cite:`gautschi2012, stoer2002, trefethen2019`. Moreover, also the Newton and Lagrange polynomials are bases of
+:math:`\Pi_A` :cite:`hecht2020`. Therefore, the unique Lagrange interpolant :math:`Q_{f,A} \in \Pi_A` of a function
+:math:`f : \Omega \longrightarrow \mathbb{R}` on :math:`P_A` is given by
 
 .. math::
 
   Q_{f,A} = \sum_{\alpha \in A}f(p_{\alpha})L_{\alpha}(x)\,.
 
-However, while the Lagrange polynomials are rather a mathematical concept this does not assert how to evaluate  the interpolant :math:`Q_{f,A}` on a point :math:`x_0 \not \in P_A \subseteq \mathbb{R}^m`.
-To resolve that problem we have generalised the classic Newton interpolation scheme to mD:
+However, while the Lagrange polynomials (see :doc:`../api/polyBases/lagrange`) are rather a mathematical concept this
+does not assert how to evaluate the interpolant :math:`Q_{f,A}` on a point
+:math:`x_0 \not \in P_A \subseteq \mathbb{R}^m`. To resolve that problem we have generalised the classic Newton
+interpolation scheme to mD:
 
 
 

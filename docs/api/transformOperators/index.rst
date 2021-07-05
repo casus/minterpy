@@ -8,7 +8,7 @@ the BarycentricOperator explores its specific recursive triangular sparse struct
 the global matrix into its elementary parts enabling to execute the transformations
 much faster with less storage requirement.
 
-The TransormationOperatorABC abstraction layer makes the interface uniform for all cases, by overloading the matrix
+The OperatorABC abstraction layer makes the interface uniform for all cases, by overloading the matrix
 multiplication ``@`` operator. The BarycentricOperatorABC provides a further abstraction for barycentric
 transformations.
 
@@ -18,7 +18,7 @@ are provided.
 .. toctree::
    :maxdepth: 2
 
-   barycentricOpABC
+   barycentricOp
    matrixTransform
    barycentricDictTransform
    barycentricFactorisedTransform
