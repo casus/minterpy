@@ -28,6 +28,8 @@ class TransformationABC(ABC):
 
     Attributes
     ----------
+    origin_type
+    target_type
     origin_poly : MultivariatePolynomialSingleABC
         The instance of the polynomial to be transformed.
     multi_index
@@ -38,11 +40,9 @@ class TransformationABC(ABC):
 
     available_transforms = {}
 
-    # TODO remove generating points as input. not required! stored in polynomial!
     def __init__(
         self,
-        origin_poly: MultivariatePolynomialSingleABC,
-        generating_points: Optional[np.ndarray] = None,
+        origin_poly: MultivariatePolynomialSingleABC
     ):
         if not isinstance(origin_poly, MultivariatePolynomialSingleABC):
             raise TypeError(f"<{origin_poly}> is not a Polynomial type.")
@@ -61,12 +61,6 @@ class TransformationABC(ABC):
         # raise ValueError('some transformations only work for complete multi index sets!')
 
 
-        # TODO remove?!
-        if generating_points is not None:
-            raise NotImplementedError(
-                "the generating points should not be passed as input. should be stored in origin polynomial"
-            )
-        # self.generating_points = generating_points
         self._transformation_operator: Optional[np.ndarray] = None
 
 

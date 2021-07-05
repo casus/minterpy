@@ -26,10 +26,8 @@ from minterpy.global_settings import ARRAY, FLOAT_DTYPE
 from minterpy.core.ABC import OperatorABC
 from ..matrix_operator import MatrixOperator
 
-
-
-class BarycentricOperatorABC(OperatorABC):
-    """Abstract base class for the barycentric transformation operators.
+class BarycentricOperator(OperatorABC):
+    """Base class for the barycentric transformation operators.
 
     Attributes
     ----------
@@ -98,7 +96,7 @@ class BarycentricOperatorABC(OperatorABC):
         return self.array_representation
 
 
-class BarycentricDictOperator(BarycentricOperatorABC):
+class BarycentricDictOperator(BarycentricOperator):
     """Concrete implementation of the BarycentricOperator given by the edge case given by decomposition to the 1D
     atomic sub-problems.
     """
@@ -107,7 +105,7 @@ class BarycentricDictOperator(BarycentricOperatorABC):
     merging_fct = merge_trafo_dict
 
 
-class BarycentricFactorisedOperator(BarycentricOperatorABC):
+class BarycentricFactorisedOperator(BarycentricOperator):
     """Concrete implementation of the BarycentricOperator given by the edge case given by realizing the factorised
     copied of the basic 1D atomic sub-problem.
     """
@@ -116,7 +114,7 @@ class BarycentricFactorisedOperator(BarycentricOperatorABC):
     merging_fct = merge_trafo_factorised
 
 
-class BarycentricPiecewiseOperator(BarycentricOperatorABC):
+class BarycentricPiecewiseOperator(BarycentricOperator):
     """Concrete implementation of the BarycentricOperator used to make comparisons with the global matrix possible by
     zooming into corresponding submatrix.
     """

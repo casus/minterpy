@@ -19,7 +19,7 @@ from minterpy.global_settings import (ARRAY, DEBUG, DICT_TRAFO_TYPE,
                                       TRAFO_DICT, TYPED_LIST)
 from .operators import (BarycentricDictOperator,
                                                BarycentricFactorisedOperator,
-                                               BarycentricOperatorABC)
+                                               BarycentricOperator)
 from minterpy.utils import eval_newt_polys_on
 from minterpy.core.tree import MultiIndexTree
 
@@ -444,7 +444,7 @@ def compute_n2l_factorised(
 
 def _build_lagrange_to_newton_bary(
     transformation: "TransformationABC",
-) -> BarycentricOperatorABC:
+) -> BarycentricOperator:
     """Construct the barycentric transformation operator for Lagrange to Newton.
 
     :param transformation: an instance of one of the concrete implementation of TransformationABC
