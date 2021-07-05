@@ -17,6 +17,6 @@ from .transformation_abstract import *
 __all__+=transformation_abstract.__all__
 
 
-from . import transformation_operator_abstract
-from .transformation_operator_abstract import *
-__all__+=transformation_operator_abstract.__all__
+from . import operator_abstract
+from .operator_abstract import *
+__all__+=operator_abstract.__all__

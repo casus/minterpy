@@ -16,9 +16,9 @@ from typing import Optional, Union
 from minterpy.global_settings import ARRAY
 
 
-__all__ = ["TransformationOperatorABC"]
+__all__ = ["OperatorABC"]
 
-class TransformationOperatorABC(ABC):
+class OperatorABC(ABC):
     """Abstract base class for transformation operators.
 
     All transformation operators must be derived from this base class.
@@ -39,7 +39,7 @@ class TransformationOperatorABC(ABC):
         self.transformation_data = transformation_data
 
     @abstractmethod
-    def __matmul__(self, other: Union[ARRAY, "TransformationOperatorABC"]):
+    def __matmul__(self, other: Union[ARRAY, "OperatorABC"]):
         """Applies the transformation operator on the input.
 
         This is a placeholder of the ABC, which is overwritten by the concrete implementation.

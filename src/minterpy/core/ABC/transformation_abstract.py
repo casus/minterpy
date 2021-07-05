@@ -15,7 +15,7 @@ from ..multi_index import MultiIndexSet
 
 from .multivariate_polynomial_abstract import \
     MultivariatePolynomialSingleABC
-from .transformation_operator_abstract import TransformationOperatorABC
+from .operator_abstract import OperatorABC
 
 __all__ = ["TransformationABC"]
 
@@ -145,7 +145,7 @@ class TransformationABC(ABC):
         pass
 
     @property
-    def transformation_operator(self) -> TransformationOperatorABC:
+    def transformation_operator(self) -> OperatorABC:
         """The polynomial basis transformation operator.
 
         :return: instance of the transformation operator
@@ -156,7 +156,7 @@ class TransformationABC(ABC):
         origin_poly type, which have the same basis (and grid) as the origin_poly, to the target_poly type.
         """
         if self._transformation_operator is None:
-            self._transformation_operator: TransformationOperatorABC = (
+            self._transformation_operator: OperatorABC = (
                 self._get_transformation_operator()
             )
         return self._transformation_operator

@@ -1,9 +1,9 @@
 """
-Concrete implementations for TransformationOperator classes.
+Concrete implementations for Operator classes.
 
 The following implementations are provided:
 
-- MatrixTransformationOperator
+- MatrixOperator
 - BarycentricDictOperator
 - BarycentricFactorisedOperator
 - BarycentricPiecewiseOperator
@@ -23,12 +23,12 @@ from .transformation_fcts import (
     transform_barycentric_dict, transform_barycentric_factorised,
     transform_barycentric_piecewise)
 from minterpy.global_settings import ARRAY, FLOAT_DTYPE
-from minterpy.core.ABC import TransformationOperatorABC
-from ..matrix_operator import MatrixTransformationOperator
+from minterpy.core.ABC import OperatorABC
+from ..matrix_operator import MatrixOperator
 
 
 
-class BarycentricOperatorABC(TransformationOperatorABC):
+class BarycentricOperatorABC(OperatorABC):
     """Abstract base class for the barycentric transformation operators.
 
     Attributes
@@ -65,16 +65,16 @@ class BarycentricOperatorABC(TransformationOperatorABC):
         pass
 
     def __matmul__(
-        self, other: Union[TransformationOperatorABC, ARRAY]
-    ) -> Union[MatrixTransformationOperator, ARRAY]:
+        self, other: Union[OperatorABC, ARRAY]
+    ) -> Union[MatrixOperator, ARRAY]:
         """Applies the transformation operator on the input.
         """
-        if isinstance(other, TransformationOperatorABC):
+        if isinstance(other, OperatorABC):
             # the input is another transformation
             # workaround: return matrix operator constructed from the matrix product
             # TODO support this natively
             # TODO which transformation object should be passed?
-            return MatrixTransformationOperator(
+            return MatrixOperator(
                 self.transformation, self.array_repr_full @ other.array_repr_full
             )
 
