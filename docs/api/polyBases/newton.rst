@@ -1,11 +1,11 @@
-.. currentmodule:: minterpy
+.. currentmodule:: minterpy.polynomials
 
 .. newton_polynomial.NewtonPolynomial:
 
 ######################
 Newton Polynomial Base
 ######################
-.. automodule:: minterpy.newton_polynomial
+.. automodule:: minterpy.polynomials.newton_polynomial
 
 .. autoclass:: NewtonPolynomial
    :members:

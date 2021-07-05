@@ -467,7 +467,13 @@ def lp_norm_for_exponents(exp_vect, p):
     a = np.abs(exp_vect).max()
     if a == 0:  # NOTE: avoid division by 0
         return 0.0
-    return a * np.linalg.norm(exp_vect / a, p)
+
+    if p == 1.0:
+        return np.sum(exp_vect)
+    elif p == np.inf:
+        return np.max(exp_vect)
+    else:
+        return a * np.linalg.norm(exp_vect / a, p)
 
 
 @njit(INT(I_2D, FLOAT, INT), cache=True)

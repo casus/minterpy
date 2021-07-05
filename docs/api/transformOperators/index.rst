@@ -18,7 +18,6 @@ are provided.
 .. toctree::
    :maxdepth: 2
 
-   transformOpABC
    barycentricOpABC
    matrixTransform
    barycentricDictTransform

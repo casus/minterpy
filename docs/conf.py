@@ -35,6 +35,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinx.ext.autosectionlabel",
+    "sphinxcontrib.bibtex"
 ]
 
 
@@ -48,6 +49,8 @@ intersphinx_mapping = {
     "pytest": ("https://docs.pytest.org/en/stable", None),
 }
 
+# bibtex config
+bibtex_bibfiles = ["refs.bib"]
 
 # configure numpydoc
 

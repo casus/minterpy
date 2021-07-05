@@ -1,17 +1,17 @@
 """
-Test suite for multi_index.py
+Test suite for multi_index_utils.py
 """
 import pytest
 
-from conftest import SpatialDimension, PolyDegree, LpDegree,assert_call
+from conftest import SpatialDimension, PolyDegree, LpDegree,assert_call,build_rnd_exponents
 from numpy.testing import assert_,assert_equal
 import numpy as np
-from minterpy import MultiIndex
+
 from minterpy.jit_compiled_utils import (all_indices_are_contained,
                                          have_lexicographical_ordering,
                                          index_is_contained,
                                          lex_smaller_or_equal)
-from minterpy.multi_index_utils import _gen_multi_index_exponents,_get_poly_degree,find_match_between,get_exponent_matrix,is_lexicographically_complete,insert_lexicographically,is_lexicographically_complete,make_derivable,make_complete
+from minterpy.core.utils import _gen_multi_index_exponents,_get_poly_degree,find_match_between,get_exponent_matrix,is_lexicographically_complete,insert_lexicographically,is_lexicographically_complete,make_derivable,make_complete
 
 
 MIN_POLY_DEG = 1
@@ -44,70 +44,6 @@ number_of_monomials = [1,2]
 @pytest.fixture(params = number_of_monomials)
 def NumOfMonomials(request):
     return request.param
-
-
-def build_rnd_exponents(dim,n,seed = None):
-    """Build random exponents.
-
-    For later use, if ``MultiIndex`` will accept arbitrary exponents again.
-
-    :param dim: spatial dimension
-    :param n: number of random monomials
-
-    Notes
-    -----
-    Exponents are generated within the intervall ``[MIN_POLY_DEG,MAX_POLY_DEG]``
-
-    """
-    if seed is None:
-        seed = SEED
-    np.random.seed(seed)
-    return np.random.randint(MIN_POLY_DEG,MAX_POLY_DEG,(n,dim))
-
-
-# test initialization
-def test_init_from_exponents(SpatialDimension,PolyDegree,LpDegree):
-    exponents = _gen_multi_index_exponents(SpatialDimension,PolyDegree,LpDegree)
-    assert_call(MultiIndex,exponents)
-    assert_call(MultiIndex,exponents, lp_degree = LpDegree)
-    multi_index = MultiIndex(exponents, lp_degree = LpDegree)
-    assert_(isinstance(multi_index, MultiIndex))
-    assert_equal(exponents, multi_index.exponents)
-    assert_(multi_index.lp_degree == LpDegree)
-    assert_(multi_index.poly_degree == PolyDegree)
-
-    number_of_monomials,dim = exponents.shape
-    assert_(len(multi_index) == number_of_monomials)
-    assert_(multi_index.spatial_dimension == dim)
-
-
-def test_init_from_degree(SpatialDimension,PolyDegree,LpDegree):
-    assert_call(MultiIndex.from_degree,SpatialDimension,PolyDegree)
-    assert_call(MultiIndex.from_degree,SpatialDimension,PolyDegree,lp_degree = LpDegree)
-    multi_index = MultiIndex.from_degree(SpatialDimension,PolyDegree,LpDegree)
-
-    assert_(isinstance(multi_index, MultiIndex))
-    assert_(multi_index.lp_degree == LpDegree)
-    assert_(multi_index.poly_degree == PolyDegree)
-
-    exponents = multi_index.exponents
-    number_of_monomials, dim = exponents.shape
-    assert_(dim == SpatialDimension)
-    assert_(np.min(exponents) == 0)
-    assert_(np.max(exponents) == PolyDegree)
-    #assert_(_get_poly_degree(exponents, LpDegree)==PolyDegree)
-    assert_(np.max(exponents) == PolyDegree)
-
-    exponents_recur = _gen_multi_index_exponents(SpatialDimension,PolyDegree,LpDegree)
-    if exponents_recur.shape[0] > number_of_monomials:
-        raise AssertionError()
-    if exponents_recur.shape[0] == number_of_monomials:
-        assert_equal(exponents, exponents_recur)
-    else:
-        match_positions = find_match_between(exponents_recur, exponents)
-        selected_exponents = exponents[match_positions, :]
-        assert_equal(selected_exponents, exponents_recur)
-
 
 
 # test utilities

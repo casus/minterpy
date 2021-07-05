@@ -1,13 +1,13 @@
-.. currentmodule:: minterpy
+.. currentmodule:: minterpy.transformations
 
-.. transformation_identity:
+.. identity:
 
 #######################
 Identity transformation
 #######################
-.. automodule:: minterpy.transformation_identity
+.. automodule:: minterpy.transformations.identity
 
-.. autoclass:: TransformationIdentity
+.. autoclass:: Identity
    :members:
    :show-inheritance:
    :private-members:

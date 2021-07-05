@@ -12,9 +12,8 @@ transformations.
 .. toctree::
    :maxdepth: 2
 
-   transformationABC
    transformationCanonical
    transformationNewton
    transformationLagrange
    transformationIdentity
-   transformationMeta
+   interface
