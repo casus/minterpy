@@ -28,6 +28,7 @@ from ..matrix_operator import MatrixOperator
 
 class BarycentricOperator(OperatorABC):
     """Base class for the barycentric transformation operators.
+       Specialized versions (dict, factorised, and piecewise) are derived from this base class.
 
     Attributes
     ----------
