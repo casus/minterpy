@@ -70,23 +70,6 @@ def _union_of_exponents(exp1, exp2):
     return res_exp, res_map
 
 
-# TODO : Generalize to handle multiple polynomials (2D coeffs)
-def _generic_lagrange_add(exp1, coeff1, exp2, coeff2):
-    if len(coeff2) > len(coeff1):
-        return _generic_lagrange_add(exp2, coeff2, exp1, coeff1)
-
-    res_exp, res_map = _union_of_exponents(exp1, exp2)
-    nr_monomials, _ = res_exp.shape
-    res_coeff = np.zeros(nr_monomials)
-    for i in range(nr_monomials):
-        if res_map[i, 0] != -1:
-            res_coeff[i] += coeff1[res_map[i, 0]]
-        if res_map[i, 1] != -1:
-            res_coeff[i] += coeff2[res_map[i, 1]]
-
-    return res_exp, res_coeff
-
-
 # TODO : poly2 can be of a different basis?
 def _lagrange_add(poly1, poly2):
     """Addition of two polynomials in Lagrange basis.
@@ -103,12 +86,30 @@ def _lagrange_add(poly1, poly2):
     """
     p1, p2 = _match_dims(poly1, poly2)
     if _matching_internal_domain(p1, p2):
-        res_mi, res_c = _generic_lagrange_add(
-            p1.multi_index.exponents, p1.coeffs, p2.multi_index.exponents, p2.coeffs
-        )
+        l2n_p1 = minterpy.transformations.LagrangeToNewton(p1)
+        newt_p1 = l2n_p1()
+        l2n_p2 = minterpy.transformations.LagrangeToNewton(p2)
+        newt_p2 = l2n_p2()
+
+        max_poly_degree = np.max(np.array([p1.multi_index.poly_degree, p2.multi_index.poly_degree]))
+        max_lp_degree = np.max(np.array([p1.multi_index.lp_degree, p2.multi_index.lp_degree]))
+
+        dim = p1.spatial_dimension  # must be the same for p2
+
+        res_mi = MultiIndexSet.from_degree(dim, int(max_poly_degree), max_lp_degree)
+        res_grid = Grid(res_mi)
+
+        un = res_grid.unisolvent_nodes
+
+        eval_p1 = newt_p1(un)
+        eval_p2 = newt_p2(un)
+
+        res_coeffs = eval_p1 + eval_p2
+
         return LagrangePolynomial(
             res_mi,
-            res_c,
+            res_coeffs,
+            grid=res_grid,
             internal_domain=p1.internal_domain,
             user_domain=p1.user_domain,
         )
@@ -132,12 +133,30 @@ def _lagrange_sub(poly1, poly2):
     """
     p1, p2 = _match_dims(poly1, poly2)
     if _matching_internal_domain(p1, p2):
-        res_mi, res_c = _generic_lagrange_add(
-            p1.multi_index.exponents, p1.coeffs, p2.multi_index.exponents, -p2.coeffs
-        )
+        l2n_p1 = minterpy.transformations.LagrangeToNewton(p1)
+        newt_p1 = l2n_p1()
+        l2n_p2 = minterpy.transformations.LagrangeToNewton(p2)
+        newt_p2 = l2n_p2()
+
+        max_poly_degree = np.max(np.array([p1.multi_index.poly_degree, p2.multi_index.poly_degree]))
+        max_lp_degree = np.max(np.array([p1.multi_index.lp_degree, p2.multi_index.lp_degree]))
+
+        dim = p1.spatial_dimension  # must be the same for p2
+
+        res_mi = MultiIndexSet.from_degree(dim, int(max_poly_degree), max_lp_degree)
+        res_grid = Grid(res_mi)
+
+        un = res_grid.unisolvent_nodes
+
+        eval_p1 = newt_p1(un)
+        eval_p2 = newt_p2(un)
+
+        res_coeffs = eval_p1 - eval_p2
+
         return LagrangePolynomial(
             res_mi,
-            res_c,
+            res_coeffs,
+            grid=res_grid,
             internal_domain=p1.internal_domain,
             user_domain=p1.user_domain,
         )
@@ -161,8 +180,10 @@ def _lagrange_mul(poly1, poly2):
     """
     p1, p2 = _match_dims(poly1, poly2)
     if _matching_internal_domain(p1, p2):
-        l2n_1 = minterpy.LagrangeToNewton(p1)
-        l2n_2 = minterpy.LagrangeToNewton(p2)
+        l2n_p1 = minterpy.transformations.LagrangeToNewton(p1)
+        newt_p1 = l2n_p1()
+        l2n_p2 = minterpy.transformations.LagrangeToNewton(p2)
+        newt_p2 = l2n_p2()
 
         degree_poly1 = p1.multi_index.poly_degree
         degree_poly2 = p2.multi_index.poly_degree
@@ -172,41 +193,22 @@ def _lagrange_mul(poly1, poly2):
         res_degree = int(degree_poly1 + degree_poly2)
         res_lpdegree = lpdegree_poly1 + lpdegree_poly2
 
-        res_mi = MultiIndexSet.from_degree(
-            p1.spatial_dimension, res_degree, res_lpdegree
-        )
+        res_mi = MultiIndexSet.from_degree(p1.spatial_dimension, res_degree, res_lpdegree)
         res_grid = Grid(res_mi)
 
-        num_points_res = res_grid.unisolvent_nodes.shape[0]
+        un = res_grid.unisolvent_nodes
 
-        num_points_poly1 = p1.unisolvent_nodes.shape[0]
-        scale_up_poly1 = np.zeros((num_points_res, num_points_poly1))
-        for i in range(num_points_poly1):
-            scale_up_poly1[:, i] = newt_eval(
-                res_grid.unisolvent_nodes,
-                l2n_1.transformation_operator.array_repr_full[:, i],
-                p1.multi_index.exponents,
-                p1.grid.generating_points,
-            )
+        eval_p1 = newt_p1(un)
+        eval_p2 = newt_p2(un)
 
-        num_points_poly2 = p2.unisolvent_nodes.shape[0]
-        scale_up_poly2 = np.zeros((num_points_res, num_points_poly2))
-        for i in range(num_points_poly2):
-            scale_up_poly2[:, i] = newt_eval(
-                res_grid.unisolvent_nodes,
-                l2n_2.transformation_operator.array_repr_full[:, i],
-                p2.multi_index.exponents,
-                p2.grid.generating_points,
-            )
+        res_coeffs = eval_p1 * eval_p2
 
-        res_c = np.multiply(scale_up_poly1 @ p1.coeffs, scale_up_poly2 @ p2.coeffs)
-        print(res_c)
         return LagrangePolynomial(
             res_mi,
-            res_c,
+            res_coeffs,
+            grid=res_grid,
             internal_domain=p1.internal_domain,
             user_domain=p1.user_domain,
-            grid=res_grid,
         )
     else:
         raise NotImplementedError(
