@@ -369,6 +369,17 @@ def make_derivable(indices: np.ndarray) -> np.ndarray:
 
 
 def make_complete(indices: np.ndarray, lp_degree: float = None) -> np.ndarray:
+    """ Make a given array of exponents complete.
+
+    :param indices: The exponent array to be completed.
+    :type indices: np.ndarray
+    :param lp_degree: lp-degree for the completation. Optional, the default is given by `minterpy.DEFAULT_LP_DEG`.
+    :type lp_degree: int (optional)
+
+    :return: Completed version of the input exponents.
+    :rtype: np.ndarray
+
+    """
     if lp_degree is None:
         lp_degree = DEFAULT_LP_DEG
     poly_degree = _get_poly_degree(indices,lp_degree)
