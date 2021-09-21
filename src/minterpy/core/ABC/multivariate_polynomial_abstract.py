@@ -329,12 +329,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         p = polynomial
         if new_coeffs is None:  # use the same coefficients
             new_coeffs = p.coeffs
-
-        print("p.multi_index",p.multi_index)
-        print("new_coeffs",new_coeffs)
-        print("p.internal_domain",p.internal_domain)
-        print("p.user_domain",p.user_domain)
-        print("p.grid",p.grid.unisolvent_nodes)
+            
         return cls(p.multi_index, new_coeffs, p.internal_domain, p.user_domain, p.grid)
 
     # Arithmetic operations:
@@ -743,13 +738,11 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         """Expand the spatial dimention.
 
         Expands the dimension of the domain space of the polynomial by adding zeros to the multi_indices
-        (which is equivalent to the multiplication of ones to each monomial)
+        (which is equivalent to the multiplication of ones to each monomial).
+        Furthermore, the grid is now embedded in the higher dimensional space by pinning the grid arrays to the origin in the additional spatial dimension.
 
         :param dim: Number of additional dimensions.
         :type dim: int
-
-        .. todo::
-            - handle expand of dimentions in ``grid``.
         """
         expand_dim = dim - self.multi_index.spatial_dimension
 
