@@ -109,7 +109,7 @@ class MultiIndexSet:
             if self.is_complete:
                 self._exponents_completed = self._exponents
             else:
-                self._exponents_completed = make_complete(self._exponents)
+                self._exponents_completed = make_complete(self._exponents,self.lp_degree)
         return self._exponents_completed
 
     @property
@@ -299,7 +299,7 @@ class MultiIndexSet:
                 _exponents_completed is not self._exponents_completed
             ):  # some exponents have been added:
                 # make complete again!
-                _exponents_completed = make_complete(_exponents_completed)
+                _exponents_completed = make_complete(_exponents_completed,self.lp_degree)
             new_instance._exponents_completed = _exponents_completed
             # also set the exponents of the new_instance
             # TODO avoid redundancy. why store both _exponents and _exponents_completed?

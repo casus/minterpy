@@ -368,28 +368,24 @@ def make_derivable(indices: np.ndarray) -> np.ndarray:
     return index_array
 
 
-def make_complete(indices: np.ndarray) -> np.ndarray:
-    """inserts ALL possible missing smaller multi index vectors
+def make_complete(indices: np.ndarray, lp_degree: float = None) -> np.ndarray:
+    """ Make a given array of exponents complete.
 
-    -> fills up the "holes"
-    ATTENTION: calling this with a complete index set is very inefficient!
+    :param indices: The exponent array to be completed.
+    :type indices: np.ndarray
+    :param lp_degree: lp-degree for the completation. Optional, the default is given by `minterpy.DEFAULT_LP_DEG`.
+    :type lp_degree: int (optional)
+
+    :return: Completed version of the input exponents.
+    :rtype: np.ndarray
+
     """
-    list_of_indices = to_index_list(indices)
-    ptr = -1  # start with the biggest multi index
-    while (
-        1
-    ):  # add the partial derivatives of the vector at the current pointer (will be added in front)
-        exp2check = list_of_indices[ptr]
-        list_insert_single(list_of_indices, exp2check)  # insert the vector itself
-        insert_partial_derivatives(
-            list_of_indices, exp2check
-        )  # insert the its partial derivatives
-        first_entry_checked = len(list_of_indices) + ptr == 0
-        if first_entry_checked:  # stop when the first entry has been processed
-            break
-        ptr -= 1  # move to the next smaller index and repeat
-    index_array = to_index_array(list_of_indices)
-    return index_array
+    if lp_degree is None:
+        lp_degree = DEFAULT_LP_DEG
+    poly_degree = _get_poly_degree(indices,lp_degree)
+    spatial_dimension = indices.shape[-1]
+    return get_exponent_matrix(spatial_dimension,poly_degree,lp_degree)
+
 
 
 def find_match_between(
