@@ -11,7 +11,7 @@ from conftest import (assert_call, assert_polynomial_almost_equal, build_rnd_coe
                         SpatialDimension, PolyDegree, LpDegree)
 
 from minterpy import (MultiIndexSet, CanonicalPolynomial, NewtonPolynomial, LagrangePolynomial)
-from minterpy.core.ABC import TransformationABC,TransformationOperatorABC
+from minterpy.core.ABC import TransformationABC,OperatorABC
 from minterpy.transformations import (LagrangeToNewton, NewtonToLagrange,
                                       LagrangeToCanonical, CanonicalToLagrange,
                                       NewtonToCanonical, CanonicalToNewton, Identity,
@@ -51,7 +51,7 @@ def test_init_transform(Transform):
 
     # test existence of transformation_operator
     operator = transform.transformation_operator
-    assert_(isinstance(operator, TransformationOperatorABC))
+    assert_(isinstance(operator, OperatorABC))
 
 poly_classes = [CanonicalPolynomial, NewtonPolynomial, LagrangePolynomial]
 

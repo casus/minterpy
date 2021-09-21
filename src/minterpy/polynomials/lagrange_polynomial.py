@@ -21,9 +21,8 @@ __all__ = ["LagrangePolynomial"]
 def dummy():
     """Placeholder function.
 
-    Cauton
-    ------
-    This feature is not implemented yet!
+    .. warning::
+      This feature is not implemented yet!
     """
     raise NotImplementedError(f"This feature is not implemented yet.")
 

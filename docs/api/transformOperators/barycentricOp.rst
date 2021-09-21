@@ -1,10 +1,10 @@
 .. currentmodule:: minterpy.schemes.barycentric.operators
 
-###########################
-Barycentric Operator ABC
-###########################
+####################
+Barycentric Operator
+####################
 
-.. autoclass:: BarycentricOperatorABC
+.. autoclass:: BarycentricOperator
    :members:
    :show-inheritance:
    :private-members:

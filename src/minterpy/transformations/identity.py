@@ -12,14 +12,14 @@ from copy import copy
 import numpy as np
 
 from minterpy.core.ABC import MultivariatePolynomialABC, TransformationABC
-from minterpy.schemes.matrix_operator import MatrixTransformationOperator
+from minterpy.schemes.matrix_operator import MatrixOperator
 
 
 __all__ = ["Identity"]
 
 
 def _build_identity_transformation_operator(transformation):
-    return MatrixTransformationOperator(
+    return MatrixOperator(
         transformation, np.identity(len(transformation.multi_index))
     )
 

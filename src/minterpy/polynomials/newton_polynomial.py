@@ -17,9 +17,8 @@ __all__ = ["NewtonPolynomial"]
 def dummy():
     """Placeholder function.
 
-    Cauton
-    ------
-    This feature is not implemented yet!
+    .. warning::
+      This feature is not implemented yet!
     """
     # move dummy to util?
     raise NotImplementedError(f"This feature is not implemented yet.")

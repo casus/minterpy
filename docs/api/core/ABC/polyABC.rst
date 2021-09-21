@@ -5,7 +5,7 @@
 Multivariate polynomial ABC
 ###########################
 
-.. automodule:: multivariate_polynomial_abstract
+.. automodule:: minterpy.core.ABC.multivariate_polynomial_abstract
 
 .. autoclass:: MultivariatePolynomialABC
     :members:

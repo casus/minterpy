@@ -1,9 +1,9 @@
 """
-Concrete implementations for TransformationOperator classes.
+Concrete implementations for Operator classes.
 
 The following implementations are provided:
 
-- MatrixTransformationOperator
+- MatrixOperator
 - BarycentricDictOperator
 - BarycentricFactorisedOperator
 - BarycentricPiecewiseOperator
@@ -23,13 +23,12 @@ from .transformation_fcts import (
     transform_barycentric_dict, transform_barycentric_factorised,
     transform_barycentric_piecewise)
 from minterpy.global_settings import ARRAY, FLOAT_DTYPE
-from minterpy.core.ABC import TransformationOperatorABC
-from ..matrix_operator import MatrixTransformationOperator
+from minterpy.core.ABC import OperatorABC
+from ..matrix_operator import MatrixOperator
 
-
-
-class BarycentricOperatorABC(TransformationOperatorABC):
-    """Abstract base class for the barycentric transformation operators.
+class BarycentricOperator(OperatorABC):
+    """Base class for the barycentric transformation operators.
+       Specialized versions (dict, factorised, and piecewise) are derived from this base class.
 
     Attributes
     ----------
@@ -65,16 +64,16 @@ class BarycentricOperatorABC(TransformationOperatorABC):
         pass
 
     def __matmul__(
-        self, other: Union[TransformationOperatorABC, ARRAY]
-    ) -> Union[MatrixTransformationOperator, ARRAY]:
+        self, other: Union[OperatorABC, ARRAY]
+    ) -> Union[MatrixOperator, ARRAY]:
         """Applies the transformation operator on the input.
         """
-        if isinstance(other, TransformationOperatorABC):
+        if isinstance(other, OperatorABC):
             # the input is another transformation
             # workaround: return matrix operator constructed from the matrix product
             # TODO support this natively
             # TODO which transformation object should be passed?
-            return MatrixTransformationOperator(
+            return MatrixOperator(
                 self.transformation, self.array_repr_full @ other.array_repr_full
             )
 
@@ -98,7 +97,7 @@ class BarycentricOperatorABC(TransformationOperatorABC):
         return self.array_representation
 
 
-class BarycentricDictOperator(BarycentricOperatorABC):
+class BarycentricDictOperator(BarycentricOperator):
     """Concrete implementation of the BarycentricOperator given by the edge case given by decomposition to the 1D
     atomic sub-problems.
     """
@@ -107,7 +106,7 @@ class BarycentricDictOperator(BarycentricOperatorABC):
     merging_fct = merge_trafo_dict
 
 
-class BarycentricFactorisedOperator(BarycentricOperatorABC):
+class BarycentricFactorisedOperator(BarycentricOperator):
     """Concrete implementation of the BarycentricOperator given by the edge case given by realizing the factorised
     copied of the basic 1D atomic sub-problem.
     """
@@ -116,7 +115,7 @@ class BarycentricFactorisedOperator(BarycentricOperatorABC):
     merging_fct = merge_trafo_factorised
 
 
-class BarycentricPiecewiseOperator(BarycentricOperatorABC):
+class BarycentricPiecewiseOperator(BarycentricOperator):
     """Concrete implementation of the BarycentricOperator used to make comparisons with the global matrix possible by
     zooming into corresponding submatrix.
     """

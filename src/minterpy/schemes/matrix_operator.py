@@ -2,20 +2,20 @@
 Matrix operator class.
 """
 from minterpy.global_settings import ARRAY
-from minterpy.core.ABC import TransformationOperatorABC
+from minterpy.core.ABC import OperatorABC
 
-__all__ = ["MatrixTransformationOperator"]
+__all__ = ["MatrixOperator"]
 
-class MatrixTransformationOperator(TransformationOperatorABC):
-    """Concrete implementation of a TransformationOperator constructed as a matrix.
+class MatrixOperator(OperatorABC):
+    """Concrete implementation of a Operator constructed as a matrix.
     """
 
     def __matmul__(self, other):
-        if isinstance(other, TransformationOperatorABC):
+        if isinstance(other, OperatorABC):
             # the input is another transformation
             # instead of an array return another Matrix transformation operator constructed from the matrix product
             # TODO which transformation object should be passed?
-            return MatrixTransformationOperator(
+            return MatrixOperator(
                 self.transformation, self.array_repr_full @ other.array_repr_full
             )
 

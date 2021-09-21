@@ -22,10 +22,8 @@ __all__ = ["CanonicalPolynomial"]
 def dummy():
     """Placeholder function.
 
-
-    Note
-    ----
-    This function is not implemented yet!
+    .. warning::
+      This function is not implemented yet!
     """
     raise NotImplementedError(f"This feature is not implemented yet.")
 
@@ -180,8 +178,8 @@ def _canonical_add(poly1, poly2):
     summed_polynomial : CanonicalPolynomial
         The sum of the passed polynomials in canonical base
 
-    Note
-    ----
+    Notes
+    -----
      - This works only for the same domains!
      - This function will be called on `self,other` if `__add__` is called.
     """
@@ -219,8 +217,8 @@ def _canonical_sub(poly1, poly2):
     difference_polynomial : CanonicalPolynomial
         The difference of the passed polynomials in canonical base.
 
-    Note
-    ----
+    Notes
+    -----
     This works only for the same domains!
     """
     return _canonical_add(poly1, -poly2)
