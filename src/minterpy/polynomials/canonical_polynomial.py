@@ -10,7 +10,7 @@ from minterpy.jit_compiled_utils import can_eval_mult
 from ..core.ABC import \
     MultivariatePolynomialSingleABC
 
-
+from ..core import MultiIndexSet
 
 from minterpy.global_settings import DEBUG, FLOAT_DTYPE
 from ..core.verification import (convert_eval_output, rectify_eval_input,
@@ -186,9 +186,14 @@ def _canonical_add(poly1, poly2):
     p1, p2 = _match_dims(poly1, poly2)
     # print(p1.internal_domain,p2.internal_domain) # here is the error!!!!
     if _matching_internal_domain(p1, p2):
-        res_mi, res_c = _generic_canonical_add(
+        res_mi_arr, res_c = _generic_canonical_add(
             p1.multi_index.exponents, p1.coeffs, p2.multi_index.exponents, p2.coeffs
         )
+
+        # warning: this is not general. we are *assuming* that the resultant lp_degree is
+        # max of the two. This is done in order to avoid issue #37.
+        max_lp_degree = np.max([p1.multi_index.lp_degree, p2.multi_index.lp_degree])
+        res_mi = MultiIndexSet(res_mi_arr, lp_degree=max_lp_degree)
         return CanonicalPolynomial(
             res_mi,
             res_c,
