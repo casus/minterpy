@@ -16,7 +16,7 @@ from ..multi_index import MultiIndexSet
 
 
 
-from ..utils import find_match_between
+from ..utils import find_match_between,_expand_dim
 from ..verification import (check_shape, check_type_n_values,
                                    verify_domain)
 
@@ -329,6 +329,12 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         p = polynomial
         if new_coeffs is None:  # use the same coefficients
             new_coeffs = p.coeffs
+
+        print("p.multi_index",p.multi_index)
+        print("new_coeffs",new_coeffs)
+        print("p.internal_domain",p.internal_domain)
+        print("p.user_domain",p.user_domain)
+        print("p.grid",p.grid.unisolvent_nodes)
         return cls(p.multi_index, new_coeffs, p.internal_domain, p.user_domain, p.grid)
 
     # Arithmetic operations:
@@ -750,6 +756,15 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         self.multi_index.expand_dim(
             dim
         )  # breaks if dim<spacial_dimension, i.e. expand_dim<0
+
+
+
+        grid = self.grid
+        new_gen_pts = _expand_dim(grid.generating_points,dim)
+        new_gen_vals = _expand_dim(grid.generating_values.reshape(-1,1),dim)
+
+        self.grid = Grid(self.multi_index,new_gen_pts,new_gen_vals)
+
         extra_internal_domain = verify_domain(extra_internal_domain, expand_dim)
         self.internal_domain = np.concatenate(
             (self.internal_domain, extra_internal_domain)

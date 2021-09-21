@@ -241,7 +241,7 @@ class MultiIndexSet:
 
         """
         new_instance = self.__class__(
-            deepcopy(self._exponents),
+            deepcopy(self.exponents),
             deepcopy(self._lp_degree),
             deepcopy(self.poly_deg_dtype),
         )

@@ -86,8 +86,12 @@ def _lagrange_add(poly1, poly2):
     p1, p2 = _match_dims(poly1, poly2)
     if _matching_internal_domain(p1, p2):
         l2n_p1 = minterpy.transformations.LagrangeToNewton(p1)
+        print("lag_add: p1.multi_index",p1.multi_index)
+        print("lag_add: p1.grid.unisolvent_nodes",p1.grid.unisolvent_nodes)
         newt_p1 = l2n_p1()
         l2n_p2 = minterpy.transformations.LagrangeToNewton(p2)
+        print("lag_add: p2.multi_index",p2.multi_index)
+        print("lag_add: p2.grid.unisolvent_nodes",p2.grid.unisolvent_nodes)
         newt_p2 = l2n_p2()
 
         max_poly_degree = np.max(np.array([p1.multi_index.poly_degree, p2.multi_index.poly_degree]))

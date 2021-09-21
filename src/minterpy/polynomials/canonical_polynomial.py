@@ -118,6 +118,12 @@ def _match_dims(poly1, poly2, copy=None):
     -----
     - Maybe move this to the MultivariatePolynomialSingleABC since it shall be avialable for all poly bases
     """
+    #print("id(poly1)",id(poly1))
+    #print("id(poly1.multi_index)",id(poly1.multi_index))
+    #print("id(poly1.multi_index.exponents)",id(poly1.multi_index.exponents))
+    #print("id(poly2)",id(poly2))
+    #print("id(poly2.multi_index)",id(poly2.multi_index))
+    #print("id(poly2.multi_index.exponents)",id(poly2.multi_index.exponents))
     if copy is None:
         copy = True
 
@@ -128,13 +134,20 @@ def _match_dims(poly1, poly2, copy=None):
         p1 = poly1
         p2 = poly2
 
-    dim1 = poly1.multi_index.spatial_dimension
-    dim2 = poly2.multi_index.spatial_dimension
+    #print("id(p1)",id(p1))
+    #print("id(p1.multi_index)",id(p1.multi_index))
+    #print("id(p1.multi_index.exponents)",id(p1.multi_index.exponents))
+    #print("id(p2)",id(p2))
+    #print("id(p2.multi_index)",id(p2.multi_index))
+    #print("id(p2.multi_index.exponents)",id(p2.multi_index.exponents))
+
+    dim1 = p1.multi_index.spatial_dimension
+    dim2 = p2.multi_index.spatial_dimension
     if dim1 >= dim2:
-        poly2.expand_dim(dim1)
+        p2.expand_dim(dim1)
     else:
-        poly1.expand_dim(dim2)
-    return poly1, poly2
+        p1.expand_dim(dim2)
+    return p1, p2
 
 
 def _matching_internal_domain(poly1, poly2, tol=None):
