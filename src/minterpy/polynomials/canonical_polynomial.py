@@ -128,13 +128,14 @@ def _match_dims(poly1, poly2, copy=None):
         p1 = poly1
         p2 = poly2
 
-    dim1 = poly1.multi_index.spatial_dimension
-    dim2 = poly2.multi_index.spatial_dimension
+
+    dim1 = p1.multi_index.spatial_dimension
+    dim2 = p2.multi_index.spatial_dimension
     if dim1 >= dim2:
-        poly2.expand_dim(dim1)
+        p2.expand_dim(dim1)
     else:
-        poly1.expand_dim(dim2)
-    return poly1, poly2
+        p1.expand_dim(dim2)
+    return p1, p2
 
 
 def _matching_internal_domain(poly1, poly2, tol=None):

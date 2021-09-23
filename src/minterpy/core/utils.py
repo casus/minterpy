@@ -178,29 +178,60 @@ def _gen_multi_index_exponents(spatial_dimension, poly_degree, lp_degree):
     return exponents
 
 
-def _expand_dim(exps, target_dim):
+#def _expand_dim(exps, target_dim):
+#    """
+#    Expansion of exponents with zeros up to a given dimension#
+
+#    Parameters
+#    ----------
+#    exps : array_like (shape=(dim,len_mi))
+#        Array of exponents from MultiIndex.
+#    target_dim : np.int
+#        Dimension up to the exponents shall be expanded to. Needs to be bigger or equal than the current dimension of exps.
+#    """
+#    mi_len, dim = exps.shape
+#    exps_dtype = exps.dtype
+#    if target_dim < dim:
+#        # TODO maybe build a reduce function which removes dims where all exps are 0
+#        raise ValueError(
+#            f"Can't expand multi_index from dim {dim} to dim {target_dim}."
+#        )
+#    if target_dim == dim:
+#        return exps
+#    num_expand_dim = target_dim - dim
+#    new_dim_exps = np.zeros((mi_len, num_expand_dim), dtype=exps_dtype)
+#    return np.concatenate((exps, new_dim_exps), axis=1)
+
+def _expand_dim(grid_nodes, target_dim,point_pinned = None):
     """
-    Expansion of exponents with zeros up to a given dimension
+    Expansion of a given array to a given dimension, where the additional dimensions will filled with tiles of given elements
 
     Parameters
     ----------
-    exps : array_like (shape=(dim,len_mi))
-        Array of exponents from MultiIndex.
+    grid_nodes : array_like (shape=(len_arr,dim))
+        Array which shall be expanded.
     target_dim : np.int
-        Dimension up to the exponents shall be expanded to. Needs to be bigger or equal than the current dimension of exps.
+        Dimension up to the array shall be expanded to. Needs to be bigger or equal than the current dimension of array.
+    point_pinned : optional np.ndarray
     """
-    mi_len, dim = exps.shape
-    exps_dtype = exps.dtype
+    grid_len, dim = grid_nodes.shape
+    grid_dtype = grid_nodes.dtype
     if target_dim < dim:
         # TODO maybe build a reduce function which removes dims where all exps are 0
         raise ValueError(
-            f"Can't expand multi_index from dim {dim} to dim {target_dim}."
+            f"Can't expand grid from dim {dim} to dim {target_dim}."
         )
     if target_dim == dim:
-        return exps
+        return grid_nodes
     num_expand_dim = target_dim - dim
-    new_dim_exps = np.zeros((mi_len, num_expand_dim), dtype=exps_dtype)
-    return np.concatenate((exps, new_dim_exps), axis=1)
+    if point_pinned is None:
+        new_dim_exps = np.zeros((grid_len, num_expand_dim), dtype=grid_dtype)
+    else:
+        point_pinned = np.atleast_1d(point_pinned)
+        if len(point_pinned) is not num_expand_dim:
+            raise ValueError(f"Given point_pinned {point_pinned} has not enough elements to fill the extra dimensions! <{num_expand_dim}> required.")
+        new_dim_exps = np.require(np.tile(point_pinned,(grid_len,1)),dtype=grid_dtype)
+    return np.concatenate((grid_nodes, new_dim_exps), axis=1)
 
 
 def iterate_indices(

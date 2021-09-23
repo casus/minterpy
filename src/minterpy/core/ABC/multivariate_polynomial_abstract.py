@@ -16,7 +16,7 @@ from ..multi_index import MultiIndexSet
 
 
 
-from ..utils import find_match_between
+from ..utils import find_match_between,_expand_dim
 from ..verification import (check_shape, check_type_n_values,
                                    verify_domain)
 
@@ -329,6 +329,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         p = polynomial
         if new_coeffs is None:  # use the same coefficients
             new_coeffs = p.coeffs
+            
         return cls(p.multi_index, new_coeffs, p.internal_domain, p.user_domain, p.grid)
 
     # Arithmetic operations:
@@ -737,19 +738,26 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         """Expand the spatial dimention.
 
         Expands the dimension of the domain space of the polynomial by adding zeros to the multi_indices
-        (which is equivalent to the multiplication of ones to each monomial)
+        (which is equivalent to the multiplication of ones to each monomial).
+        Furthermore, the grid is now embedded in the higher dimensional space by pinning the grid arrays to the origin in the additional spatial dimension.
 
         :param dim: Number of additional dimensions.
         :type dim: int
-
-        .. todo::
-            - handle expand of dimentions in ``grid``.
         """
         expand_dim = dim - self.multi_index.spatial_dimension
 
         self.multi_index.expand_dim(
             dim
         )  # breaks if dim<spacial_dimension, i.e. expand_dim<0
+
+
+
+        grid = self.grid
+        new_gen_pts = _expand_dim(grid.generating_points,dim)
+        new_gen_vals = _expand_dim(grid.generating_values.reshape(-1,1),dim)
+
+        self.grid = Grid(self.multi_index,new_gen_pts,new_gen_vals)
+
         extra_internal_domain = verify_domain(extra_internal_domain, expand_dim)
         self.internal_domain = np.concatenate(
             (self.internal_domain, extra_internal_domain)
