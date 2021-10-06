@@ -81,32 +81,38 @@ def test_fail_get_transformation_class():
 
     assert_raises(NotImplementedError, get_transformation_class, None, LagrangePolynomial)
 
+
 def test_l2n_transform(SpatialDimension, PolyDegree, LpDegree):
-    """ testing the naive and bary centric l2n transformations """
+    """Tests the Lagrange to Newton transformations."""
+
+    # Arrange
     mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
     coeffs = build_rnd_coeffs(mi)
     lag_poly = LagrangePolynomial(mi, coeffs)
 
     transformation_l2n = LagrangeToNewton(lag_poly)
 
-    # test naive
+    # Test the naive form
     transform_naive = _build_lagrange_to_newton_naive(transformation_l2n)
     newt_coeffs_naive = transform_naive @ lag_poly.coeffs
     newt_poly_naive = NewtonPolynomial(mi, newt_coeffs_naive)
 
-    # test bary dict
+    # Test the barycentric form
     transform_bary = _build_lagrange_to_newton_bary(transformation_l2n)
     newt_coeffs_bary = transform_bary @ lag_poly.coeffs
     newt_poly_bary = NewtonPolynomial(mi, newt_coeffs_bary)
 
-    # compare the result of naive and bary transformation
+    # Compare the results of the naive and barycentric transformation
     assert_polynomial_almost_equal(newt_poly_naive, newt_poly_bary)
 
-    # compare the naive transformation matrix with dds constructed
+    # Test the transformation via DDS of the Lagrange polynomial on the grid
     l2n_matrix = build_l2n_matrix_dds(lag_poly.grid)
+
+    # Compare the results of the naive and DDS transformation
     assert_almost_equal(l2n_matrix, transform_naive.array_repr_full)
 
-    # check if newton polynomials evaluated on the unisolvent nodes are indeed lagrange coeffs
+    # Test if the Newton interpolation polynomials evaluated on the unisolvent
+    # nodes are indeed the Lagrange coefficients
     res_eval = newt_poly_naive(lag_poly.unisolvent_nodes)
     assert_almost_equal(res_eval, lag_poly.coeffs)
 
