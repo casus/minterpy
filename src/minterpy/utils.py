@@ -30,6 +30,77 @@ def lp_norm(arr, p, axis=None, keepdims: bool = False):
         return 0.0
     return a * np.linalg.norm(arr / a, p, axis, keepdims)
 
+def cartesian_product(*arrays):
+    """
+    Build the cartesian product of any number of 1D arrays.
+
+    :param arrays: List of 1D array_like.
+    :type arrays: list
+
+    :return:  Array of all cominations of elements of the input arrays (a cartesian product).
+    :rtype: np.ndarray
+
+    Examples
+    --------
+    >>> x = np.array([1,2,3])
+    >>> y = np.array([4,5])
+    >>> cartesian_product(x,y)
+    array([[1, 4],
+           [1, 5],
+           [2, 4],
+           [2, 5],
+           [3, 4],
+           [3, 5]])
+
+    >>> s= np.array([0,1])
+    >>> cartesian_product(s,s,s,s)
+    array([[0, 0, 0, 0],
+           [0, 0, 0, 1],
+           [0, 0, 1, 0],
+           [0, 0, 1, 1],
+           [0, 1, 0, 0],
+           [0, 1, 0, 1],
+           [0, 1, 1, 0],
+           [0, 1, 1, 1],
+           [1, 0, 0, 0],
+           [1, 0, 0, 1],
+           [1, 0, 1, 0],
+           [1, 0, 1, 1],
+           [1, 1, 0, 0],
+           [1, 1, 0, 1],
+           [1, 1, 1, 0],
+           [1, 1, 1, 1]])
+
+    """
+    la = len(arrays)
+    dtype = np.result_type(*arrays)
+    arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
+    for i, a in enumerate(np.ix_(*arrays)):
+        arr[...,i] = a
+    return arr.reshape(-1, la)
+
+def lp_sum(arr,p):
+    """
+    Sum of powers, i.e. lp-norm to the lp-degree.
+
+    :param arr: 2D-array to be lp-summed
+    :type arr: np.ndarray
+
+    :param p: Potence for each element in the lp-sum
+    :type p: int
+
+    :return: lp-sum over the last axis of the input array powered by the given potence
+    :rtype: np.ndarray
+
+    Notes
+    -----
+    - equivalent to ```lp_norm(arr,p,axis=-1)**p``` but more stable then the implementation using `np.linalg.norm` (see `numpy #5697`_  for more informations)
+
+    .. _numpy #5697:
+        https://github.com/numpy/numpy/issues/5697
+    """
+    return np.sum(np.power(arr,p),axis=-1)
+
 
 def chebychev_2nd_order(n: int):  # 2nd order
     """Factory function of Chebychev points of the second kind.

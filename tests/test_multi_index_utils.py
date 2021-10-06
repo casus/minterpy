@@ -141,7 +141,7 @@ def test_make_complete(SpatialDimension,PolyDegree,LpDegree):
     incomplete_exponents = np.delete(exponents, 0, axis=0)
     # completion should be identical to "make derivable" after just deleting a single exponent vector
     completed_exponents1 = make_derivable(incomplete_exponents)
-    completed_exponents2 = make_complete(incomplete_exponents)
+    completed_exponents2 = make_complete(incomplete_exponents,LpDegree)
 
     assert(is_lexicographically_complete(completed_exponents1))
     assert(is_lexicographically_complete(completed_exponents2))
@@ -154,7 +154,7 @@ def test_make_complete(SpatialDimension,PolyDegree,LpDegree):
         incomplete_exponents = np.delete(exponents, 1, axis=0)
         # completion should be identical to "make derivable" after just deleting a single exponent vector
         completed_exponents1 = make_derivable(incomplete_exponents)
-        completed_exponents2 = make_complete(incomplete_exponents)
+        completed_exponents2 = make_complete(incomplete_exponents,LpDegree)
 
         assert(is_lexicographically_complete(completed_exponents1))
         assert(is_lexicographically_complete(completed_exponents2))
