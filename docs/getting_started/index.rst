@@ -8,7 +8,7 @@ Getting started with ``minterpy``
    and developers. It should provide users what is it like to use ``minterpy``
    to solve interpolation problems.
    This chapter might be broken into parts with increasing complexity,
-   progressively disclose more difficult or specific terms related to interpolation problems or ``minterpy``  itself.
+   progressively disclosing more difficult or specific terms related to interpolation problems or ``minterpy``  itself.
 
    For example:
 
