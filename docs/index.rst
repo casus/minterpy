@@ -11,18 +11,23 @@ machine learning regularisation, data reconstruction, computational solutions in
 
 `minterpy` is provided as an openSource PYTHON package that makes it easily accessable and allows further development and improvement by the PYTHON community. In the following short survey we give some crucial insights of the underlying theoretical aspects of multivariate polynomial interpolation.
 
+..
+   Mathematical Introduction <math_intro/intro>
+   Todo list <TODO>
+   :hidden:
 
 .. bibliography::
   :filter: docname in docnames
   :style: unsrt
 
-
-
 .. toctree::
-   :maxdepth: 1
-   :hidden:
+   :maxdepth: 2
 
-   Getting Started <usage/index>
-   Mathematical Introduction <math_intro/intro>
+   Overview <overview/index>
+   Getting Started <getting_started/index>
+   How-to <howto/index>
+   Fundamentals <fundamentals/index>
    API reference <api/index>
-   Todo list <TODO>
+   Contributing <contributing/index>
+   Glossary <glossary>
+
