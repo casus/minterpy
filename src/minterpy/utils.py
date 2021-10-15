@@ -1,6 +1,7 @@
 """
 set of package wide utility functions
 """
+from numbers import Real
 
 import numpy as np
 
@@ -30,14 +31,14 @@ def lp_norm(arr, p, axis=None, keepdims: bool = False):
         return 0.0
     return a * np.linalg.norm(arr / a, p, axis, keepdims)
 
-def cartesian_product(*arrays):
+def cartesian_product(*arrays: np.ndarray) -> np.ndarray:
     """
     Build the cartesian product of any number of 1D arrays.
 
     :param arrays: List of 1D array_like.
     :type arrays: list
 
-    :return:  Array of all cominations of elements of the input arrays (a cartesian product).
+    :return: Array of all combinations of elements of the input arrays (a cartesian product).
     :rtype: np.ndarray
 
     Examples
@@ -79,17 +80,17 @@ def cartesian_product(*arrays):
         arr[...,i] = a
     return arr.reshape(-1, la)
 
-def lp_sum(arr,p):
+def lp_sum(arr: np.ndarray,p: Real) -> Real:
     """
     Sum of powers, i.e. lp-norm to the lp-degree.
 
     :param arr: 2D-array to be lp-summed
     :type arr: np.ndarray
 
-    :param p: Potence for each element in the lp-sum
-    :type p: int
+    :param p: Power for each element in the lp-sum
+    :type p: Real
 
-    :return: lp-sum over the last axis of the input array powered by the given potence
+    :return: lp-sum over the last axis of the input array powered by the given power
     :rtype: np.ndarray
 
     Notes

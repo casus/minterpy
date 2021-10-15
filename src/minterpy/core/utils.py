@@ -34,12 +34,12 @@ def get_exponent_matrix(spatial_dimension: int, poly_degree: int, lp_degree: Uni
 
     """
     if lp_degree == np.inf:
-        right_choices = cartesian_product(*[np.arange(poly_degree+1)]*spatial_dimension)
+        right_choices = cartesian_product(*[np.arange(poly_degree+1,dtype=INT_DTYPE)]*spatial_dimension)
     else:
-        canidates_without_diag = cartesian_product(*[np.arange(poly_degree)]*spatial_dimension)
-        canidates =np.vstack((canidates_without_diag,np.diag([poly_degree]*spatial_dimension)))
-        cond =  lp_sum(canidates,lp_degree)<=poly_degree**lp_degree
-        right_choices = canidates[cond]
+        candidates_without_diag = cartesian_product(*[np.arange(poly_degree,dtype=INT_DTYPE)]*spatial_dimension)
+        candidates =np.vstack((candidates_without_diag,np.diag([INT_DTYPE(poly_degree)]*spatial_dimension)))
+        cond =  lp_sum(candidates,lp_degree)<=poly_degree**lp_degree
+        right_choices = candidates[cond]
     lex_idx = np.lexsort(right_choices.T)
     return right_choices[lex_idx]
 
