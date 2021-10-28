@@ -457,19 +457,14 @@ def _build_lagrange_to_newton_bary(
     generating_points = grid.generating_points
     split_positions = tree.split_positions
     subtree_sizes = tree.subtree_sizes
-    problem_sizes = tree.problem_sizes
 
-    # TODO check why dict is used instead of factorised
-
-    transformation_data = compute_l2n_dict(
-        generating_points, split_positions, subtree_sizes, problem_sizes
+    transformation_data = compute_l2n_factorised(
+        generating_points, split_positions, subtree_sizes
     )
-    transformation_operator = BarycentricDictOperator(
+
+    transformation_operator = BarycentricFactorisedOperator(
         transformation, transformation_data
     )
-
-    # transformation_data = compute_l2n_factorised(generating_points, split_positions, subtree_sizes)
-    # transformation_operator = BarycentricFactorisedOperator(transformation_data)
 
     return transformation_operator
 
