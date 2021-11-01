@@ -6,97 +6,45 @@ import numpy as np
 from scipy.special import binom
 
 from minterpy.global_settings import DEFAULT_LP_DEG, INT_DTYPE
-from minterpy.jit_compiled_utils import (fill_exp_matrix, fill_match_positions,
+from minterpy.jit_compiled_utils import (fill_match_positions,
                                          index_is_contained,
                                          lex_smaller_or_equal)
-from minterpy.utils import lp_norm
+from minterpy.utils import lp_norm,cartesian_product,lp_sum
 
 
 def _get_poly_degree(exponents, lp):
     norms = lp_norm(exponents, lp, axis=1)
     return norms.max()
 
-
-def lp_hypersphere_vol(spacial_dimension, radius, p):
-    # https://en.wikipedia.org/wiki/Volume_of_an_n-ball#Balls_in_Lp_norms
-    n = spacial_dimension
-    r = radius
-    return (2 * gamma(1 / p + 1) * r) ** n / gamma(n / p + 1)
-
-
-def get_exponent_matrix(
-    spatial_dimension: int, poly_degree: int, lp_degree: Union[float, int]
-) -> np.ndarray:
-    """creates an array of "multi-indices" symmetric in each dimension
-
-    pre allocate the right amount of memory
-    then starting from the 0 vector, lexicographically "count up" and add all valid exponent vectors
-
-    NOTE: this has only been tested for up to dim 4 and up to deg 5.
-        be aware that the preallocated array might be too small
-        (<- will raise an IndexError by accessing the array out of bounds)!
-
-    :param spatial_dimension: the dimensionality m
-    :param poly_degree: the highest exponent which should occur in the exponent matrix
-    :param lp_degree: the value for p of the l_p-norm
-    :return: an array of shape (m, x) with all possible exponent vectors v with: l_p-norm(v) < poly_degree
-        sorted lexicographically.
+def get_exponent_matrix(spatial_dimension: int, poly_degree: int, lp_degree: Union[float, int]) -> np.ndarray:
     """
-    n = poly_degree
-    m = spatial_dimension
-    p = lp_degree
-    p = float(p)  # float dtype expected
+    Generate exponent matrix.
 
-    max_nr_exp = (n + 1) ** m
-    if p < 0.0:
-        raise ValueError("values for p must be larger than 0.")
-    # for some special cases it is known how many distinct exponent vectors exist:
-    if p == 1.0:
-        nr_expected_exponents = binom(m + n, n)
-    elif p == np.inf or m == 1 or n == 1:
-        # in dimension 1 all lp-degrees are equal!
-        nr_expected_exponents = max_nr_exp
+    :param spatial_dimension: Dimension of the domain space.
+    :type spatial_dimension: int
+
+    :param poly_degree: Polynomial degree described by the resulting exponent matrix.
+    :type poly_degree: int
+
+    :param lp_degree: Degree of the used lp-norm. This can be any integer bigger than one or `np.inf`.
+    :type lp_degree: int or float
+
+    :return: List of exponent arrays for all monomials, whose lp-norm of the exponents is smaller or equal to the given `poly_degree`. The list is given as a `np.ndarray` with the shape `(number_of_monomials, spatial_dimension)` and the list is lexicographically ordered.
+    :rtype: np.ndarray
+
+    """
+    if lp_degree == np.inf:
+        right_choices = cartesian_product(*[np.arange(poly_degree+1,dtype=INT_DTYPE)]*spatial_dimension)
     else:
-        # for values p << 2 the estimation based on the hypersphere volume tends to underestimate
-        # the required amount of space! -> clip values for estimation.
-        # TODO find more precise upper bound.
-        # -> increases the volume in order to make sure there truly is enough memory being allocated
-        p_estimation = max(p, 1.7)
-        vol_lp_sphere = lp_hypersphere_vol(m, radius=1.0, p=p_estimation)
-        vol_hypercube = 2 ** m
-        vol_fraction = vol_lp_sphere / vol_hypercube
-        nr_expected_exponents = max_nr_exp * vol_fraction
-
-    nr_expected_exponents = int(nr_expected_exponents)
-    if nr_expected_exponents > 1e6:
-        raise ValueError(
-            f"trying to generate exponent matrix with {max_nr_exp} entries."
-        )
-    exponents = np.empty((nr_expected_exponents, m), dtype=INT_DTYPE)
-    nr_filled_exp = fill_exp_matrix(exponents, p, n)
-
-    # NOTE: validity checked by tests:
-    # if nr_expected_exponents == nr_filled_exp and lp_degree != np.inf:
-    #     raise ValueError('potentially not enough memory has been allocated to fit all valid exponent vectors! '
-    #                      'check increasing the `incr_factor`')
-    # just use relevant part:
-    out = exponents[:nr_filled_exp, :]
-    #  NOTE: since tiny_array is a view onto huge_array, so long as a reference to tiny_array exists the full
-    #  big memory allocation will remain. creating an independent copy however will take up resources!
-    #  cf. http://numpy-discussion.10968.n7.nabble.com/Numpy-s-policy-for-releasing-memory-td1533.html
-    #  NOTE: will be slow for very large arrays. since everything needs not be copied!
-    if nr_filled_exp * 2 < nr_expected_exponents:
-        warn(
-            f"more than double the required memory has been allocated ({nr_filled_exp} filled "
-            f"<< {nr_expected_exponents} allocated). inefficient!"
-        )
-        out = out.copy()  # independent copy
-        del exponents  # free up memory
-    return out
+        candidates_without_diag = cartesian_product(*[np.arange(poly_degree,dtype=INT_DTYPE)]*spatial_dimension)
+        candidates =np.vstack((candidates_without_diag,np.diag([INT_DTYPE(poly_degree)]*spatial_dimension)))
+        cond =  lp_sum(candidates,lp_degree)<=poly_degree**lp_degree
+        right_choices = candidates[cond]
+    lex_idx = np.lexsort(right_choices.T)
+    return right_choices[lex_idx]
 
 
 NORM_FCT = lp_norm
-
 
 def _gen_multi_index_exponents_recur(m, n, gamma, gamma2, lp_degree):
     """DEPRECATED. only for reference. TODO remove
@@ -177,30 +125,6 @@ def _gen_multi_index_exponents(spatial_dimension, poly_degree, lp_degree):
     )
     return exponents
 
-
-#def _expand_dim(exps, target_dim):
-#    """
-#    Expansion of exponents with zeros up to a given dimension#
-
-#    Parameters
-#    ----------
-#    exps : array_like (shape=(dim,len_mi))
-#        Array of exponents from MultiIndex.
-#    target_dim : np.int
-#        Dimension up to the exponents shall be expanded to. Needs to be bigger or equal than the current dimension of exps.
-#    """
-#    mi_len, dim = exps.shape
-#    exps_dtype = exps.dtype
-#    if target_dim < dim:
-#        # TODO maybe build a reduce function which removes dims where all exps are 0
-#        raise ValueError(
-#            f"Can't expand multi_index from dim {dim} to dim {target_dim}."
-#        )
-#    if target_dim == dim:
-#        return exps
-#    num_expand_dim = target_dim - dim
-#    new_dim_exps = np.zeros((mi_len, num_expand_dim), dtype=exps_dtype)
-#    return np.concatenate((exps, new_dim_exps), axis=1)
 
 def _expand_dim(grid_nodes, target_dim,point_pinned = None):
     """
