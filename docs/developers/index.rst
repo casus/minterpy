@@ -9,10 +9,12 @@ Developers Guide
    or documentation (documentation contribution should be distinct).
    The main audience of the documentation is, currently at least, internal contributors.
 
+**Contents**
+
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 3
 
    code-of-conduct
-   contributing_to_code
-   contributing_to_documentation
+   Code base contribution <contrib-code-base/index>
+   Documentation contribution <contrib-doc/index>
    about_us
