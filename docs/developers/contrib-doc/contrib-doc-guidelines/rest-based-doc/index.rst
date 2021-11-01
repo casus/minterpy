@@ -31,7 +31,7 @@ in the documentation and how they should be used in the documentation.
    admonitions
    bibliography
    code-examples
-   cross-references
+   cross-ref
    glossary
    mathematics
 

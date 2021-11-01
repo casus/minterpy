@@ -2,16 +2,16 @@
 Cross-references
 ################
 
-The ``minterpy`` documentation uses three different types of cross-references
-(linking): external, internal, and bibliographic citations.
+The ``minterpy`` documentation uses various types of cross-references (linking),
+including: external and internal cross-references, bibliographic citations, etc.
 
 .. seealso::
 
    There are various types of internal cross-references used in the ``minterpy``
    documentation specific to documentation elements
    (pages, section headings, images, equations, API elements, etc.).
-   This guideline only external cross references and covers pages
-   and sections internal cross-referencing;
+   This guideline covers pages, section headings, and API elements
+   cross-references;
    other types of internal cross-referencing may be found in its own guideline.
 
 External cross-references
@@ -34,8 +34,8 @@ As an example:
    The problem is well explained in this `Wikipedia article`_
    and also in a `DeepAI article`_.
 
-   .. _`Wikipedia article`: https://en.wikipedia.org/wiki/Curse_of_dimensionality
-   .. _`DeepAI article`: https://deepai.org/machine-learning-glossary-and-terms/curse-of-dimensionality
+   .. _Wikipedia article: https://en.wikipedia.org/wiki/Curse_of_dimensionality
+   .. _DeepAI article: https://deepai.org/machine-learning-glossary-and-terms/curse-of-dimensionality
 
 which will be rendered as:
 
@@ -153,6 +153,40 @@ which will be rendered as:
     specified using ``:ref:`` role. The path is always relative
     to the root ``docs`` directory.
 
+``minterpy`` API elements
+#########################
+
+Elements of the ``minterpy`` API (including modules, functions, classes,
+methods, attributes or properties) may be cross-referenced in the documentation.
+The `Python domain`_ allows for cross-referencing most documented objects.
+Before an API element can be cross-referenced,
+its documentation must be available in the :doc:`/api/index`.
+
+Refer to the to the table for some usages and examples.
+
+=========  ==================  =========================================  =====================================
+Element    Role                Example                                    Rendered as
+=========  ==================  =========================================  =====================================
+Module     :code:`:py:mod:`    ``:py:mod:`.transformations.lagrange```    :py:mod:`.transformations.lagrange`
+Function   :code:`:py:func:`   ``:py:func:`.interpolate```                :py:func:`.interpolate`
+Class      :code:`:py:class:`  ``:py:class:`.core.grid.Grid```            :py:class:`.core.grid.Grid`
+Method     :code:`:py:meth:`   ``:py:meth:`.MultiIndexSet.from_degree```  :py:meth:`.MultiIndexSet.from_degree`
+Attribute  :code:`py:attr:`    ``:py:attr:`.MultiIndexSet.exponents```    :py:attr:`.MultiIndexSet.exponents`
+=========  ==================  =========================================  =====================================
+
+.. important::
+
+    Precede the object identifier with a dot indicating that it is relative
+    to the ``minterpy`` package.
+
+Other projects' documentation cross-references
+##############################################
+
+.. note::
+
+   Check the variable ``intersphinx_mapping`` inside the ``conf.py`` file
+   of the Sphinx documentation for updated list of mappings.
+
 Best-practice recommendations
 #############################
 
@@ -161,8 +195,26 @@ Best-practice recommendations
   of a page source. See the source of this page for example.
 - Try to be descriptive with what being cross-referenced; use custom link title
   if necessary.
+- When you cross-reference a ``minterpy``  API element anywhere
+  in the documentation, try to provide a context on why the element
+  is being cross-referenced.
+
+  For example, instead of writing:
+
+    Finally, we call the monomials :math:`x^\alpha = \prod_{i=1}^m x^{\alpha_i}_{i}`, :math:`\alpha \in A` the
+    *canonical basis* (see :py:class:`.CanonicalPolynomial`) of :math:`\Pi_{A}`.
+
+  write:
+
+    Finally, we call the monomials :math:`x^\alpha = \prod_{i=1}^m x^{\alpha_i}_{i}`, :math:`\alpha \in A` the
+    *canonical basis* of :math:`\Pi_{A}`.
+
+    .. SEEALSO::
+
+       In ``minterpy``, the canonical polynomial basis is implemented as :py:class:`.CanonicalPolynomial` class.
 
 .. _link-target: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#hyperlinks
-.. _`Wikipedia article`: https://en.wikipedia.org/wiki/Curse_of_dimensionality
-.. _`DeepAI article`: https://deepai.org/machine-learning-glossary-and-terms/curse-of-dimensionality
+.. _Wikipedia article: https://en.wikipedia.org/wiki/Curse_of_dimensionality
+.. _DeepAI article: https://deepai.org/machine-learning-glossary-and-terms/curse-of-dimensionality
 .. _autosectionlabel: https://www.sphinx-doc.org/en/master/usage/extensions/autosectionlabel.html
+.. _Python domain: https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#cross-referencing-python-objects

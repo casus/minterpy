@@ -107,7 +107,7 @@ Best-practice recommendations
   Use, instead, the nearest or the most relevant heading to the equation
   as an anchor.
   See the guidelines of
-  :ref:`section heading cross-references <developers/contrib-doc/contrib-doc-guidelines/rest-based-doc/cross-references:Section headings cross-references>`
+  :ref:`section heading cross-references <developers/contrib-doc/contrib-doc-guidelines/rest-based-doc/cross-ref:Section headings cross-references>`
   for details.
 
 
