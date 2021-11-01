@@ -31,5 +31,6 @@ in the documentation and how they should be used in the documentation.
    admonitions
    bibliography
    code-examples
+   cross-references
 
 .. _Jupyter notebooks: https://jupyter.org/
