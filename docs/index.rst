@@ -24,7 +24,7 @@ machine learning regularisation, data reconstruction, computational solutions in
    :maxdepth: 2
 
    Overview <overview/index>
-   Getting Started <getting_started/index>
+   Getting Started <getting-started/index>
    How-to <howto/index>
    Fundamentals <fundamentals/index>
    API reference <api/index>
