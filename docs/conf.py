@@ -50,7 +50,7 @@ intersphinx_mapping = {
 }
 
 # bibtex config
-bibtex_bibfiles = ["refs.bib"]
+bibtex_bibfiles = ["bibliography.bib"]
 
 # configure numpydoc
 

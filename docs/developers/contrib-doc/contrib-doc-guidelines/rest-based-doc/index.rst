@@ -29,5 +29,6 @@ in the documentation and how they should be used in the documentation.
 
    character-width-rule
    admonitions
+   bibliography
 
 .. _Jupyter notebooks: https://jupyter.org/
