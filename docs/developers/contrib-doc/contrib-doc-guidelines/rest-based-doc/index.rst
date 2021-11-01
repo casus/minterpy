@@ -30,5 +30,6 @@ in the documentation and how they should be used in the documentation.
    character-width-rule
    admonitions
    bibliography
+   code-examples
 
 .. _Jupyter notebooks: https://jupyter.org/
