@@ -70,6 +70,9 @@ exclude_patterns = ["_build", "**.ipynb_checkpoints", "Thumbs.db", ".DS_Store", 
 # The reST default role (used for this markup: `text`) to use for all documents.
 default_role = "autolink"
 
+# Make sure label sections are unique
+autosectionlabel_prefix_document = True
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
