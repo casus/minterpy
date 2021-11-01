@@ -32,6 +32,7 @@ in the documentation and how they should be used in the documentation.
    bibliography
    code-examples
    cross-references
+   glossary
    mathematics
 
 .. _Jupyter notebooks: https://jupyter.org/
