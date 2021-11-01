@@ -28,6 +28,6 @@ machine learning regularisation, data reconstruction, computational solutions in
    How-to <howto/index>
    Fundamentals <fundamentals/index>
    API reference <api/index>
-   Contributing <contributing/index>
+   Developers <developers/index>
    Glossary <glossary>
 

@@ -1,6 +1,6 @@
-############################
-Contributing to ``minterpy``
-############################
+################
+Developers Guide
+################
 
 .. todo::
 
@@ -12,6 +12,7 @@ Contributing to ``minterpy``
 .. toctree::
    :maxdepth: 4
 
-   about_us
+   code-of-conduct
    contributing_to_code
    contributing_to_documentation
+   about_us
