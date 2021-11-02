@@ -40,10 +40,9 @@ Fundamentals of ``minterpy``
    :maxdepth: 4
 
    introduction
-   polynomial_bases
-   interpolation_on_unisolvent_nodes
-   multivariate_dds
-   interpolation_evaluation
-   interpolation_differentiation
+   polynomial-bases
+   interpolation-on-unisolvent-nodes
+   multivariate-dds
+   interpolation-evaluation
    transformation
-   barycentric_transformation
+   barycentric-transformation
