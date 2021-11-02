@@ -16,4 +16,4 @@ Glossary
       A set containing the exponents of multivariate polynomials.
       Capital letters (e.g., :math:`A`, :math:`B`, :math:`C`) are used to denote the set.
 
-      See :ref:`fundamentals/polynomial_bases:Multi-index set` for details.
+      See :ref:`fundamentals/polynomial-bases:Multi-index set` for details.

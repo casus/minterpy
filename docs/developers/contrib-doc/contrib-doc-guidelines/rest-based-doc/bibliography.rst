@@ -2,7 +2,7 @@
 Bibliographic citations
 #######################
 
-A bibliographic citation is a special case of :doc:`cross-referencing <cross-references>`.
+A bibliographic citation is a special case of :doc:`cross-referencing <cross-ref>`.
 Specifically, it cross-references external scientific works
 such as articles, books, or reports.
 You need to include any relevant scientific works in the ``minterpy`` documentation
