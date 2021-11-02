@@ -1,6 +1,6 @@
-##################
-Minterpy Reference
-##################
+##########################
+``minterpy`` API Reference
+##########################
 
 :Release: |version|
 :Date: |today|
