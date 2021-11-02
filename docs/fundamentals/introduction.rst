@@ -1,6 +1,6 @@
-============
+############
 Introduction
-============
+############
 
 .. todo::
 
@@ -12,12 +12,15 @@ Introduction
    - Curse of dimensionality
    - Differentiating aspects of ``minterpy``
 
+   What's written below is the older mathematical introduction to ``minterpy``.
+   While quite comprehensive, it is rather dense and can be splitted into
+   different parts of the documentation.
 
-In this section we present the mathematical concepts and conventions, the implementation of ``minterpy`` is based on.
+In this section we present the mathematical concepts and conventions,
+the implementation of ``minterpy`` is based on.
 
 Multivariate Polynomial Interpolation - A Short Survey
-======================================================
-
+######################################################
 
 Polynomial interpolation goes back to Newton, Lagrange, and others\ :footcite:`meijering2002`,
 and its fundamental importance for mathematics and computing is undisputed.
@@ -109,7 +112,7 @@ to :math:`l_2`-degree instead of :math:`l_{\infty}`-degree MIP reduces the amoun
 precision  compared to tensorial Chebyshev interpolation by about :math:`\sim 5 \cdot 10^7` samples in that case.
 
 Newton and Lagrange Interpolation on Unisolvent Nodes
-=====================================================
+#####################################################
 
 For :math:`A= A_{m,n,p}`, :math:`m,n \in \mathbb{N}`, :math:`p\geq1` we assign the **unisolvent nodes**
 (See :doc:`../api/core/grid`) :math:`P_A` given by choosing :math:`n+1` **genrerating nodes**

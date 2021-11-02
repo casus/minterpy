@@ -5,7 +5,7 @@ Multivariate divided difference scheme (DDS)
 .. todo::
 
    Multivariate DDS is central to the whole ``minterpy`` operation,
-   it is important somehow to _demistify_ it.
+   it is important somehow to *demistify* it.
    In this page, all aspects related to the multivariate DDS should be defined
    and explained from the data structure used, construction, and operation.
 
@@ -19,5 +19,5 @@ Multi-index tree
 Construction
 ############
 
-Example
-#######
+Examples
+########
