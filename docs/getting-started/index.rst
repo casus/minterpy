@@ -16,3 +16,9 @@ Getting started with ``minterpy``
    - Part 2: One-dimensional interpolation (make sure users are convinced that it works for the most simple problems while introducing ``minterpy`` basic usage, say ``mp.interpolate``)
    - Part 3: Multi-dimensional interpolation (it works for one-dimension, it also works for higher-dimensions, introduce other aspects of ``minterpy`` not apparent in one-dimensional problem)
    - Part 4: Interpolator objects (this is also an exposed interface for users, so it might be good idea to introduce how to create and handle such objects)
+
+.. toctree::
+   :maxdepth: 3
+
+   installation
+   one-dimensional-interpolation
