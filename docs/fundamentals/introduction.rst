@@ -90,7 +90,7 @@ iii) The unisolvent nodes :math:`P_A` that scale sub-exponentially with the spac
      :math:`|P_A| \in o(n^m)` and guarantee uniform approximation of even strongly varying functions (avoiding over
      fitting) as the Runge function :math:`f_R(x) = 1/(1+\|x\|_2^2)` by fast (exponential) approximation rates.
 
-In fact, the results of\ :footcite:`hecht2020` suggest that the therein presented algorithm MIP resolves issues i) - iii)
+In fact, the results of\ :footcite:`Hecht2020` suggest that the therein presented algorithm MIP resolves issues i) - iii)
 by choosing :math:`p=2`, i.e., yields
 :math:`|P_{A_{m,n,2}}| \approx \frac{(n+1)^m }{\sqrt{\pi m}} (\frac{\pi \mathrm{e}}{2m})^{m/2} \in o(n^m)` and
 
@@ -154,7 +154,7 @@ Finally, we call the monomials :math:`x^\alpha = \prod_{i=1}^m x^{\alpha_i}_{i}`
 
 
 Indeed, in dimension :math:`m=1` this reduces to the classic definition of Lagrange and Newton polynomials\ :footcite:`gautschi2012, stoer2002, trefethen2019`.
-Moreover, also the Newton and Lagrange polynomials are bases of :math:`\Pi_A`\ :footcite:`hecht2020`.
+Moreover, also the Newton and Lagrange polynomials are bases of :math:`\Pi_A`\ :footcite:`Hecht2020`.
 Therefore, the unique Lagrange interpolant :math:`Q_{f,A} \in \Pi_A` of a function
 :math:`f : \Omega \longrightarrow \mathbb{R}` on :math:`P_A` is given by
 
@@ -178,7 +178,7 @@ can be determined in :math:`\mathcal{O}(|A|^2)` operations requiring :math:`\mat
 
 Earlier versions of this statement were limited to the case where :math:`P_A` is given by a (sparse) tensorial grid\ :footcite:`Dyn2014`.
 In contrast, Theorem 1 also holds for our generalised notion of non-tensorial unisolvent nodes.
-**The DDS** functions realises a concrete (recursive divided difference scheme) implementation  of the algorithm explicitly described in\ :footcite:`hecht2020`.
+**The DDS** functions realises a concrete (recursive divided difference scheme) implementation  of the algorithm explicitly described in\ :footcite:`Hecht2020`.
 
 Once the interpolant :math:`Q_{f,A}` is given in Newton form the following crucial consequences applies.
 
@@ -189,7 +189,7 @@ Let :math:`Q(x) = \sum_{\alpha \in A}c_\alpha N_{\alpha} \in \Pi_A`,
 i) It requires :math:`\mathcal{O}(m|A|)` operations and :math:`\mathcal{O}(|A|)` storage to evaluate :math:`Q` at :math:`x_0`.
 ii) It requires :math:`\mathcal{O}(nm|A|)` operations and :math:`\mathcal{O}(|A|)` storage to evaluate the partial derivative :math:`\partial_{x_j}Q`, :math:`1 \leq j \leq m` at :math:`x_0`.
 
-In fact, all three basis  Newton, Lagrange and Canonical basis are inter-linked :cite:`hecht2020`.
+In fact, all three basis  Newton, Lagrange and Canonical basis are inter-linked\ :footcite:`Hecht2020`.
 
 **Theorem 3 (Transformations)**
 Let :math:`A= A_{m,n,p}` and :math:`P_A\subseteq \mathbb{R}^m` be as in Eq. :eq:`eq_A`, :eq:`eq_PA`, :math:`f : \mathbb{R}^m \longrightarrow  \mathbb{R}` be a function and :math:`F=\big(f(p_\alpha)\big)_{\alpha \in A}\in \mathbb{R}^{|A|}`. Then:
