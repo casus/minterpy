@@ -173,7 +173,7 @@ Then, the Newton coefficients :math:`C = (c_{\alpha})_{\alpha \in A} \in \mathbb
 
 can be determined in :math:`\mathcal{O}(|A|^2)` operations requiring :math:`\mathcal{O}(|A|)` storage.
 
-Earlier versions of this statement were limited to the case where :math:`P_A` is given by a (sparse) tensorial grid :cite:`dyn2014`.
+Earlier versions of this statement were limited to the case where :math:`P_A` is given by a (sparse) tensorial grid\ :footcite:`Dyn2014`.
 In contrast, Theorem 1 also holds for our generalised notion of non-tensorial unisolvent nodes.
 **The DDS** functions realises a concrete (recursive divided difference scheme) implementation  of the algorithm explicitly described in\ :footcite:`hecht2020`.
 
