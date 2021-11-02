@@ -17,7 +17,7 @@ What is ``minterpy``?
    - Who is it for? Who is the intended audience?
    - Why should you use it? Include some common use cases.
 
-The Python package ``minterpy`` is based on an optimised re-implementation of
+The Python package ``minterpy`` is based on an optimized re-implementation of
 the multivariate interpolation prototype algorithm (*MIP*) by Hecht et al.\ :footcite:`hecht2020`
 and thereby provides software solutions that lift the curse of dimensionality from interpolation tasks.
 While interpolation occurs as the bottleneck of most computational challenges,
@@ -42,7 +42,7 @@ to a broad field of computational challenges, including but not limited to:
 and allows for further development and improvement by the Python community.
 
 How the documentation is organized
-==================================
+##################################
 
 .. todo::
 
@@ -50,7 +50,7 @@ How the documentation is organized
    structure of ``minterpy`` each with a brief description.
 
 How to cite
-===========
+###########
 
 .. todo::
 
