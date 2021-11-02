@@ -27,16 +27,16 @@ While interpolation occurs as the bottleneck of most computational challenges,
 by adding further functionality and modules that provide novel digital solutions
 to a broad field of computational challenges, including but not limited to:
 
- - multivariate interpolation
- - non-linear polynomial regression
- - numerical integration
- - global (black-box) optimization
- - surface level-set methods
- - non-periodic spectral partial differential equations (PDE) solvers on
-   flat and complex geometries
- - machine learning regularization
- - data reconstruction
- - computational solutions in algebraic geometry
+- multivariate interpolation
+- non-linear polynomial regression
+- numerical integration
+- global (black-box) optimization
+- surface level-set methods
+- non-periodic spectral partial differential equations (PDE) solvers on
+  flat and complex geometries
+- machine learning regularization
+- data reconstruction
+- computational solutions in algebraic geometry
 
 ``minterpy`` is an open-source Python package that makes it easily accessible
 and allows for further development and improvement by the Python community.
@@ -58,13 +58,16 @@ How to cite
    an attribution, most probably to the main reference paper.
    Because there is no article in JOSS yet, then select another paper.
 
+Full table of contents
+######################
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    Getting Started <getting-started/index>
    How-to <howto/index>
    Fundamentals <fundamentals/index>
-   API reference <api/index>
+   API Reference <api/index>
    Developers <developers/index>
    Glossary <glossary>
    Todo list <TODO>
