@@ -35,7 +35,8 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinx.ext.autosectionlabel",
-    "sphinxcontrib.bibtex"
+    "sphinxcontrib.bibtex",
+    "nbsphinx"
 ]
 
 
@@ -72,6 +73,9 @@ default_role = "autolink"
 
 # Make sure label sections are unique
 autosectionlabel_prefix_document = True
+
+# Math configurations
+math_eqref_format = 'Eq. ({number})'
 
 # -- Options for HTML output -------------------------------------------------
 
