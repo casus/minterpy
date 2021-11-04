@@ -476,48 +476,6 @@ def lp_norm_for_exponents(exp_vect, p):
         return a * np.linalg.norm(exp_vect / a, p)
 
 
-@njit(INT(I_2D, FLOAT, INT), cache=True)
-def fill_exp_matrix(placeholder, lp_degree, poly_degree):
-    """Generates the exponent matrix.
-
-    :param placeholder: the placeholder array for storing exponents.
-    :param lp_degree: the lp_degree of the multi index set
-    :param poly_degree: the degree of the polynomial
-    :return: the number of exponents filled in placeholder.
-
-    Notes
-    -----
-    We do not know the number of exponents apriori, therefore the placeholder array is usually larger than required.
-
-    """
-    max_nr_exp, spatial_dimension = placeholder.shape
-    idx_last_dim = spatial_dimension - 1
-    # initialise the first exponent (all 0)
-    curr_exp = placeholder[0, :]  # slice of exponent array (view)
-    curr_exp[:] = 0  # assign all values of in this view
-    ctr = 0
-    for ctr in range(1, max_nr_exp):
-        # valid next exponent found. start increasing in the first dimension again:
-        dim_pointer = 0
-        # move to the next position:
-        prev_exp = curr_exp
-        # duplicate the last entry:
-        curr_exp = placeholder[ctr, :]  # slice of exponent array (view)
-        curr_exp[:] = prev_exp  # assign all values of in this view
-
-        # try to increase the exponent in the current dim
-        curr_exp[dim_pointer] += 1
-        while lp_norm_for_exponents(curr_exp, lp_degree) > poly_degree:
-            # the generated multi index does not belong to the requested lp_degree any more
-            # -> "backtrack" and find next bigger
-            if dim_pointer == idx_last_dim:  # no larger exponent can be generated
-                return ctr  # equal to the amount of filled exponents
-            curr_exp[dim_pointer] = 0
-            dim_pointer += 1
-            curr_exp[dim_pointer] += 1
-    return ctr + 1  # equal to the amount of filled exponents
-
-
 @njit(void(F_3D, I_2D), cache=True)
 def compute_grad_c2c(grad_c2c: np.ndarray, exponents: np.ndarray):
     """Computes the gradient operator from canonical basis to canonical basis.

@@ -35,7 +35,8 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinx.ext.autosectionlabel",
-    "sphinxcontrib.bibtex"
+    "sphinxcontrib.bibtex",
+    "nbsphinx"
 ]
 
 
@@ -50,7 +51,7 @@ intersphinx_mapping = {
 }
 
 # bibtex config
-bibtex_bibfiles = ["refs.bib"]
+bibtex_bibfiles = ["bibliography.bib"]
 
 # configure numpydoc
 
@@ -69,6 +70,12 @@ exclude_patterns = ["_build", "**.ipynb_checkpoints", "Thumbs.db", ".DS_Store", 
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 default_role = "autolink"
+
+# Make sure label sections are unique
+autosectionlabel_prefix_document = True
+
+# Math configurations
+math_eqref_format = 'Eq. ({number})'
 
 # -- Options for HTML output -------------------------------------------------
 
