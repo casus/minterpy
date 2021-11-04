@@ -17,8 +17,40 @@ Getting started with ``minterpy``
    - Part 3: Multi-dimensional interpolation (it works for one-dimension, it also works for higher-dimensions, introduce other aspects of ``minterpy`` not apparent in one-dimensional problem)
    - Part 4: Interpolator objects (this is also an exposed interface for users, so it might be good idea to introduce how to create and handle such objects)
 
+Have you installed ``minterpy``?
+Read on how to install it before moving on.
+
+Installation
+############
+
+Requirements
+============
+
+Installing via conda
+====================
+
+Installing from source code
+===========================
+
+Testing the installation
+========================
+
+Help?!
+######
+
+What's next
+###########
+
+The best way to learn about ``minterpy`` is to read and play around
+with the tutorials below.
+
+Once you're more familiar with ``minterpy`` and would like to achieve a particular task,
+be sure to check out the :doc:`/howto/index` Guides!
+
+Tutorials table of contents
+###########################
+
 .. toctree::
    :maxdepth: 3
 
-   installation
-   one-dimensional-interpolation
+   one-dimensional-function-interpolation
