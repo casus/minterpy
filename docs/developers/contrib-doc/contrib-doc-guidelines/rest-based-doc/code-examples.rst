@@ -131,7 +131,7 @@ For example:
 
 .. code-block:: rest
 
-   See the code example :ref:`code-example`.
+   See the code example :ref:`code example <code-example>`.
 
 which will be rendered as:
 
