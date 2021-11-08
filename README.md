@@ -1,6 +1,6 @@
 # minterpy
+> "to minterpy *sth.* (transitive verb) -- to produce a multivariate polynomial representation of *sth.* which lifts the curse of dimensionality."
 
-Lifting the curse of dimensionality.
 
 
 ``minterpy`` is an open-source python package for multivariate generalisations of the classical Newton and Lagrange interpolation schemes as well as related tasks. It is based on an optimized re-implementation of
@@ -57,25 +57,26 @@ One shall **not** use :code:`python setup.py install`, since one shall not assum
 ## Quickstart
 With ``minterpy`` one can easily interpolate a given function. For instance, take the function :math:`f(x) = x\sin(10x)`in one spacial dimentsion:
 
-.. code-block:: python
+```python
 
     import numpy as np
     import minterpy as mp
 
     def test_function(x):
         return x*sin(10*x)
+```
 
 In order to ``minterpy`` the function :code:`test_function` one can use the top-level function :code:`interpolate`:
 
-.. code-block:: python
+```python
 
     interpolant = mp.interplate(test_function,spatial_dimension=1, poly_degree=64)
+```
 
 Here, interpolant is a callable function, which can be used as a representation of :code:`test_function`.
 Beside the keyword argument :code:`spatial_dimension`, which is self-explanatory, there is the keyword :code:`poly_degree`, which denotes the degree of the underlying polynomial. Therefore, one may adjust this parameter in order to get higher accuracy. For the example above, a degree of 64 produces an interpolant which reproduces the :code:`test_function` almost up to machine precision:
 
-.. code-block::
-
+```python
     import matplotlib.pylab as plt
 
     x = np.linspace(-1,1,100)
@@ -84,12 +85,13 @@ Beside the keyword argument :code:`spatial_dimension`, which is self-explanatory
     plt.plot(x,test_function(x),"k.",label="test function")
     plt.legend()
     plt.show()
+```
 
 ![Compare test function with its interpolant](docs/assets/test_function1D.png)
 For a more comprehensive examples, see the [tutorial](link-to-tutorials) section of the ``minterpy`` documentation.
 
 ## Testing
-After installation, it is recommended to at least run the unit tests of ``minterpy``, where we use [`pytest`]((https://docs.pytest.org/en/6.2.x/) to run the tests. If you want to run all tests, just hit
+After installation, it is recommended to at least run the unit tests of ``minterpy``, where we use [`pytest`](https://docs.pytest.org/en/6.2.x/) to run the tests. If you want to run all tests, just hit
 ```bash
 pytest [-vvv]
 ```
@@ -132,7 +134,7 @@ This package would not be possible without many contributions done from the comm
 
 
 
-## :construction: :construction:  Useful badges:
+
 
 [conda]: https://docs.conda.io/
 [pre-commit]: https://pre-commit.com/
@@ -145,6 +147,9 @@ This package would not be possible without many contributions done from the comm
 [HZDR]: https://www.hzdr.de
 [MPI-CBG]: https://www.mpi-cbg.de
 [CSBD]: https://www.csbdresden.de
+
+
+## :construction: :construction:  Useful badges:
 
 [![Actions Status][actions-badge]][actions-link]
 [![Documentation Status][rtd-badge]][rtd-link]
@@ -173,3 +178,10 @@ This package would not be possible without many contributions done from the comm
 [rtd-badge]:                https://readthedocs.org/projects/minterpy/badge/?version=latest
 [rtd-link]:                 https://minterpy.readthedocs.io/en/latest/?badge=latest
 [sk-badge]:                 https://scikit-hep.org/assets/images/Scikit--HEP-Project-blue.svg
+
+## :construction: :construction: Todos
+- insert missing links
+- add sponsor logos (CASUS, HZDR, CSBD?, MPI-CBG?)
+- write shorter installation section
+- write more comprehensive quickstart (maybe higher dimensionality)
+-
