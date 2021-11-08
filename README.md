@@ -1,6 +1,5 @@
 # minterpy
-> "to minterpy *sth.* (transitive verb) -- to produce a multivariate polynomial representation of *sth.* which lifts the curse of dimensionality."
-
+> "to minterpy *sth.* (transitive verb) -- to produce a multivariate polynomial representation of *sth.* ." -- The minterpy developers in ["Lifting the curse of dimensionality"](link-to-math-intro)
 
 
 ``minterpy`` is an open-source python package for multivariate generalisations of the classical Newton and Lagrange interpolation schemes as well as related tasks. It is based on an optimized re-implementation of
