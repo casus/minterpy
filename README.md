@@ -111,7 +111,7 @@ Contributions to the ``minterpy`` packages are highly wellcome. For that it is r
 ## Credits and contributers
 This work was partly funded by the Center for Advanced Systems Understanding (CASUS) that is financed by Germany’s Federal Ministry of Education and Research (BMBF) and by the Saxon Ministry for Science, Culture and Tourism (SMWK) with tax funds on the basis of the budget approved by the Saxon State Parliament.
 
-#### Main code development
+#### the minterpy development team
 The core development of the ``minterpy`` is currently done by a small team at the Center for Advanced Systems Understanding ([CASUS]), namely
 
 - Uwe Hernandez Acosta ([HZDR]/[CASUS]) (u.hernandez@hzdr.de)
@@ -140,6 +140,15 @@ This package would not be possible without many contributions done from the comm
 
   - the guy who will show me how to include a list of contributers on github/gitlab
 
+
+## Citing
+:construction: Add here the informations how to cite ``minterpy``.
+
+## References
+:construction: Add here the relevant references the code is based on. Maybe use a [REFERENCES.bib] for that.
+
+## License
+[MIT](LICENSE) © minterpy development team
 
 
 
@@ -192,4 +201,4 @@ This package would not be possible without many contributions done from the comm
 - add sponsor logos (CASUS, HZDR, CSBD?, MPI-CBG?)
 - write shorter installation section
 - write more comprehensive quickstart (maybe higher dimensionality)
--
+- discuss the License we want to use
