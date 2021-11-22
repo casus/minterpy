@@ -139,7 +139,7 @@ def assert_interpolant_almost_equal(interpolant1,interpolant2):
 
 # fixtures for spatial dimension
 
-spatial_dimensions = [1,3]
+spatial_dimensions = [1,5]
 
 @pytest.fixture(params = spatial_dimensions)
 def SpatialDimension(request):
@@ -147,7 +147,7 @@ def SpatialDimension(request):
 
 # fixture for polynomial degree
 
-polynomial_degree = [1,3]
+polynomial_degree = [1,4]
 
 @pytest.fixture(params = polynomial_degree)
 def PolyDegree(request):
