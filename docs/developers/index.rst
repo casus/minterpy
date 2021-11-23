@@ -17,4 +17,4 @@ Developers Guide
    code-of-conduct
    Code base contribution <contrib-code-base/index>
    Documentation contribution <contrib-doc/index>
-   about_us
+   about-us
