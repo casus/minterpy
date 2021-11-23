@@ -162,7 +162,7 @@ The `Python domain`_ allows for cross-referencing most documented objects.
 Before an API element can be cross-referenced,
 its documentation must be available in the :doc:`/api/index`.
 
-Refer to the to the table for some usages and examples.
+Refer to the to the table below for some usages and examples.
 
 =========  ==================  =========================================  =====================================
 Element    Role                Example                                    Rendered as
@@ -181,6 +181,26 @@ Attribute  :code:`py:attr:`    ``:py:attr:`.MultiIndexSet.exponents```    :py:at
 
 Other projects' documentation cross-references
 ##############################################
+
+Documentation from other projects (say, ``NumPy``, ``Scipy``, or ``Matplolib``)
+may be cross-referenced in the ``minterpy`` documentation.
+
+To cross-reference a part or an API element from another project's documentation,
+use the following syntax:
+
+.. code-block:: rest
+
+   :py:<type>:`<mapping_key>.<ref>`
+
+replace ``<type>`` with one of the types listed in the table above,
+``<mapping_key>`` with the key listed in the ``intersphinx_mapping`` variable
+inside the ``conf.py`` file, and ``ref`` with the actual documentation element.
+
+:class:`np:numpy.ndarray`
+
+:class:`python5:collections.abc.Mapping`
+
+This functionality is provided by the `intersphinx`_ extension for Sphinx.
 
 .. note::
 
@@ -218,3 +238,4 @@ Best-practice recommendations
 .. _DeepAI article: https://deepai.org/machine-learning-glossary-and-terms/curse-of-dimensionality
 .. _autosectionlabel: https://www.sphinx-doc.org/en/master/usage/extensions/autosectionlabel.html
 .. _Python domain: https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#cross-referencing-python-objects
+.. _intersphinx: https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html
