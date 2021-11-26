@@ -34,11 +34,9 @@ Contribution guidelines
 This section contains reference guides and best-practice recommendations
 for when you're working with the documentation.
 There are separate guidelines for each document type
-(reStructuredText, Jupyter notebooks, and API documentation).
-
-**Contents**
+(reStructuredText, Jupyter notebooks, and Python docstrings for the API docs).
 
 .. toctree::
    :maxdepth: 2
 
-   Contribution guidelines <contrib-doc-guidelines/index>
+   ./guidelines/index

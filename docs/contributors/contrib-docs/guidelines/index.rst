@@ -7,6 +7,7 @@ Documentation contribution guidelines
 .. toctree::
    :maxdepth: 2
 
-   reST-based documentation <rest-based-doc/index>
-   Notebook-based documentation <ipynb-based-doc>
-   API documentation <api-doc>
+   reST-based docs <rest-based-docs>
+   Jupyter-notebook-based docs <ipynb-based-docs>
+   Python docstrings <py-based-docs>
+   Writing style <writing-style>
