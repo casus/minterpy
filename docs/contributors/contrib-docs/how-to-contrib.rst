@@ -29,20 +29,20 @@ and improve the ``minterpy`` docs:
 
 When you have a suggestion or thing you want to do to improve the docs,
 you should open an issue in the ``minterpy`` repository
-(see :ref:`developers/contrib-doc/how-to-contrib:Creating an issue in the repository` below)
+(see :ref:`contributors/contrib-docs/how-to-contrib:Creating an issue in the repository` below)
 and describe briefly the reasoning.
 This way we can track all the issues regarding the docs as well as your contributions.
 Then you can wait until someone else reviews your suggestion
 (and, if verified, does it for you);
 or you may go ahead make the necessary changes yourself and do a merge request
-(see :ref:`developers/contrib-doc/how-to-contrib:Contributing directly to the docs` below).
+(see :ref:`contributors/contrib-docs/how-to-contrib:Contributing directly to the docs` below).
 
 Before contributing
 ###################
 
 Before making your contribution, we encourage you to consider the following:
 
-- **Read about how** :doc:`the docs is designed </developers/contrib-doc/about-the-doc>`.
+- **Read about how** :doc:`the docs is designed </contributors/contrib-docs/about-the-docs>`.
   You'll notice that we try to consistently distinguish four categories of docs:
   tutorials, how-to guides, fundamentals, and API reference.
   We build the docs around these four categories.
@@ -58,8 +58,8 @@ Before making your contribution, we encourage you to consider the following:
   Second or comment on the issue.
 - **Familiarize yourself with** `Sphinx`_, `reStructuredText (reST)`_,
   and `Jupyter notebooks`_.
-  As explained in the :ref:`About the Docs <developers/contrib-doc/about-the-doc:Tools and frameworks>`,
-  we're using Sphinx to generate the `minterpy` docs.
+  As explained in the :ref:`About the Docs <contributors/contrib-docs/about-the-docs:Tools and frameworks>`,
+  we're using Sphinx to generate the ``minterpy`` docs.
   Most of the docs are written in reST, the default markup language for Sphinx.
   However, the tutorials and how-to guides are full of code examples
   and they are written instead as Jupyter notebooks to capture the outputs directly.
@@ -70,8 +70,139 @@ Before making your contribution, we encourage you to consider the following:
 Docs source structure
 ######################
 
+The ``minterpy`` docs source is part of the ``minterpy`` repository
+and stored in the ``docs`` directory.
+The docs consists of five main (top-level) sections:
+
+- The :doc:`Getting Started Guides </getting-started/index>` (``getting-started``)
+- The :doc:`How-to Guides </how-to/index>` (``how-to``)
+- The :doc:`Fundamentals </fundamentals/index>` (``fundamentals``)
+- The :doc:`API Reference </api/index>` (``api``)
+- The :doc:`Contributors Guide </contributors/index>` (``contributors``)
+
+These five sections correspond to the five top-level directories inside the ``docs`` directory.
+
+.. important::
+
+   The main sections are meant to be stable;
+   changes at this level change the hierarchy of the information we'd like to present to the readers
+   and may require layout modifications as well.
+   A new top-level directories within the ``docs`` should not be added without consulting
+   the ``minterpy`` project maintainers.
+
+Inside each section, contents are organized into *Subsections* and *Pages*.
+*Pages* are individual reStructuredText (reST) document files (with an ``.rst`` extension);
+*Subsections* are directories that group topically-related pages together
+and correspond to subsections within one of the top-level sections.
+
+For example, the :doc:`/contributors/index` has subsections such as
+:doc:`/contributors/contrib-dev/index` and :doc:`/contributors/contrib-docs/index`,
+and individual pages such as :doc:`/contributors/about-us`
+and :doc:`/contributors/code-of-conduct`.
+The docs source reflect that structure as shown below:
+
+.. code-block::
+
+   docs
+   |--- api
+   |--- contributors
+   |    |--- contrib-dev
+   |    |--- contrib-docs
+   |    |--- about-us.rst
+   |    |--- code-of-conduct.rst
+   |    |--- index.rst
+   ...
+
+The file ``index.rst`` in the top ``docs`` directory is the main index (root)
+file of the docs.
+This file defines what you see when you navigate
+to the ``minterpy`` :doc:`docs homepage </index>`.
+Each of the main sections also has its own index file that serves
+as the main page of the section;
+it lists all the pages that belong to that section.
+Some of the subsections inside the main sections may contain
+their own index file as well.
+
 Building the docs locally
 #########################
+
+To build the ``minterpy`` docs locally,
+make sure you've cloned a version of ``minterpy`` from the repository,
+installed it in your system, including all the requirements for the docs.
+You can install the docs requirements from your local ``minterpy`` source directory
+by:
+
+.. code-block:: bash
+
+   $ pip install .[docs]
+
+in Linux or macOS, and:
+
+.. code-block::
+
+   ..:\> pip install .[docs]
+
+in Windows.
+
+Then from the ``docs`` directory, build the HTML docs by invoking the ``make`` command:
+
+.. code-block:: bash
+
+   $ make html
+
+in Linux or macOS, and:
+
+.. code-block::
+
+   ..:\> make.bat html
+
+in Windows.
+
+If you're making modifications to the docs, you need to invoke
+the ``make`` command every time.
+It may be useful to clean the built directory from time to time by invoking
+the following command from the ``docs`` directory:
+
+.. code-block:: bash
+
+   $ make clean
+
+in Linux or macOS, and:
+
+.. code-block::
+
+   ..:\> make.bat clean
+
+in Windows.
+
+.. tip::
+
+   If you don't see your source modifications (after saving them) in the HTML docs,
+   do this cleaning as a first troubleshooting step.
+
+While you're working with the docs, you might prefer to have a live-reload.
+You can use `sphinx-autobuild`_ (part of the docs requirements) to automatically
+rebuild the HTML docs on source changes.
+You need to invoke the following command
+from the main ``minterpy`` source directory
+(*not* from the ``docs`` directory; it's one level above it):
+
+.. code-block:: bash
+
+   $ sphinx-autobuild docs ./docs/build/html
+
+in Linux or mac OS, and:
+
+.. code-block::
+
+   ..:\> sphinx-autobuild docs .\docs\build\html
+
+in Windows.
+
+This will start a local server accessible at the shown address;
+open the address in your web browser.
+sphinx-autobuild watches for any changes in the ``docs`` directory;
+when it detects them, it rebuilds the docs automatically.
 
 Creating an issue in the repository
 ###################################
@@ -86,3 +217,4 @@ Contributing directly to the docs
 .. _reStructuredText (reST): https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
 .. _Jupyter notebooks: https://jupyter-notebook.readthedocs.io/en/stable/notebook.html
 .. _Markdown: https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/Working%20With%20Markdown%20Cells.html
+.. _sphinx-autobuild: https://github.com/executablebooks/sphinx-autobuild
