@@ -68,7 +68,7 @@ Full table of contents
    How-to <how-to/index>
    Fundamentals <fundamentals/index>
    API Reference <api/index>
-   Developers <developers/index>
+   Contributors <contributors/index>
    Glossary <glossary>
    Todo list <TODO>
 
