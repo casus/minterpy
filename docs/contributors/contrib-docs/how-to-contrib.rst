@@ -32,6 +32,7 @@ you should open an issue in the ``minterpy`` repository
 (see :ref:`contributors/contrib-docs/how-to-contrib:Creating an issue in the repository` below)
 and describe briefly the reasoning.
 This way we can track all the issues regarding the docs as well as your contributions.
+
 Then you can wait until someone else reviews your suggestion
 (and, if verified, does it for you);
 or you may go ahead make the necessary changes yourself and do a merge request
