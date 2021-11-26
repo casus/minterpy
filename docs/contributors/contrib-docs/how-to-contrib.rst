@@ -14,7 +14,7 @@ and improve the ``minterpy`` docs:
 
 - **General language improvements**: If you are disturbed by typos, grammatical
   mistakes, or imprecise and misleading writing (we are as well!),
-  help us correct them.
+  help us correct them when you find them in the docs.
 - **Fixing technical errors**: If you find technical errors in the docs
   such as downright wrong statements, broken links, wrong usage examples,
   or missing parameters in the API reference, let us know about them.
@@ -58,7 +58,7 @@ Before making your contribution, we encourage you to consider the following:
   Second or comment on the issue.
 - **Familiarize yourself with** `Sphinx`_, `reStructuredText (reST)`_,
   and `Jupyter notebooks`_.
-  As explained in the :ref:`About the Docs <contributors/contrib-docs/about-the-docs:Tools and frameworks>`,
+  As explained in the :ref:`About the Docs <contributors/contrib-docs/about-the-docs:Frameworks and tools>`,
   we're using Sphinx to generate the ``minterpy`` docs.
   Most of the docs are written in reST, the default markup language for Sphinx.
   However, the tutorials and how-to guides are full of code examples
@@ -68,7 +68,7 @@ Before making your contribution, we encourage you to consider the following:
   be sure to familiarize yourself with the mechanics of the underlying tools.
 
 Docs source structure
-######################
+#####################
 
 The ``minterpy`` docs source is part of the ``minterpy`` repository
 and stored in the ``docs`` directory.
@@ -232,6 +232,15 @@ of the issue with the following (at the very least):
 
 Finally, don't forget to assign "Issue" as the **Type** and "Docs" as the **Label**
 before you click on the **Create Issue** button.
+
+.. tip::
+
+   Creating an issue does not mean you're responsible for actually doing it
+   (unless you want to)!
+   Someone else in the project will verify your issue
+   and, if verified, does it for you.
+   If you want to do it,
+   then assign the issue to yourself using the **Assignee** field.
 
 Contributing directly to the docs
 #################################
