@@ -1,6 +1,6 @@
-################
-Developers Guide
-################
+##################
+Contributors Guide
+##################
 
 .. todo::
 
@@ -15,6 +15,6 @@ Developers Guide
    :maxdepth: 3
 
    code-of-conduct
-   Code base contribution <contrib-code-base/index>
-   Documentation contribution <contrib-doc/index>
+   Development contribution <contrib-dev/index>
+   Documentation contribution <contrib-docs/index>
    about-us
