@@ -206,7 +206,7 @@ You would most probably be more familiar already with Markdown than with reST.
 The figure below illustrates the different components and processes involved
 in building the ``minterpy`` docs.
 
-.. figure:: ./images/minterpy-documentation-tooling.png
+.. figure:: /assets/images/contributors/documentation-tooling.png
   :align: center
 
   The components and processes to build and, eventually, deploy the ``minterpy``
