@@ -35,7 +35,7 @@ Fundamentals of ``minterpy``
      It is easy to confuse users when these different aspects of ``minterpy``
      are all mixed up in the same part of the documentation.
      If this is not always possible, make a clear transition
-     or use an :doc:`/developers/contrib-doc/contrib-doc-guidelines/rest-based-doc/admonitions`.
+     or use an :doc:`/contributors/contrib-docs/contrib-doc-guidelines/rest-based-doc/admonitions`.
    - *Accept (some) repetitions in the documentation* (ARID): documentation is
      not code, so it's okay to repeat something to make a page more self-contained.
      Otherwise, be sure to *cross-reference other parts of the documentation*
