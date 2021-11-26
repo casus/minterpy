@@ -4,7 +4,7 @@ Contributing to the Documentation
 
 On this page, you'll find detailed information on the ``minterpy``
 documentation and how to contribute to it.
-For information on contributing to the code base see :doc:`/developers/contrib-code-base/index`.
+For information on contributing to the code base see :doc:`/contributors/contrib-dev/index`.
 
 About the documentation
 #######################
@@ -15,7 +15,7 @@ of the ``minterpy`` documentation.
 .. toctree::
    :maxdepth: 2
 
-   about-the-doc
+   about-the-docs
 
 How to contribute
 #################
