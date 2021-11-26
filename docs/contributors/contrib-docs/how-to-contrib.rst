@@ -207,6 +207,32 @@ when it detects them, it rebuilds the docs automatically.
 Creating an issue in the repository
 ###################################
 
+Whether you have a suggestion about the docs or you want to change the docs directly,
+you should start by creating a new issue in the `Issue Tracker`_ of the ``minterpy`` `repository`_.
+
+.. figure:: /assets/images/contributors/issue-tracker-docs.png
+  :align: center
+
+  Open a new issue regarding the docs in the `Issue Tracker`_;
+  make sure you've checked the already created issues regarding the docs by
+  using the label filter.
+
+Provide your issue with a descriptive title and then fill in the description
+of the issue with the following (at the very least):
+
+- The docs section (and, when applicable, the page) where the problem occurs
+  or your suggestions apply to.
+- A proposed solution.
+
+.. figure:: /assets/images/contributors/new-issue-docs.png
+  :align: center
+
+  Fill in the new issue form; give a descriptive title, briefly describe
+  the problem or your suggestions about the doc, and write a possible solution.
+
+Finally, don't forget to assign "Issue" as the **Type** and "Docs" as the **Label**
+before you click on the **Create Issue** button.
+
 Contributing directly to the docs
 #################################
 
@@ -218,3 +244,4 @@ Contributing directly to the docs
 .. _Jupyter notebooks: https://jupyter-notebook.readthedocs.io/en/stable/notebook.html
 .. _Markdown: https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/Working%20With%20Markdown%20Cells.html
 .. _sphinx-autobuild: https://github.com/executablebooks/sphinx-autobuild
+.. _repository: https://gitlab.hzdr.de/interpol/minterpy
