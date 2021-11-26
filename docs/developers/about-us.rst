@@ -13,6 +13,9 @@ History
 Project maintainers
 ###################
 
+Project maintainers are the current main developers responsible for ``minterpy``
+and managing its development process.
+
 .. raw:: html
 
    <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove this section -->
@@ -49,6 +52,9 @@ Project maintainers
 
 Contributors
 ############
+
+Contributors are developers and technical writers who made additions to ``minterpy``'s codebase,
+docs, or infrastructure.
 
 .. raw:: html
 
