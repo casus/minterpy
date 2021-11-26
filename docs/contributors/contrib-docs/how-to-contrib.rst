@@ -245,6 +245,12 @@ before you click on the **Create Issue** button.
 Contributing directly to the docs
 #################################
 
+.. TODO::
+
+   This section is still empty. It should synchronize well with the
+   contribution to the codebase because they are very similar.
+   Refer as much as possible to the corresponding section in the contribution
+   to the development.
 
 .. _issues labeled with docs: https://gitlab.hzdr.de/interpol/minterpy/-/issues?scope=all&state=opened&label_name[]=docs
 .. _Issue Tracker: https://gitlab.hzdr.de/interpol/minterpy/-/issues
