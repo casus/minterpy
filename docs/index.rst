@@ -65,13 +65,12 @@ Full table of contents
    :maxdepth: 3
 
    Getting Started <getting-started/index>
-   How-to <howto/index>
+   How-to <how-to/index>
    Fundamentals <fundamentals/index>
    API Reference <api/index>
    Developers <developers/index>
    Glossary <glossary>
    Todo list <TODO>
-
 
 References
 ##########
