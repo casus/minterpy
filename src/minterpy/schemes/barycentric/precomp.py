@@ -425,7 +425,7 @@ def leaf_node_dds(
 
     The results are the factors for every matching split nodes
     between the left and right subtrees.
-    These factors are used in the factorized form of the barycentri
+    These factors are used in the factorized form of the barycentric
     Lagrange-to-Newton transformation operator.
 
     NOTE: only use case is calling this with the identity matrix?!
