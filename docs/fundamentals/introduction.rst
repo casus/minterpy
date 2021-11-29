@@ -16,209 +16,174 @@ Introduction
    While quite comprehensive, it is rather dense and can be splitted into
    different parts of the documentation.
 
+   get the refs upgraded
+
 In this section we present the mathematical concepts and conventions,
 the implementation of ``minterpy`` is based on.
 
-Multivariate Polynomial Interpolation - A Short Survey
-######################################################
+Multivariate polynomial interpolation
+#####################################
 
 Polynomial interpolation goes back to Newton, Lagrange, and others\ :footcite:`meijering2002`,
 and its fundamental importance for mathematics and computing is undisputed.
-Interpolation is based on the fact that, in 1D, one and only one polynomial :math:`Q_{f,n}` of degree :math:`n` can
+Interpolation is based on the fact that, in 1D, one and only one polynomial :math:`Q_{f,A}` of degree :math:`n \in \mathbb{N}` can
 interpolate a function :math:`f : \mathbb{R} \longrightarrow \mathbb{R}` on :math:`n+1` distinct
 *unisolvent interpolation nodes*
-:math:`P_n \subseteq \mathbb{R}` , i.e.,
+:math:`P_A = \{p_i\}_{i \in A} \subseteq \mathbb{R}`, :math:`A=\{0, \ldots, n\}`, i.e.,
 
 .. math::
 
-  Q_{f,n}(p_i) = f(p_i)\,, \quad \text{for all} \quad  p_i \in P_n \,, 0 \leq i \leq n\,.
+  Q_{f,A}(p_i) = f(p_i)\,, \quad \text{for all} \quad  p_i \in P_A \,, i \in A\,.
 
-This makes interpolation fundamentally different from approximation.
-For the latter, the famous *Weierstrass Approximation Theorem*\ :footcite:`weierstrass1885` states
-that any continuous function :math:`f : \Omega =[-1,1]^m \longrightarrow \mathbb{R}`
+This makes interpolation fundamentally different from approximation, see Figure 1.
+
+.. figure:: ./images/1D_interpol.png
+    :align: center
+
+    Figure 1: Interpolation and approximation in 1D. While the interpolant :math:`Q_{f,A}` has to coincide with :math:`f`
+    in the interpolation nodes :math:`p_0,\ldots,p_n` an approximation :math:`Q^*_n` does not have to coincide with :math:`f` at all.
+
+The famous *Weierstrass Approximation Theorem*\ :footcite:`weierstrass1885` states
+that any continuous function :math:`f : \Omega\longrightarrow \mathbb{R}` defined on compact domain, e.g. :math:`\Omega = [-1,1]^m`,
 can be uniformly approximated by polynomials\ :footcite:`debranges1959`.
 However, the Weierstrass Approximation Theorem does not require the polynomials
 to coincide with :math:`f` at all, i.e., it is possible that there is a sequence of multivariate polynomials
-:math:`Q_{f,n}`, :math:`n \in \mathbb{N}` with :math:`Q_{f,n}(x) \not = f(x)` for all :math:`x \in \Omega`,
+:math:`Q_{n}^*`, :math:`n \in \mathbb{N}` with :math:`Q_{n}^*(x) \not = f(x)` for all :math:`x \in \Omega`,
 but still
 
 .. math::
 
-  Q_{f,n} \xrightarrow[n \rightarrow \infty]{} f \quad \text{uniformly on} \quad \Omega\,.
+  Q_{n}^* \xrightarrow[n \rightarrow \infty]{} f \quad \text{uniformly on} \quad \Omega\,.
 
-Even though there are several constructive versions of the Weierstrass Approximation Theorem,
-with the earliest given by Serge Bernstein\ :footcite:`bernstein1912`,
-providing an algorithm for computing such approximations it only delivers
-a slow (inverse linear) convergence rate.
-In 1D, however, interpolation on **Chebyshev and Legendre nodes** is known to
-yield exponential approximation rates\ :footcite:`trefethen2019` for analytic functions,
-which is much faster than what has been shown possible by Weierstrass-type approximations\ :footcite:`bernstein1912`.
-There has therefore been much research into extending :math:`1-`\ D Newton
+
+
+There are several constructive proofs of the Weierstrass approximation theorem, including the prominent version given by Serge Bernstein\ :footcite:`bernstein1912`.
+Although the resulting *Bernstein approximation scheme*
+is universal and has been proven to reach the optimal (inverse-linear) approximation rate for the absolute value function :math:`f(x) = |x|`
+\ :footcite:`bernstein1914`,
+it achieves only slow convergence rates for analytic functions, resulting in a high computational cost in practice.
+
+
+
+There has therefore been much research into extending 1D Newton
 or Lagrange interpolation schemes to multi–dimensions (mD) by maintaining their
 computational power.
-Any approach that addresses this problem has to guarantee uniform approximation of the
-interpolation target :math:`f` and resist the curse of dimensionality. That is:
+Any approach that addresses this problem has to avoid Runge's phenomenon\ :footcite:`runge1901` (overfitting) by guaranteeing uniform approximation of the
+interpolation target :math:`f : \Omega \longrightarrow \mathbb{R}` and resist the *curse of dimensionality*, i.e.,
+reach highly accurate polynomial approximations of general multivariate functions with a sub-exponentially depending demand of data samples :math:`f(p)\,,p \in P_A`, :math:`|P_A|\in o(n^m)`.
 
-.. figure:: ./images/mip_approximation.png
-  :align: center
+Lifting the curse of dimensionality
+###################################
 
-  Approximation errors rates for interpolating the Runge function in dimension m = 4.
-
-We consider the :math:`l_p\text{-norm}\|x\|_p = \big(\sum_{i=1}^m x_i^p\big)^{1/p}`,
-:math:`x = (x_1,\dots,x_m) \in\mathbb{R}^m`, :math:`m \in \mathbb{N}` and the
-**lexicographical ordered multi-index sets** (see :doc:`../api/core/multi_index`).
+To address the problem we consider the :math:`l_p`-norm :math:`\|\alpha\|_p = (\alpha_1^p + \cdots +\alpha_m^p)^{1/p}`,
+:math:`\alpha = (\alpha_1,\dots,\alpha_m) \in\mathbb{N}^m`, :math:`m \in \mathbb{N}` and the
+*lexicographical ordered* :doc:`../api/core/multi_index`.
 
 .. math::
   :label: eq_A
 
-  A=A_{m,n,p} = \left\{\alpha \in \mathbb{N}^m | \|\alpha\|_p \leq n \right\}\,, \quad m,n \in \mathbb{N}\,, p \geq 1\,.
+  A_{m,n,p} = \left\{\alpha \in \mathbb{N}^m : \|\alpha\|_p \leq n \right\}\,, \quad m,n \in \mathbb{N}\,, p \geq 1\,.
 
 This notion generalises the 1D notion of polynomial degree to multi-dimensional :math:`l_p`-degree, i.e, we consider
 the polynomial spaces spanned by all monomials of bounded :math:`l_p`-degree
 
 .. math::
 
-   \Pi_A = \mathrm{span} \left\{ x^\alpha = \prod_{i=1}^mx^{\alpha_i}\right\}\,, \quad \alpha = (\alpha_1,\dots,\alpha_m) \in A\,.
+   \Pi_A =  \left< x^\alpha = x^{\alpha_1}\cdots x^{\alpha_m} : \alpha \in A \right>\,, A =A_{m,n,p}\,.
 
 Given :math:`A=A_{m,n,p}` we ask for:
 
-i) Unisolvent interpolation nodes :math:`P_A` that uniquely determine the interpolant :math:`Q_{f,A} \in \Pi_A` by
-   satisfying :math:`Q_{f,A}(p_{\alpha}) = f(p_{\alpha})`, :math:`\forall p_{\alpha} \in P_A`, :math:`\alpha \in A`.
-ii) An interpolation scheme **MIP/DDS** that computes the uniquely determined interpolant :math:`Q_{f,A} \in \Pi_A`
-    efficiently and numerically accurate (with machine precision).
-iii) The unisolvent nodes :math:`P_A` that scale sub-exponentially with the space dimension :math:`m \in \mathbb{N}`,
-     :math:`|P_A| \in o(n^m)` and guarantee uniform approximation of even strongly varying functions (avoiding over
-     fitting) as the Runge function :math:`f_R(x) = 1/(1+\|x\|_2^2)` by fast (exponential) approximation rates.
+:math:`i)` Unisolvent interpolation nodes :math:`P_A` that uniquely determine the interpolant :math:`Q_{f,A} \in \Pi_A`
+by satisfying :math:`Q_{f,A}(p_{\alpha}) = f(p_{\alpha})`, :math:`\forall p_{\alpha} \in P_A`, :math:`\alpha \in A`.
 
-In fact, the results of\ :footcite:`Hecht2020` suggest that the therein presented algorithm MIP resolves issues i) - iii)
-by choosing :math:`p=2`, i.e., yields
-:math:`|P_{A_{m,n,2}}| \approx \frac{(n+1)^m }{\sqrt{\pi m}} (\frac{\pi \mathrm{e}}{2m})^{m/2} \in o(n^m)` and
+
+:math:`ii)` An interpolation scheme **DDS** that computes the uniquely determined interpolant :math:`Q_{f,A} \in \Pi_A`
+efficiently and numerically accurate (with machine precision).
+
+:math:`iii)` The unisolvent nodes :math:`P_A` that scale sub-exponentially with the space dimension :math:`m \in \mathbb{N}`,
+:math:`|P_A| \in o(n^m)` and guarantee uniform approximation of even strongly varying functions (avoiding over
+fitting) as the Runge function :math:`f_R(x) = 1/(1+\|x\|^2)` by fast (ideally exponential) approximation rates.
+
+.. figure:: ./images/mip_approximation.png
+       :align: center
+
+       Approximation errors rates for interpolating the Runge function in dimension m = 4.
+
+In fact, the results of\ :footcite:`Hecht2020` suggest that the therein presented algorithm **DDS** resolves issues :math:`i) - iii)` for so called *Trefethen functions*
+by choosing Euclidian :math:`l_2`-degree. Thereby,
+:math:`|P_A| \approx \frac{(n+1)^m }{\sqrt{\pi m}} (\frac{\pi \mathrm{e}}{2m})^{m/2} \in o(n^m)`, :math:`A=A_{m,n,2}` scales sub-expomemtially
+with space dimension :math:`m` and
 
 .. math::
 
   Q_{f,A_{m,n,2}} \xrightarrow[n\rightarrow \infty]{} f \quad \text{uniformly and fast (exponentially) on} \,\,\, \Omega\,.
 
 
-Figure 1 shows the approximation rates of the classic Runge function\ :footcite:`runge1901` in dimension :math:`m=4`,
+Figure 2 shows the approximation rates of the classic Runge function\ :footcite:`runge1901` in dimension :math:`m=4`,
 which is known to cause over fitting when interpolated naively.
-There is an optimal approximation rate known\ :footcite:`trefethen2017`,
-which we call the Trefethen rate. Spline-type interpolation is based on works of by Carl de Boor
-et al.\ :footcite:`deboor1972, deboor1977, deboor1978, deboor2010` is limited
+There is an optimal (upper bound) approximation rate
+
+.. math::
+  \|Q_{f,A} - f\| \in \mathcal{O}_{\varepsilon}(\rho^{-n})
+
+known\ :footcite:`trefethen2017`,which we call the *Trefethen rate*.
+
+In fact, the **minterpy DDS** scheme numerically reaches the optimal Trefethen rate.
+In contrast,
+Spline-type interpolation is based on works of Carl de Boor
+et al.\ :footcite:`deboor1972, deboor1977, deboor1978, deboor2010` and limited
 to reach only polynomial approximation rates\ :footcite:`deboor1988`.
 Similarly, interpolation by rational functions as in Floater-Hormann interpolation\ :footcite:`cirillo2017, floater2007`
 and tensorial Chebyshev interpolation, relying on :math:`l_{\infty}`-degree\ :footcite:`gaure2018`,
-miss optimality. In contrast MIP reaches optimality. While relying on interpolating with respect
-to :math:`l_2`-degree instead of :math:`l_{\infty}`-degree MIP reduces the amount of samples needed to reach machine
-precision  compared to tensorial Chebyshev interpolation by about :math:`\sim 5 \cdot 10^7` samples in that case.
+miss optimality.
 
-Newton and Lagrange Interpolation on Unisolvent Nodes
-#####################################################
+Combining sub-exponential node (data) counts with exponential approximation rates, the **DDS** algorithm
+may *lift the curse of dimensionality* for interpolation problems of regular (Trefethen) functions\ :footcite:`Hecht2020`.
 
-For :math:`A= A_{m,n,p}`, :math:`m,n \in \mathbb{N}`, :math:`p\geq1` we assign the **unisolvent nodes**
-(See :doc:`../api/core/grid`) :math:`P_A` given by choosing :math:`n+1` **genrerating nodes**
-:math:`P_i \subseteq \mathbb{R}`, :math:`|P_i| = n+1` for each dimension :math:`1 \leq i \leq m` and generate the
-non-tensorial (non-symmetric) grid
 
-.. math::
-  :label: eq_PA
+The notion of unisolvence
+#########################
 
-  P_A = \left\{  (p_{1,\alpha_1}, \dots, p_{m,\alpha_m}) \in \mathbb{R}^m  \mid  \alpha \in A \,, p_{i,\alpha_i}\in P_i\right\}\,.
 
-By default the  :math:`P_i = (-1)^i\mathrm{Cheb}_n^{0}` are chosen as the Chebyshev extremes\ :footcite:`trefethen2019`,
+The pioneering works of\ :footcite:`kuntz, Guenther, Chung` gave constructions of nodes :math:`P_A` that turn out o be unisolvent
+for downward closed **multi-index sets**  :math:`A= A_{m,n,1}` or :math:`A =A_{m,n,\infty}`
+given by :math:`l_1`- or :math:`l_\infty`-degree.
 
-.. math::
 
-  \mathrm{Cheb}_n^{0} = \left\{ \cos\Big(\frac{k\pi}{n}\Big) \mid 0 \leq k \leq n\right\}\,.
-
-**Give an example of the nodes**
-
-Polynomial interpolation goes back to Newton, Lagrange, and others\ :footcite:`meijering2002`, and its fundamental
-importance for mathematics and computing is undisputed. We derive a multivariate generalisation by defining:
-
-**Definition 1 (Multivariate polynomials)** Let :math:`A= A_{m,n,p}` and :math:`P_A\subseteq \mathbb{R}^m` be as in Eq. :eq:`eq_A`, :eq:`eq_PA`. Then, we define the **multivariate Lagrange polynomials** as
+For multi-index sets :math:`A_{m,n,p}`, :math:`1\leq p \leq \infty` and interpolation nodes
+:math:`P_A=\{p_{\alpha}\}_{\alpha\in A} \subseteq \Omega =[-1,1]^m`
+a set :math:`\{q_{\alpha}\}_{\alpha \in A}` of multivariate polynomials (e.g., :math:`q_{\alpha}(x) = x^\alpha:=x_1^{\alpha_1}\cdots x_m^{\alpha_m}`),
+generating the polynomial space :math:`\Pi_A = \left<q_{\alpha} : \alpha \in A \right>`
+the *multivariate Vandermonde matrix* is given by
 
 .. math::
+  V(P_A) = \big (q_{\beta}(p_{\alpha})\big)_{\alpha,\beta \in A} \in \mathbb{R}^{|A|\times|A|}\,.
 
-  L_{\alpha} \in \Pi_{P_A}\ \quad \text{with}\quad L_{\alpha}(p_\beta)= \delta_{\alpha,\beta}\, , \,\,\, \alpha,\beta \in A\,,
-
-where :math:`\delta_{\cdot,\cdot}` is the Kronecker delta. The **multivariate Newton polynomials**
-(see :doc:`../api/polyBases/newton`) are given by
-
-.. math::
-
-  N_\alpha(x) = \prod_{i=1}^m\prod_{j=0}^{\alpha_i-1}(x_i-p_{j,i}) \,, \quad \alpha \in A\,.
-
-
-Finally, we call the monomials :math:`x^\alpha = \prod_{i=1}^m x^{\alpha_i}_{i}`, :math:`\alpha \in A` the
-**canonical basis** (see :doc:`../api/polyBases/canonical`) of :math:`\Pi_{A}`.
-
-
-Indeed, in dimension :math:`m=1` this reduces to the classic definition of Lagrange and Newton polynomials\ :footcite:`gautschi2012, stoer2002, trefethen2019`.
-Moreover, also the Newton and Lagrange polynomials are bases of :math:`\Pi_A`\ :footcite:`Hecht2020`.
-Therefore, the unique Lagrange interpolant :math:`Q_{f,A} \in \Pi_A` of a function
-:math:`f : \Omega \longrightarrow \mathbb{R}` on :math:`P_A` is given by
+For :math:`q_{\alpha}(x) = x^\alpha`, this results in the classic :math:`V(P_A) = \big (p_{\alpha}^\beta\big)_{\alpha,\beta \in A}`\ :footcite:`gautschi`.
+If :math:`V(P_A)` is (numerically) invertible, then one can interpolate `f` by solving the linear system of equations
 
 .. math::
+  V(P_A)C =F \,,  \quad C= (c_{\alpha})_{\alpha \in A} \,, \,\, \quad F= (f(p_{\alpha}))_{\alpha \in A} \in \mathbb{R}^{|A|}.
 
-  Q_{f,A} = \sum_{\alpha \in A}f(p_{\alpha})L_{\alpha}(x)\,.
-
-However, while the Lagrange polynomials (see :doc:`../api/polyBases/lagrange`) are rather a mathematical concept this
-does not assert how to evaluate the interpolant :math:`Q_{f,A}` on a point
-:math:`x_0 \not \in P_A \subseteq \mathbb{R}^m`. To resolve that problem we have generalised the classic Newton
-interpolation scheme to mD:
-
-**Theorem 1 (Newton Interpolation)** Let :math:`A = A_{m,n,p}` and :math:`P_A\subseteq \mathbb{R}^m` be as in Eq. :eq:`eq_A`, :eq:`eq_PA` and let :math:`f : \Omega \subseteq \mathbb{R}^m \longrightarrow \mathbb{R}` be a function.
-Then, the Newton coefficients :math:`C = (c_{\alpha})_{\alpha \in A} \in \mathbb{R}^{|A|}` of the unique interpolant of :math:`f` in Newton form
+This requires :math:`\mathcal{O}(|A|^r)` operations with :math:`r>2`\ :footcite:`strassen,COPPER`,
+whereas the present **DDS** achieves quadratic runtime :math:`\mathcal{O}(|A|^2)`.
+Indeed,
 
 .. math::
+  Q_{f,A}(x)=\sum_{\alpha \in A}c_\alpha q_\alpha \,\, \in \Pi_A
 
-  Q_{f,A}(x) = \sum_{\alpha \in A} c_\alpha N_{\alpha} (x)\,, \quad Q_{f,A} \in \Pi_A
+yields the unique interpolant of :math:`f` in :math:`P_A`, i.e.,  :math:`Q_{f,A}(p)=f(p)` for all :math:`p \in P_A`.
+We therefore call a set of nodes :math:`P_A` *unisolvent* with respect to :math:`\Pi_A` if and only if :math:`V(P_A)`
+is invertible, i.e., if and only if its null space :math:`\ker V(P_A) =0` is trivial.
+The condition :math:`\ker V(P_A) =0` is equivalent to requiring that there exists no hypersurface :math:`H = Q^{-1}(0)`
+generated by a polynomial :math:`0\not =Q \in \Pi_A` with :math:`P_A \subseteq H`.
+Indeed, the coefficients :math:`C` of such a polynomial would be a non-trivial solution of :math:`V(P_A)C=0`.
 
-can be determined in :math:`\mathcal{O}(|A|^2)` operations requiring :math:`\mathcal{O}(|A|)` storage.
+However, even if :math:`P_A` is unisolvent, the matrix :math:`V` rapidly becomes numerically ill-conditioned for higher dimensions or degrees
+when using the canonical basis :math:`q_{\alpha}(x) =x^\alpha`, :math:`\alpha \in A`.
+While previous approaches addressed this problem by tensorial interpolation\ :footcite:`sauertens, Dyn2014,chebfun`, ``minterpy`` is based on the alternative
+approach realised in the **DDS**.
 
-Earlier versions of this statement were limited to the case where :math:`P_A` is given by a (sparse) tensorial grid\ :footcite:`Dyn2014`.
-In contrast, Theorem 1 also holds for our generalised notion of non-tensorial unisolvent nodes.
-**The DDS** functions realises a concrete (recursive divided difference scheme) implementation  of the algorithm explicitly described in\ :footcite:`Hecht2020`.
-
-Once the interpolant :math:`Q_{f,A}` is given in Newton form the following crucial consequences applies.
-
-**Theorem 2 (Evaluation and Differentiation in Newton form)** Let :math:`A= A_{m,n,p}` and :math:`P_A\subseteq \mathbb{R}^m` be as in Eq. :eq:`eq_A`, :eq:`eq_PA`,  :math:`x_0 \in \mathbb{R}^m`
-Let :math:`Q(x) = \sum_{\alpha \in A}c_\alpha N_{\alpha} \in \Pi_A`,
-:math:`C = (c_{\alpha})_{\alpha \in A} \in \mathbb{R}^{|A|}` be a polynomial in Newton form. Then:
-
-i) It requires :math:`\mathcal{O}(m|A|)` operations and :math:`\mathcal{O}(|A|)` storage to evaluate :math:`Q` at :math:`x_0`.
-ii) It requires :math:`\mathcal{O}(nm|A|)` operations and :math:`\mathcal{O}(|A|)` storage to evaluate the partial derivative :math:`\partial_{x_j}Q`, :math:`1 \leq j \leq m` at :math:`x_0`.
-
-In fact, all three basis  Newton, Lagrange and Canonical basis are inter-linked\ :footcite:`Hecht2020`.
-
-**Theorem 3 (Transformations)**
-Let :math:`A= A_{m,n,p}` and :math:`P_A\subseteq \mathbb{R}^m` be as in Eq. :eq:`eq_A`, :eq:`eq_PA`, :math:`f : \mathbb{R}^m \longrightarrow  \mathbb{R}` be a function and :math:`F=\big(f(p_\alpha)\big)_{\alpha \in A}\in \mathbb{R}^{|A|}`. Then:
-
-i) Lower triangular matrices  :math:`\mathrm{NL}_A, \mathrm{LN}_A  \in \mathbb{R}^{|A|\times |A|}`  can be computed in :math:`\mathcal{O}(|A|^3)` operations, such that
-
-  .. math::
-
-     \mathrm{LN}_A \cdot\mathrm{NL}_A = \mathrm{I} \,, \quad \mathrm{NL}_A  \cdot C_{\mathrm{Newt}} = C_{\mathrm{Lag}}\,, \,\,\,  \mathrm{LN}_A\cdot C_{\mathrm{Lag}} = C_{\mathrm{Newt}} \,,
-
- where :math:`C_{\mathrm{Lag}}=F \in \mathbb{R}^{|A|}` are the **Lagrange coefficients** and :math:`C_{\mathrm{Newt}} \in \mathbb{R}^A` the **Newton coefficients** of :math:`Q_{f,A} \in \Pi_A`.
-
-ii) Upper triangular matrices :math:`\mathrm{CL}_A,\mathrm{CN}_A \in \mathbb{R}^{|A|\times |A|}` can be computed in :math:`\mathcal{O}(|A|^3)` operations, such that
-
-  .. math::
-
-    \mathrm{CL}_A\cdot C_{\mathrm{can}} =C_{\mathrm{Lag}}\,, \quad \mathrm{CN}_A\cdot C_{\mathrm{can}} =C_{\mathrm{Newt}}\,,
-
- where :math:`C_{\mathrm{can}}=(d_{\alpha})_{\alpha \in A}  \in \mathbb{R}^{|A|}` denotes the  **canonical coefficients** of :math:`Q_{f,A}\in \Pi_A`.
-
-**Remark 1** If :math:`P_A` is fixed, all matrices can be precomputed. In fact the columns of :math:`\mathrm{NL}_A` are given by **evaluating the Newton polynomials**, i.e.,
-:math:`C_{\alpha} = (N_{\alpha}(p_\beta))_{\beta \in A} \in \mathbb{R}^{|A|}`. Thereby, Theorem 2 enables efficient and numerically accurate computation.
-Vice versa, the **DDS scheme** from Theorem 1 can be used to interpolate the
-**Lagrange polynomials** :math:`L_{\alpha}`, :math:`\alpha \in A` in Newton form, i.e, the resulting **Newton coefficients** :math:`C_\alpha=(c_{\alpha,\beta})_{\beta \in A} \in \mathbb{R}^{|A|}` are the columns of :math:`\mathrm{LN}_A`.
-In particular, :math:`\mathrm{CL}_A =(x^\alpha(p_{\beta}))_{\alpha,\beta \in A} \in \mathbb{R}^{|A|\times|A|}` coincides with the classic Vandermonde matrix and the columns of :math:`\mathrm{CN}_A` are given by applying **DDS** to the canonical basis :math:`x^\alpha`.
-
-**Remark 2** In fact, all matrices are of recursive triangular sparse structure, which allows numerical accurate precomputation of the occurring sub-matrices, avoiding storage issues. Consequently, the explicit structure of :math:`LN,NL` can be condensed into **barycentric transformations** performing much faster than classic matrix multiplication, resulting in
-fast interpolation, evaluation and even differentiation. A preliminary implementation of these
-fast **barycentric transformations** is already used in the `minterpy` package. Current research aims to improve this technique and deliver further insights on the algorithmic optimality and complexity.
 
 References
 ##########

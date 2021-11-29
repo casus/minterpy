@@ -45,6 +45,7 @@ Fundamentals of ``minterpy``
      But do this only if readers won't be confused
      with any changes of conventions and notations.
 
+
 .. toctree::
    :maxdepth: 3
 
