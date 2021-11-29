@@ -129,7 +129,7 @@ API reference
 
 *API reference* is *information-oriented* docs;
 think of them as a *dictionary* or an *encyclopedia* [#]_
-that describes all the exposed components and machinery of `minterpy`.
+that describes all the exposed components and machinery of ``minterpy``.
 API reference avoids explaining basic concepts
 or providing thorough usage examples;
 its main task is *to describe*.
@@ -188,7 +188,7 @@ There is, however, a notable exception.
 Tutorials and how-to guides are typically full of code examples and the outputs
 (texts or plots) of their execution.
 So instead of writing them in reST, we write them as `Jupyter notebooks`_
-(files with an `.ipynb` extension) in which executable codes, their outputs,
+(files with an ``.ipynb`` extension) in which executable codes, their outputs,
 and narrative markup texts surrounding the codes and outputs may be combined
 in a single document.
 The Sphinx build process will automatically execute the notebooks,
