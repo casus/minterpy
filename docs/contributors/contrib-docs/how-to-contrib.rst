@@ -71,7 +71,7 @@ Docs source structure
 #####################
 
 The ``minterpy`` docs source is part of the ``minterpy`` repository
-and stored in the ``docs`` directory.
+and stored in the |docs directory|_.
 The docs consists of five main (top-level) sections:
 
 - The :doc:`Getting Started Guides </getting-started/index>` (``getting-started``)
@@ -258,5 +258,7 @@ Contributing directly to the docs
 .. _reStructuredText (reST): https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
 .. _Jupyter notebooks: https://jupyter-notebook.readthedocs.io/en/stable/notebook.html
 .. _Markdown: https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/Working%20With%20Markdown%20Cells.html
+.. |docs directory| replace:: ``docs`` directory
+.. _docs directory: https://gitlab.hzdr.de/interpol/minterpy/-/tree/dev/docs
 .. _sphinx-autobuild: https://github.com/executablebooks/sphinx-autobuild
 .. _repository: https://gitlab.hzdr.de/interpol/minterpy

@@ -45,7 +45,7 @@ The best way to learn about ``minterpy`` is to read and play around
 with the tutorials below.
 
 Once you're more familiar with ``minterpy`` and would like to achieve a particular task,
-be sure to check out the :doc:`/howto/index`!
+be sure to check out the :doc:`/how-to/index`!
 
 Tutorials table of contents
 ###########################
