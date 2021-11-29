@@ -1,6 +1,6 @@
-################
-Developers Guide
-################
+##################
+Contributors Guide
+##################
 
 .. todo::
 
@@ -12,9 +12,9 @@ Developers Guide
 **Contents**
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    code-of-conduct
-   Code base contribution <contrib-code-base/index>
-   Documentation contribution <contrib-doc/index>
-   about_us
+   Development contribution <contrib-dev/index>
+   Documentation contribution <contrib-docs/index>
+   about-us
