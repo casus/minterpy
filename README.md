@@ -78,7 +78,7 @@ In order to ``minterpy`` the function :code:`test_function` one can use the top-
 
 ```python
 
-    interpolant = mp.interplate(test_function,spatial_dimension=1, poly_degree=64)
+    interpolant = mp.interpolate(test_function,spatial_dimension=1, poly_degree=64)
 ```
 
 Here, interpolant is a callable function, which can be used as a representation of :code:`test_function`.
@@ -177,24 +177,15 @@ This package would not be possible without many contributions done from the comm
 [![PyPI platforms][pypi-platforms]][pypi-link]
 
 
-
-
-[actions-badge]:            https://gitlab.hzdr.de/interpol/minterpy/workflows/CI/badge.svg
-[actions-link]:             https://gitlab.hzdr.de/interpol/minterpy/actions
 [black-badge]:              https://img.shields.io/badge/code%20style-black-000000.svg
 [black-link]:               https://github.com/psf/black
 [conda-badge]:              https://img.shields.io/conda/vn/conda-forge/minterpy
 [conda-link]:               https://github.com/conda-forge/minterpy-feedstock
-[github-discussions-badge]: https://img.shields.io/static/v1?label=Discussions&message=Ask&color=blue&logo=github
-[github-discussions-link]:  https://gitlab.hzdr.de/interpol/minterpy/discussions
-[gitter-badge]:             https://badges.gitter.im/https://gitlab.hzdr.de/interpol/minterpy/community.svg
-[gitter-link]:              https://gitter.im/https://gitlab.hzdr.de/interpol/minterpy/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
 [pypi-link]:                https://pypi.org/project/minterpy/
 [pypi-platforms]:           https://img.shields.io/pypi/pyversions/minterpy
 [pypi-version]:             https://badge.fury.io/py/minterpy.svg
 [rtd-badge]:                https://readthedocs.org/projects/minterpy/badge/?version=latest
 [rtd-link]:                 https://minterpy.readthedocs.io/en/latest/?badge=latest
-[sk-badge]:                 https://scikit-hep.org/assets/images/Scikit--HEP-Project-blue.svg
 
 ## :construction: :construction: Todos
 - insert missing links
