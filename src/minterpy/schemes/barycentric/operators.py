@@ -16,15 +16,16 @@ from typing import Optional, Union
 import numpy as np
 from _warnings import warn
 
-from .conversion import (merge_trafo_dict,
-                                             merge_trafo_factorised,
-                                             merge_trafo_piecewise)
-from .transformation_fcts import (
-    transform_barycentric_dict, transform_barycentric_factorised,
-    transform_barycentric_piecewise)
-from minterpy.global_settings import ARRAY, FLOAT_DTYPE
 from minterpy.core.ABC import OperatorABC
+from minterpy.global_settings import ARRAY, FLOAT_DTYPE
+
 from ..matrix_operator import MatrixOperator
+from .conversion import (merge_trafo_dict, merge_trafo_factorised,
+                         merge_trafo_piecewise)
+from .transformation_fcts import (transform_barycentric_dict,
+                                  transform_barycentric_factorised,
+                                  transform_barycentric_piecewise)
+
 
 class BarycentricOperator(OperatorABC):
     """Base class for the barycentric transformation operators.
@@ -35,6 +36,7 @@ class BarycentricOperator(OperatorABC):
     array_representation
 
     """
+
     _array_representation: Optional[ARRAY] = None
 
     @property
@@ -52,22 +54,19 @@ class BarycentricOperator(OperatorABC):
     @staticmethod
     @abstractmethod
     def transformation_fct(coeffs_in, coeffs_out_placeholder, *args):
-        """Abstract method for executing the potentially decomposed linear transformation.
-        """
+        """Abstract method for executing the potentially decomposed linear transformation."""
         pass
 
     @staticmethod
     @abstractmethod
     def merging_fct(*args):
-        """Abstract method for reconstructing the global matrix from the decomposition.
-        """
+        """Abstract method for reconstructing the global matrix from the decomposition."""
         pass
 
     def __matmul__(
         self, other: Union[OperatorABC, ARRAY]
     ) -> Union[MatrixOperator, ARRAY]:
-        """Applies the transformation operator on the input.
-        """
+        """Applies the transformation operator on the input."""
         if isinstance(other, OperatorABC):
             # the input is another transformation
             # workaround: return matrix operator constructed from the matrix product

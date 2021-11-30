@@ -50,6 +50,7 @@ def can_eval_mult(x_multiple, coeffs, exponents, result_placeholder):
 # NOTE: the most "fine grained" functions must be defined first
 # in order for Numba to properly infer the function types
 
+
 @njit(FLOAT(F_1D, F_1D), cache=True)  # O(N)
 def single_eval(coefficients, monomial_vals):
     """Evaluation of one polynomial at a single point given the coefficients and monomial evaluations.
@@ -175,7 +176,7 @@ def eval_all_newt_polys(
     for point_nr in range(nr_points):  # evaluate on all given points points
         x_single = x[point_nr, :]
         monomial_vals_placeholder = matrix_placeholder[point_nr]  # row of the matrix
-        if (triangular):
+        if triangular:
             # only evaluate some polynomials to create a triangular output array
             nr_active_polys = point_nr + 1
             # IMPORTANT: initialised empty. set all others to 0!

@@ -6,15 +6,13 @@ from typing import Callable, Optional
 
 import numpy as np
 
-from .tree import MultiIndexTree
-
 from minterpy.global_settings import ARRAY, INT_DTYPE
-from .multi_index import MultiIndexSet
-
-from .utils import sort_lexicographically
 from minterpy.utils import gen_chebychev_2nd_order_leja_ordered
-from .verification import (check_domain_fit, check_shape,
-                                   check_type_n_values)
+
+from .multi_index import MultiIndexSet
+from .tree import MultiIndexTree
+from .utils import sort_lexicographically
+from .verification import check_domain_fit, check_shape, check_type_n_values
 
 __all__ = ["Grid"]
 
@@ -96,6 +94,7 @@ class Grid:
     generating_points : The (multivariate) points the grid is based on.
 
     """
+
     # TODO make all attributes read only!
 
     _unisolvent_nodes: Optional[ARRAY] = None
@@ -107,7 +106,9 @@ class Grid:
         generating_values: Optional[ARRAY] = None,
     ):
         if not isinstance(multi_index, MultiIndexSet):
-            raise TypeError(f"the indices must be given as {MultiIndexSet} class instance")
+            raise TypeError(
+                f"the indices must be given as {MultiIndexSet} class instance"
+            )
         # NOTE: the multi indices of a grid must be NOT be 'lexicographically complete in order to form a basis!
         # HOWEVER: building a MultiIndexTree requires complete indices
         self.multi_index: MultiIndexSet = multi_index
@@ -259,7 +260,7 @@ class Grid:
         .. todo::
             - find out what it does and then document it.
         """
-          # TODO: find more meaningful name
+        # TODO: find more meaningful name
         if self.poly_degree == 0:
             double_degree = 1
         else:

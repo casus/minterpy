@@ -14,19 +14,15 @@ import numpy as np
 from minterpy.core.ABC import MultivariatePolynomialABC, TransformationABC
 from minterpy.schemes.matrix_operator import MatrixOperator
 
-
 __all__ = ["Identity"]
 
 
 def _build_identity_transformation_operator(transformation):
-    return MatrixOperator(
-        transformation, np.identity(len(transformation.multi_index))
-    )
+    return MatrixOperator(transformation, np.identity(len(transformation.multi_index)))
 
 
 class Identity(TransformationABC):
-    """Transformation between same basis.
-    """
+    """Transformation between same basis."""
 
     origin_type = MultivariatePolynomialABC
     target_type = MultivariatePolynomialABC

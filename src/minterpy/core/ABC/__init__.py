@@ -9,14 +9,17 @@ __all__ = []
 
 from . import multivariate_polynomial_abstract
 from .multivariate_polynomial_abstract import *
-__all__+=multivariate_polynomial_abstract.__all__
+
+__all__ += multivariate_polynomial_abstract.__all__
 
 
 from . import transformation_abstract
 from .transformation_abstract import *
-__all__+=transformation_abstract.__all__
+
+__all__ += transformation_abstract.__all__
 
 
 from . import operator_abstract
 from .operator_abstract import *
-__all__+=operator_abstract.__all__
+
+__all__ += operator_abstract.__all__

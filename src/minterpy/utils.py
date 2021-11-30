@@ -5,10 +5,11 @@ from numbers import Real
 
 import numpy as np
 
+from minterpy.core.verification import (check_dtype, convert_eval_output,
+                                        rectify_eval_input,
+                                        rectify_query_points)
 from minterpy.global_settings import DEBUG, FLOAT_DTYPE, INT_DTYPE
 from minterpy.jit_compiled_utils import eval_all_newt_polys, evaluate_multiple
-from minterpy.core.verification import (check_dtype, convert_eval_output,
-                                   rectify_eval_input, rectify_query_points)
 
 
 def lp_norm(arr, p, axis=None, keepdims: bool = False):
@@ -30,6 +31,7 @@ def lp_norm(arr, p, axis=None, keepdims: bool = False):
     if a == 0.0:  # NOTE: avoid division by 0
         return 0.0
     return a * np.linalg.norm(arr / a, p, axis, keepdims)
+
 
 def cartesian_product(*arrays: np.ndarray) -> np.ndarray:
     """
@@ -77,10 +79,11 @@ def cartesian_product(*arrays: np.ndarray) -> np.ndarray:
     dtype = np.result_type(*arrays)
     arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
     for i, a in enumerate(np.ix_(*arrays)):
-        arr[...,i] = a
+        arr[..., i] = a
     return arr.reshape(-1, la)
 
-def lp_sum(arr: np.ndarray,p: Real) -> Real:
+
+def lp_sum(arr: np.ndarray, p: Real) -> Real:
     """
     Sum of powers, i.e. lp-norm to the lp-degree.
 
@@ -100,7 +103,7 @@ def lp_sum(arr: np.ndarray,p: Real) -> Real:
     .. _numpy #5697:
         https://github.com/numpy/numpy/issues/5697
     """
-    return np.sum(np.power(arr,p),axis=-1)
+    return np.sum(np.power(arr, p), axis=-1)
 
 
 def chebychev_2nd_order(n: int):  # 2nd order

@@ -6,9 +6,10 @@ Module of the NewtonPolyomial class
 """
 
 from minterpy.global_settings import DEBUG
+from minterpy.utils import newt_eval
+
 from ..core.ABC.multivariate_polynomial_abstract import \
     MultivariatePolynomialSingleABC
-from minterpy.utils import newt_eval
 from ..core.verification import verify_domain
 
 __all__ = ["NewtonPolynomial"]

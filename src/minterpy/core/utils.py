@@ -9,14 +9,17 @@ from minterpy.global_settings import DEFAULT_LP_DEG, INT_DTYPE
 from minterpy.jit_compiled_utils import (fill_match_positions,
                                          index_is_contained,
                                          lex_smaller_or_equal)
-from minterpy.utils import lp_norm,cartesian_product,lp_sum
+from minterpy.utils import cartesian_product, lp_norm, lp_sum
 
 
 def _get_poly_degree(exponents, lp):
     norms = lp_norm(exponents, lp, axis=1)
     return norms.max()
 
-def get_exponent_matrix(spatial_dimension: int, poly_degree: int, lp_degree: Union[float, int]) -> np.ndarray:
+
+def get_exponent_matrix(
+    spatial_dimension: int, poly_degree: int, lp_degree: Union[float, int]
+) -> np.ndarray:
     """
     Generate exponent matrix.
 
@@ -34,17 +37,27 @@ def get_exponent_matrix(spatial_dimension: int, poly_degree: int, lp_degree: Uni
 
     """
     if lp_degree == np.inf:
-        right_choices = cartesian_product(*[np.arange(poly_degree+1,dtype=INT_DTYPE)]*spatial_dimension)
+        right_choices = cartesian_product(
+            *[np.arange(poly_degree + 1, dtype=INT_DTYPE)] * spatial_dimension
+        )
     else:
-        candidates_without_diag = cartesian_product(*[np.arange(poly_degree,dtype=INT_DTYPE)]*spatial_dimension)
-        candidates =np.vstack((candidates_without_diag,np.diag([INT_DTYPE(poly_degree)]*spatial_dimension)))
-        cond =  lp_sum(candidates,lp_degree)<=poly_degree**lp_degree
+        candidates_without_diag = cartesian_product(
+            *[np.arange(poly_degree, dtype=INT_DTYPE)] * spatial_dimension
+        )
+        candidates = np.vstack(
+            (
+                candidates_without_diag,
+                np.diag([INT_DTYPE(poly_degree)] * spatial_dimension),
+            )
+        )
+        cond = lp_sum(candidates, lp_degree) <= poly_degree ** lp_degree
         right_choices = candidates[cond]
     lex_idx = np.lexsort(right_choices.T)
     return right_choices[lex_idx]
 
 
 NORM_FCT = lp_norm
+
 
 def _gen_multi_index_exponents_recur(m, n, gamma, gamma2, lp_degree):
     """DEPRECATED. only for reference. TODO remove
@@ -126,7 +139,7 @@ def _gen_multi_index_exponents(spatial_dimension, poly_degree, lp_degree):
     return exponents
 
 
-def _expand_dim(grid_nodes, target_dim,point_pinned = None):
+def _expand_dim(grid_nodes, target_dim, point_pinned=None):
     """
     Expansion of a given array to a given dimension, where the additional dimensions will filled with tiles of given elements
 
@@ -142,9 +155,7 @@ def _expand_dim(grid_nodes, target_dim,point_pinned = None):
     grid_dtype = grid_nodes.dtype
     if target_dim < dim:
         # TODO maybe build a reduce function which removes dims where all exps are 0
-        raise ValueError(
-            f"Can't expand grid from dim {dim} to dim {target_dim}."
-        )
+        raise ValueError(f"Can't expand grid from dim {dim} to dim {target_dim}.")
     if target_dim == dim:
         return grid_nodes
     num_expand_dim = target_dim - dim
@@ -153,8 +164,12 @@ def _expand_dim(grid_nodes, target_dim,point_pinned = None):
     else:
         point_pinned = np.atleast_1d(point_pinned)
         if len(point_pinned) is not num_expand_dim:
-            raise ValueError(f"Given point_pinned {point_pinned} has not enough elements to fill the extra dimensions! <{num_expand_dim}> required.")
-        new_dim_exps = np.require(np.tile(point_pinned,(grid_len,1)),dtype=grid_dtype)
+            raise ValueError(
+                f"Given point_pinned {point_pinned} has not enough elements to fill the extra dimensions! <{num_expand_dim}> required."
+            )
+        new_dim_exps = np.require(
+            np.tile(point_pinned, (grid_len, 1)), dtype=grid_dtype
+        )
     return np.concatenate((grid_nodes, new_dim_exps), axis=1)
 
 
@@ -324,7 +339,7 @@ def make_derivable(indices: np.ndarray) -> np.ndarray:
 
 
 def make_complete(indices: np.ndarray, lp_degree: float = None) -> np.ndarray:
-    """ Make a given array of exponents complete.
+    """Make a given array of exponents complete.
 
     :param indices: The exponent array to be completed.
     :type indices: np.ndarray
@@ -337,10 +352,9 @@ def make_complete(indices: np.ndarray, lp_degree: float = None) -> np.ndarray:
     """
     if lp_degree is None:
         lp_degree = DEFAULT_LP_DEG
-    poly_degree = _get_poly_degree(indices,lp_degree)
+    poly_degree = _get_poly_degree(indices, lp_degree)
     spatial_dimension = indices.shape[-1]
-    return get_exponent_matrix(spatial_dimension,poly_degree,lp_degree)
-
+    return get_exponent_matrix(spatial_dimension, poly_degree, lp_degree)
 
 
 def find_match_between(

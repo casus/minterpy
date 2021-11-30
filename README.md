@@ -18,7 +18,7 @@ Generalisations of classic Newton & Lagrange interpolation schemes to arbitrary 
    ```bash
    source <your_venv_name>/bin/activate
    ```
-   so you use the python verion of your virtual environment.    
+   so you use the python verion of your virtual environment.
 
 2. install `minterpy` via pip (in the activated venv):
    ```bash
@@ -32,7 +32,7 @@ Generalisations of classic Newton & Lagrange interpolation schemes to arbitrary 
    ```bash
    hash -r
    ```
-   instead.  
+   instead.
 3. run the unit_tests using [pytest].
    ```bash
    pytest

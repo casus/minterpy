@@ -4,26 +4,35 @@ testing module for Transformation classes.
 
 """
 
-import pytest
 import numpy as np
+import pytest
+from conftest import (LpDegree, PolyDegree, SpatialDimension, assert_call,
+                      assert_polynomial_almost_equal, build_rnd_coeffs)
 from numpy.testing import assert_, assert_almost_equal, assert_raises
-from conftest import (assert_call, assert_polynomial_almost_equal, build_rnd_coeffs,
-                        SpatialDimension, PolyDegree, LpDegree)
 
-from minterpy import (MultiIndexSet, CanonicalPolynomial, NewtonPolynomial, LagrangePolynomial)
-from minterpy.core.ABC import TransformationABC,OperatorABC
-from minterpy.transformations import (LagrangeToNewton, NewtonToLagrange,
-                                      LagrangeToCanonical, CanonicalToLagrange,
-                                      NewtonToCanonical, CanonicalToNewton, Identity,
-                                      get_transformation, get_transformation_class)
-
-from minterpy.transformations.utils import (_build_lagrange_to_newton_naive, _build_lagrange_to_newton_bary,
-                                            _build_newton_to_lagrange_naive, _build_newton_to_lagrange_bary,
+from minterpy import (CanonicalPolynomial, LagrangePolynomial, MultiIndexSet,
+                      NewtonPolynomial)
+from minterpy.core.ABC import OperatorABC, TransformationABC
+from minterpy.transformations import (CanonicalToLagrange, CanonicalToNewton,
+                                      Identity, LagrangeToCanonical,
+                                      LagrangeToNewton, NewtonToCanonical,
+                                      NewtonToLagrange, get_transformation,
+                                      get_transformation_class)
+from minterpy.transformations.utils import (_build_lagrange_to_newton_bary,
+                                            _build_lagrange_to_newton_naive,
+                                            _build_newton_to_lagrange_bary,
+                                            _build_newton_to_lagrange_naive,
                                             build_l2n_matrix_dds)
 
-transform_classes = [LagrangeToNewton, NewtonToLagrange,
-                     LagrangeToCanonical, CanonicalToLagrange,
-                     NewtonToCanonical, CanonicalToNewton]
+transform_classes = [
+    LagrangeToNewton,
+    NewtonToLagrange,
+    LagrangeToCanonical,
+    CanonicalToLagrange,
+    NewtonToCanonical,
+    CanonicalToNewton,
+]
+
 
 @pytest.fixture(params=transform_classes)
 def Transform(request):
@@ -33,7 +42,7 @@ def Transform(request):
 def test_init_transform(Transform):
     """testing the initialization of transformation classes"""
 
-    assert_(issubclass(Transform,TransformationABC))
+    assert_(issubclass(Transform, TransformationABC))
 
     # Test initialization
     mi = MultiIndexSet.from_degree(2, 2, 1.0)
@@ -53,14 +62,18 @@ def test_init_transform(Transform):
     operator = transform.transformation_operator
     assert_(isinstance(operator, OperatorABC))
 
+
 poly_classes = [CanonicalPolynomial, NewtonPolynomial, LagrangePolynomial]
+
 
 @pytest.fixture(params=poly_classes)
 def Polynom(request):
     return request.param
 
+
 P1 = Polynom
 P2 = Polynom
+
 
 def test_get_transformation(P1, P2):
     """ test the get_transformation function in transformation_meta"""
@@ -76,10 +89,13 @@ def test_get_transformation(P1, P2):
     else:
         assert_(isinstance(transform, TransformationABC))
 
+
 def test_fail_get_transformation_class():
     """ tests if get_transformation_class throws an error if it cannot find a transforamtion"""
 
-    assert_raises(NotImplementedError, get_transformation_class, None, LagrangePolynomial)
+    assert_raises(
+        NotImplementedError, get_transformation_class, None, LagrangePolynomial
+    )
 
 
 def test_l2n_transform(SpatialDimension, PolyDegree, LpDegree):
@@ -160,15 +176,15 @@ def test_transformation_identity():
     assert_polynomial_almost_equal(res_poly, newt_poly)
 
 
-def test_transform_back_n_forth(P1,P2,SpatialDimension, PolyDegree, LpDegree):
+def test_transform_back_n_forth(P1, P2, SpatialDimension, PolyDegree, LpDegree):
     mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
     coeffs = build_rnd_coeffs(mi)
     origin_poly = P1(mi, coeffs)
 
-    transform_forward = get_transformation(origin_poly,P2)
+    transform_forward = get_transformation(origin_poly, P2)
     interim_poly = transform_forward()
 
-    transform_back = get_transformation(interim_poly,P1)
+    transform_back = get_transformation(interim_poly, P1)
     final_poly = transform_back()
 
     assert_polynomial_almost_equal(origin_poly, final_poly)

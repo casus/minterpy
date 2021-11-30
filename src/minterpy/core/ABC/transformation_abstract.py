@@ -12,9 +12,7 @@ import numpy as np
 
 from ..grid import Grid
 from ..multi_index import MultiIndexSet
-
-from .multivariate_polynomial_abstract import \
-    MultivariatePolynomialSingleABC
+from .multivariate_polynomial_abstract import MultivariatePolynomialSingleABC
 from .operator_abstract import OperatorABC
 
 __all__ = ["TransformationABC"]
@@ -40,10 +38,7 @@ class TransformationABC(ABC):
 
     available_transforms = {}
 
-    def __init__(
-        self,
-        origin_poly: MultivariatePolynomialSingleABC
-    ):
+    def __init__(self, origin_poly: MultivariatePolynomialSingleABC):
         if not isinstance(origin_poly, MultivariatePolynomialSingleABC):
             raise TypeError(f"<{origin_poly}> is not a Polynomial type.")
         if not isinstance(origin_poly, self.origin_type):
@@ -60,9 +55,7 @@ class TransformationABC(ABC):
         # self.origin_poly = self.origin_poly.make_complete()
         # raise ValueError('some transformations only work for complete multi index sets!')
 
-
         self._transformation_operator: Optional[np.ndarray] = None
-
 
     @property
     def multi_index(self) -> MultiIndexSet:
@@ -77,8 +70,7 @@ class TransformationABC(ABC):
     # TODO register the transformation classes to the available_transforms dictionary
     # TODO integrate function to retrieve the proper transformation (cf. transformation_utils.py)
     def __init_subclass__(cls, **kwargs):
-        """Add a concrete implementation to the registry of available transformations
-        """
+        """Add a concrete implementation to the registry of available transformations"""
         super().__init_subclass__(**kwargs)
         cls.available_transforms[(cls.origin_type, cls.target_type)] = cls
 

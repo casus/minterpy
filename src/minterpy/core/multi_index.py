@@ -9,18 +9,17 @@ import numpy as np
 from minterpy.global_settings import ARRAY, INT_DTYPE
 from minterpy.jit_compiled_utils import (all_indices_are_contained,
                                          have_lexicographical_ordering)
-from .utils import (_expand_dim, get_exponent_matrix,
-                                        insert_lexicographically,
-                                        is_lexicographically_complete,
-                                        make_complete, verify_lp_deg)
 
+from .utils import (_expand_dim, get_exponent_matrix, insert_lexicographically,
+                    is_lexicographically_complete, make_complete,
+                    verify_lp_deg)
 from .verification import check_shape, check_values
 
 __all__ = ["MultiIndexSet"]
 
 # TODO implement (set) comparison operations based on the multi index utils (>=, == ...)
 class MultiIndexSet:
-    """ Class representation of the set of multi indices for a polynomial.
+    """Class representation of the set of multi indices for a polynomial.
 
     The instances of this class provide storrage for the exponents of a multi variate
     polynomial independently of the base assumed in the polynomial space. Only
@@ -34,6 +33,7 @@ class MultiIndexSet:
     is_complete
     spatial_dimension
     """
+
     def __init__(self, exponents: ARRAY, lp_degree=None, poly_deg_dtype=None):
         exponents = np.require(exponents, dtype=INT_DTYPE)
         check_shape(exponents, dimensionality=2)
@@ -83,8 +83,10 @@ class MultiIndexSet:
         self._exponents = _expand_dim(self._exponents, dim)
 
     @property
-    def exponents(self,):
-        """ Array of exponents.
+    def exponents(
+        self,
+    ):
+        """Array of exponents.
 
         :return: A 2D :class:`ndarray` which stores the exponents, where the first axis refers to the explicit exponent and the second axis refers to the variable which is powerd by the entry at this array position. These exponents are always lexicographically ordered w.r.t. the first axis.
 
@@ -109,12 +111,14 @@ class MultiIndexSet:
             if self.is_complete:
                 self._exponents_completed = self._exponents
             else:
-                self._exponents_completed = make_complete(self._exponents,self.lp_degree)
+                self._exponents_completed = make_complete(
+                    self._exponents, self.lp_degree
+                )
         return self._exponents_completed
 
     @property
     def is_complete(self):
-        """ Returns :class:`True` if the ``exponent`` array is complete.
+        """Returns :class:`True` if the ``exponent`` array is complete.
 
         :rtype: bool
         """
@@ -148,11 +152,11 @@ class MultiIndexSet:
 
     @property
     def spatial_dimension(self):
-        """ The dimentsion of the domain space.
+        """The dimentsion of the domain space.
 
-        :return: The dimension of the space, where a polynomial described by this ``multi_index`` lives on. It is equal to the number of powers in each exponent vector.
+         :return: The dimension of the space, where a polynomial described by this ``multi_index`` lives on. It is equal to the number of powers in each exponent vector.
 
-       :rtype: int
+        :rtype: int
 
         """
         return self._exponents.shape[1]
@@ -299,7 +303,9 @@ class MultiIndexSet:
                 _exponents_completed is not self._exponents_completed
             ):  # some exponents have been added:
                 # make complete again!
-                _exponents_completed = make_complete(_exponents_completed,self.lp_degree)
+                _exponents_completed = make_complete(
+                    _exponents_completed, self.lp_degree
+                )
             new_instance._exponents_completed = _exponents_completed
             # also set the exponents of the new_instance
             # TODO avoid redundancy. why store both _exponents and _exponents_completed?
@@ -309,9 +315,7 @@ class MultiIndexSet:
     def add_exponents(self, exponents: ARRAY) -> "MultiIndexSet":
         exponents = np.require(exponents, dtype=INT_DTYPE)
         check_values(exponents)
-        exponents = exponents.reshape(
-            -1, self.spatial_dimension
-        )
+        exponents = exponents.reshape(-1, self.spatial_dimension)
         """Insert a set if exponents lexicographically into the exponents of this instance.
 
         :param exponents: Array of exponents to be inserted.

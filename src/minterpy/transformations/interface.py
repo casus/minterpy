@@ -2,7 +2,9 @@
 Module providing high-level helper functions for polynomial basis transformations.
 """
 
-from minterpy.core.ABC import TransformationABC,MultivariatePolynomialSingleABC
+from minterpy.core.ABC import (MultivariatePolynomialSingleABC,
+                               TransformationABC)
+
 from .identity import Identity
 
 __all__ = ["get_transformation", "get_transformation_class"]
@@ -31,7 +33,9 @@ def get_transformation_class(origin_type, target_type) -> TransformationABC:
         )
 
 
-def get_transformation(origin_polynomial: MultivariatePolynomialSingleABC, target_type) -> TransformationABC:
+def get_transformation(
+    origin_polynomial: MultivariatePolynomialSingleABC, target_type
+) -> TransformationABC:
     """Finds the Transformation class that can transform the basis of the origin_polynomial to the desired target_type.
 
     :param origin_polynomial: an instance of the origin polynomial

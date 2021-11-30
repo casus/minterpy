@@ -11,17 +11,17 @@ import numpy as np
 from numba import njit
 from numba.typed import List
 
+from minterpy.core.tree import MultiIndexTree
 from minterpy.dds import (dds_1_dimensional, get_direct_child_idxs,
                           get_leaf_idxs, get_node_positions)
-from minterpy.global_settings import (ARRAY, DEBUG, DICT_TRAFO_TYPE,
-                                      FACTORISED_TRAFO_TYPE, FLOAT_DTYPE,
-                                      TRAFO_DICT, TYPED_LIST, ARRAY_DICT,
-                                      INT_DTYPE)
-from .operators import (BarycentricDictOperator,
-                                               BarycentricFactorisedOperator,
-                                               BarycentricOperator)
+from minterpy.global_settings import (ARRAY, ARRAY_DICT, DEBUG,
+                                      DICT_TRAFO_TYPE, FACTORISED_TRAFO_TYPE,
+                                      FLOAT_DTYPE, INT_DTYPE, TRAFO_DICT,
+                                      TYPED_LIST)
 from minterpy.utils import eval_newt_polys_on
-from minterpy.core.tree import MultiIndexTree
+
+from .operators import (BarycentricDictOperator, BarycentricFactorisedOperator,
+                        BarycentricOperator)
 
 __author__ = "Jannik Michelfeit"
 __copyright__ = "Copyright 2021, minterpy"
@@ -218,9 +218,7 @@ def get_leaf_array_slice(
     split_positions: TYPED_LIST,
     subtree_sizes: TYPED_LIST,
 ) -> ARRAY:
-    """Get leaf slices
-
-    """
+    """Get leaf slices"""
     pos_from, pos_to = get_leaf_idxs(dim_idx, node_idx, split_positions, subtree_sizes)
     return array[pos_from:pos_to]
 
@@ -290,11 +288,7 @@ def update_leaves(
 
     # Values corresponding to the right subtree
     v_right = get_leaf_array_slice(
-        dim_idx,
-        node_idx_right,
-        result_placeholder,
-        split_positions,
-        subtree_sizes
+        dim_idx, node_idx_right, result_placeholder, split_positions, subtree_sizes
     )
 
     # Consider only entries in the left subtree
@@ -313,7 +307,7 @@ def compute_leaf_projection_mask(
     node_idx_right: int,
     split_positions: TYPED_LIST,
     subtree_sizes: TYPED_LIST,
-    exponents: ARRAY
+    exponents: ARRAY,
 ) -> ARRAY:
     """Compute the projection mask of the left tree w.r.t right on the splits.
 
@@ -378,7 +372,7 @@ def compute_leaf_projection_mask(
     leaf_pos_right = split_positions_right[split_idx_right]
     # Split exponent in the right subtree
     # NOTE: Make sure the current dimension is included in the array slicing
-    exp_right = exponents[leaf_pos_right, :dim_idx+1]
+    exp_right = exponents[leaf_pos_right, : dim_idx + 1]
 
     # Initialize indices of the matched entries
     nr_entries_matched_right = 0
@@ -389,7 +383,7 @@ def compute_leaf_projection_mask(
 
         # Split exponent in the left subtree
         # NOTE: Make sure the current dimension is included in the slicing
-        exp_left = exponents[leaf_pos_left, :dim_idx+1]
+        exp_left = exponents[leaf_pos_left, : dim_idx + 1]
 
         if np.array_equal(exp_left, exp_right):
             # The two exponent splits match
@@ -402,7 +396,7 @@ def compute_leaf_projection_mask(
             # Update the split position and exponent of the right subtree
             leaf_pos_right = split_positions_right[split_idx_right]
             # NOTE: Make sure the current dimension is included in the slicing
-            exp_right = exponents[leaf_pos_right, :dim_idx+1]
+            exp_right = exponents[leaf_pos_right, : dim_idx + 1]
 
         nr_entries_matched_left += 1
 
@@ -463,7 +457,7 @@ def leaf_node_dds(
     # Get the dimensionality of the problem
     dimensionality = len(split_positions)
 
-    for dim_idx_par in range(dimensionality-1, 0, -1):
+    for dim_idx_par in range(dimensionality - 1, 0, -1):
         # Traverse through the multi-index tree (mimicking recursion)
         # starting from the highest dimension, exclude the first dimension
         dim_idx_child = dim_idx_par - 1
@@ -499,7 +493,7 @@ def leaf_node_dds(
                     subtree_sizes,
                 )
 
-                for node_idx_right in range(node_idx_left+1, last_child_idx+1):
+                for node_idx_right in range(node_idx_left + 1, last_child_idx + 1):
                     # Loop over all right subtrees (splits)
                     # ATTENTION: Also include the last subtree
 
@@ -510,7 +504,7 @@ def leaf_node_dds(
                         node_idx_right,
                         split_positions,
                         subtree_sizes,
-                        exponents
+                        exponents,
                     )
 
                     # Update the results (project left subtree onto the right)
@@ -524,7 +518,7 @@ def leaf_node_dds(
                         generating_values,
                         split_positions,
                         subtree_sizes,
-                        leaf_mask
+                        leaf_mask,
                     )
 
     # NOTE: No need to perform the 1D DDS schemes (considering leaf nodes only)
@@ -590,7 +584,9 @@ def compute_l2n_factorised(
     # TODO again this matrix is of nested triangular form. optimise!?
     # TODO find more memory efficient format?!
     leaf_factors = np.eye(nr_of_leaves, dtype=FLOAT_DTYPE)
-    leaf_node_dds(leaf_factors, generating_points, split_positions, subtree_sizes, exponents)
+    leaf_node_dds(
+        leaf_factors, generating_points, split_positions, subtree_sizes, exponents
+    )
 
     return dds_solution_max, leaf_factors, leaf_positions, leaf_sizes
 

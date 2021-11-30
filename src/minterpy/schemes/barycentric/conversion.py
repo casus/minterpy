@@ -12,6 +12,7 @@ from numba import njit
 from minterpy.global_settings import (ARRAY, FLOAT_DTYPE, INT_DTYPE,
                                       TRAFO_DICT, TYPED_LIST)
 
+
 @njit(cache=True)
 def merge_trafo_dict(trafo_dict: TRAFO_DICT, leaf_positions: ARRAY) -> ARRAY:
     """Reconstructing the global transformation matrix from the precomputed transformation in dictionary format.

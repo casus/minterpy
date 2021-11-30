@@ -10,13 +10,12 @@ implentations are derived.
 
 
 from abc import ABC, abstractmethod
-
 from typing import Optional, Union
 
 from minterpy.global_settings import ARRAY
 
-
 __all__ = ["OperatorABC"]
+
 
 class OperatorABC(ABC):
     """Abstract base class for transformation operators.
@@ -29,6 +28,7 @@ class OperatorABC(ABC):
     array_repr_sparse
 
     """
+
     # ATTENTION: this approach is only valid for single polynomials
     transformation_data = None
     _array_repr_full: Optional[ARRAY] = None

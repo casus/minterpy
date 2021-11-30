@@ -1,14 +1,14 @@
 """
 Matrix operator class.
 """
-from minterpy.global_settings import ARRAY
 from minterpy.core.ABC import OperatorABC
+from minterpy.global_settings import ARRAY
 
 __all__ = ["MatrixOperator"]
 
+
 class MatrixOperator(OperatorABC):
-    """Concrete implementation of a Operator constructed as a matrix.
-    """
+    """Concrete implementation of a Operator constructed as a matrix."""
 
     def __matmul__(self, other):
         if isinstance(other, OperatorABC):
@@ -22,6 +22,5 @@ class MatrixOperator(OperatorABC):
         return self.array_repr_sparse @ other
 
     def _get_array_repr(self) -> ARRAY:
-        """Returns the matrix representation of the transformation.
-        """
+        """Returns the matrix representation of the transformation."""
         return self.transformation_data

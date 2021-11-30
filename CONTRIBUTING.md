@@ -2,7 +2,7 @@
 # Contribution guide
 
 # 1. Installation
-This installation guide is focused on development. For productive runs of `minterpy` check out the `README.md`.  
+This installation guide is focused on development. For productive runs of `minterpy` check out the `README.md`.
 In order to get the source of latest release, just clone the master branch from hzdr.gitlab:
 ```bash
 git clone https://gitlab.hzdr.de/interpol/minterpy.git
@@ -18,8 +18,8 @@ git pull origin dev
 Notice: in future it will **not** be allowed to push to dev or master. Please follow the instructions under [Working with git](#git)
 
 ## Virtual environments
-It is stongly recommended to use virtual environments for development and productive runs. This encapsulates the package and all dependencies without messing up other python installations.  
-#### Using [venv](https://docs.python.org/3/tutorial/venv.html) from the python standard library:  
+It is stongly recommended to use virtual environments for development and productive runs. This encapsulates the package and all dependencies without messing up other python installations.
+#### Using [venv](https://docs.python.org/3/tutorial/venv.html) from the python standard library:
 1. Building the virtual environment:
 
     ```bash
@@ -32,7 +32,7 @@ It is stongly recommended to use virtual environments for development and produc
     source <your_venv_name>/bin/activate
     ```
 
-3. To deactivate the virtual environment, just type  
+3. To deactivate the virtual environment, just type
 
     ```bash
     deactivate
@@ -52,7 +52,7 @@ It is stongly recommended to use virtual environments for development and produc
     source <your_venv_name>/bin/activate
     ```
 
-3. To deactivate the virtual environment, just type  
+3. To deactivate the virtual environment, just type
 
     ```bash
     deactivate
@@ -91,7 +91,7 @@ It is stongly recommended to use virtual environments for development and produc
    ```bash
    conda activate minterpy
    ```
-   Maybe you need to `init` the conda env; just follow the instructions printed out or read the conda docs.  
+   Maybe you need to `init` the conda env; just follow the instructions printed out or read the conda docs.
 
 3. To deactivate the conda environment, just hit:
     ```bash
@@ -101,14 +101,14 @@ It is stongly recommended to use virtual environments for development and produc
 ## Dependency Management & Reproducibility (conda)
 
 1. Always keep your abstract (unpinned) dependencies updated in `environment.yaml` and eventually
-   in `setup.cfg` if you want to ship and install your package via `pip` later on.  
+   in `setup.cfg` if you want to ship and install your package via `pip` later on.
 
 2. Create concrete dependencies as `environment.lock.yaml` for the exact reproduction of your
    environment with:
    ```bash
    conda env export -n minterpy -f environment.lock.yaml
    ```
-   For multi-OS development, consider using `--no-builds` during the export.  
+   For multi-OS development, consider using `--no-builds` during the export.
 
 3. Update your current environment with respect to a new `environment.lock.yaml` using:
    ```bash
@@ -117,16 +117,16 @@ It is stongly recommended to use virtual environments for development and produc
 
 
 ## Installation
-Installing `minterpy` it is recommended to use [pip](https://pip.pypa.io/en/stable/) (in the activated environment, see above):  
+Installing `minterpy` it is recommended to use [pip](https://pip.pypa.io/en/stable/) (in the activated environment, see above):
 ```bash
 pip install [-e] .[all,dev,docs]
 ```
 where the flag `-e` means the package is directly linked into the python site-packages.
 The options `[all,dev,docs]` refer to the requirements defined in the `options.extras_require` section in `setup.cfg`.
-One shall **not** use `python setup.py install`, since the file `setup.py` will not be present for every build of the package.  
+One shall **not** use `python setup.py install`, since the file `setup.py` will not be present for every build of the package.
 
 ### Troubleshooting: pytest with venv (not conda)
-After installation, the restart of your virtual environment might be necessary, since the `pytest` command uses the `PYTHONPATH` which is not automatically changed to your venv.  
+After installation, the restart of your virtual environment might be necessary, since the `pytest` command uses the `PYTHONPATH` which is not automatically changed to your venv.
 
 ```bash
 deactivate && source <your_venv_name>/bin/activate
@@ -135,9 +135,9 @@ deactivate && source <your_venv_name>/bin/activate
 or just run `hash -r` instead. This seems **not** to be an issuse for environments build with conda.
 
 # 2. Testing
-:construction: :construction: :construction: :construction: :construction: :construction: :construction: :construction:  
+:construction: :construction: :construction: :construction: :construction: :construction: :construction: :construction:
 Since the whole test environment needs a refactoring, we shall update this section with more detailed informations.
-:construction: :construction: :construction: :construction:  :construction: :construction: :construction: :construction:  
+:construction: :construction: :construction: :construction:  :construction: :construction: :construction: :construction:
 ## Running the unittests
 We use [pytest](https://docs.pytest.org/en/6.2.x/) to run the unit tests of `minterpy`. Unit tests itself shall always be placed into the directory `tests`. To run all tests, just type
 ```bash
@@ -147,16 +147,16 @@ into the terminal. if you want to run tests on single modules, e.g. run
 ```bash
 pytest tests/test_multi_index_utils.py
 ```
-The coverage test is done automatically if you run `pytest`, a summary of the coverage is printed at the terminal. Furthermore, you found a browser version of the results of the coverage test in `htmmlcov/index.html` which you can open with your favourite browser.  
+The coverage test is done automatically if you run `pytest`, a summary of the coverage is printed at the terminal. Furthermore, you found a browser version of the results of the coverage test in `htmmlcov/index.html` which you can open with your favourite browser.
 ## Writing new tests
-It is highly recommended to use the capabilities of `pytest` for writing unittests (see [here](https://docs.pytest.org/en/6.2.x/example/index.html), [here](https://realpython.com/pytest-python-testing/) or [here](https://towardsdatascience.com/testing-best-practices-for-machine-learning-libraries-41b7d0362c95)).  
+It is highly recommended to use the capabilities of `pytest` for writing unittests (see [here](https://docs.pytest.org/en/6.2.x/example/index.html), [here](https://realpython.com/pytest-python-testing/) or [here](https://towardsdatascience.com/testing-best-practices-for-machine-learning-libraries-41b7d0362c95)).
 There are some points one should always be aware of:
 - the developer of the code shall write the tests
 - test the behaviour you expect from your code, not breaking points
 - use as small samples as possible
 - unittests do **not** test if the code works, they test if the code **still** works
 - the coverage shall always be as high as possible
-- BUT, even 100% coverage does not mean, there is nothing missed (buzz: edge case!)  
+- BUT, even 100% coverage does not mean, there is nothing missed (buzz: edge case!)
 
 # 3. Documentation
 ## Install dependencies
@@ -179,7 +179,7 @@ cd docs
  make html
 ```
 
-This generates the documentation, which is stored in `docs/_build` can be accessed through your favorite browser  
+This generates the documentation, which is stored in `docs/_build` can be accessed through your favorite browser
 ```bash
 firefox docs/_build/html/index.html
 ```
@@ -192,15 +192,15 @@ The generated PDF will be stored (along with the latex files) in `docs/latex`.
 
 ## Design of the documentation
 The files for generating the documentation are stored in the directory `docs` and will be configured with the file `docs/conf.py`. The main file of the documentation is `docs/index.rst`.
-The documentation itself contains two different parts  
-1. References section:  
-    The reference to all exposed functions/classes will be generated exclusively from their docstrings, stored in the variable `func.__doc__`. Here we use the [numpydoc](https://numpydoc.readthedocs.io/en/latest/) docstring format (see [here](https://numpydoc.readthedocs.io/en/latest/example.html#example) for an example function, or [here](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html) for a more complete example including classes). This shall be the only part of the documentation in the [reST](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html). Be aware of the fact, that the docstring of an object might be used elsewhere. The files which are imported to the documentation (containing the generated docstring part) are stored in `docs/api`.      
+The documentation itself contains two different parts
+1. References section:
+    The reference to all exposed functions/classes will be generated exclusively from their docstrings, stored in the variable `func.__doc__`. Here we use the [numpydoc](https://numpydoc.readthedocs.io/en/latest/) docstring format (see [here](https://numpydoc.readthedocs.io/en/latest/example.html#example) for an example function, or [here](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html) for a more complete example including classes). This shall be the only part of the documentation in the [reST](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html). Be aware of the fact, that the docstring of an object might be used elsewhere. The files which are imported to the documentation (containing the generated docstring part) are stored in `docs/api`.
 
-2. Usage section:  
+2. Usage section:
     Constains all tutorials/guides/explanations usually in the [markdown](https://www.markdownguide.org/getting-started/) format. The files for this section are stored in `docs/usage`. Each subsection shall be stored into a separate file, which can than be linked into the intro page (`docs/usage/intro`) of somewhere else.
 
 # 4. Code Style
-In order to ensure readability of the code, we shall follow a common code style for `minterpy`. The long-term goal shall be fulfilling the [PEP8](https://www.python.org/dev/peps/pep-0008/) regulations. For the build system, it is recommended to follow [PEP517](https://www.python.org/dev/peps/pep-0517/) and [PEP518](https://www.python.org/dev/peps/pep-0518/). However, since these requirements are very challenging, we shall at least agree on the code style enforced from [black](https://github.com/psf/black).  
+In order to ensure readability of the code, we shall follow a common code style for `minterpy`. The long-term goal shall be fulfilling the [PEP8](https://www.python.org/dev/peps/pep-0008/) regulations. For the build system, it is recommended to follow [PEP517](https://www.python.org/dev/peps/pep-0517/) and [PEP518](https://www.python.org/dev/peps/pep-0518/). However, since these requirements are very challenging, we shall at least agree on the code style enforced from [black](https://github.com/psf/black).
 
 ## Pre-commit
 In the development process, one can check the format using [pre-commit](https://pre-commit.com) and the hooks defined in `.pre-commit-config.yaml`. For instance running `black` for the whole `minterpy` code, just run
@@ -211,7 +211,7 @@ in the terminal. For now, it is recommended to run single hooks. However, to run
 ```bash
 pre-commit run --all-files #DON'T DO THIS IF YOU DON'T KNOW WHAT HAPPENS
 ```
-In the current state of the code, this shall be used with caution since it might change code in the manner, that it breaks (see below). However, further developments shall try to fulfil the full set of pre-commit-hooks.  
+In the current state of the code, this shall be used with caution since it might change code in the manner, that it breaks (see below). However, further developments shall try to fulfil the full set of pre-commit-hooks.
 It is also possible, and also recommended for further developments, to run all pre-commit-hooks every time if you commit some changes to your branch. To enable this, just type:
 ```bash
 pre-commit install
@@ -238,10 +238,10 @@ For the code versioning of `minterpy` we only use [git](). The main repository f
 ## Versioning with git <span id="git"><span>
 At least, up to the point we installed CI/CD on [hzdr.gitlab](https://gitlab.hzdr.de/interpol/minterpy), we loosely follow the structure of [gitflow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow). This means for us, that we have three different types of branches:
 
-1. `master` branch:  
+1. `master` branch:
     On this branch, only releases will be stored. This means, on this branch, one has only fully tested, documented and cleaned up code.
-2. `dev` branch:  
-    On this branch, the development version are stored. These shall pass all of the tests, which means on this branch, there is always a running version even if documentation and code is not in the 'release state'.  
+2. `dev` branch:
+    On this branch, the development version are stored. These shall pass all of the tests, which means on this branch, there is always a running version even if documentation and code is not in the 'release state'.
 3. `feature` branches:
     Shall always be build from the `dev` branch (not from `master`). Here all the features and actual code developments shall be happen.
 

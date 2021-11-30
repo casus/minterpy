@@ -304,7 +304,7 @@ DOMAIN_WARN_MSG = (
 
 
 def check_domain_fit(points: np.ndarray):
-    """ Checks weather a given array of points is properly formatted and spans the standard domain :math:`[-1,1]^m`.
+    """Checks weather a given array of points is properly formatted and spans the standard domain :math:`[-1,1]^m`.
 
     .. todo::
         - maybe remove the warnings.

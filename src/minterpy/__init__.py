@@ -6,31 +6,32 @@ isort:skip_file
 
 from .version import version as __version__
 
-__all__ = ["__version__",]
+__all__ = [
+    "__version__",
+]
 
 from . import core
 from .core import *
 
-__all__+=core.__all__
+__all__ += core.__all__
 
 
 from . import polynomials
 from .polynomials import *
 
-__all__+=polynomials.__all__
+__all__ += polynomials.__all__
 
 
 from . import transformations
 from .transformations import *
 
-__all__+=transformations.__all__
+__all__ += transformations.__all__
 
 
 from . import interpolation
 from .interpolation import *
 
-__all__+=interpolation.__all__
-
+__all__ += interpolation.__all__
 
 
 """

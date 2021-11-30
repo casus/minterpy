@@ -5,16 +5,16 @@ from typing import Optional
 
 import numpy as np
 
-from .canonical_polynomial import (_match_dims,
-                                           _matching_internal_domain)
-from minterpy.global_settings import ARRAY
-from ..core.utils import insert_lexicographically
-from ..core.ABC import \
-    MultivariatePolynomialSingleABC
-from minterpy.utils import newt_eval
-from ..core.verification import verify_domain
-from ..core import MultiIndexSet,Grid
 import minterpy
+from minterpy.global_settings import ARRAY
+from minterpy.utils import newt_eval
+
+from ..core import Grid, MultiIndexSet
+from ..core.ABC import MultivariatePolynomialSingleABC
+from ..core.utils import insert_lexicographically
+from ..core.verification import verify_domain
+from .canonical_polynomial import _match_dims, _matching_internal_domain
+
 __all__ = ["LagrangePolynomial"]
 
 
@@ -90,8 +90,12 @@ def _lagrange_add(poly1, poly2):
         l2n_p2 = minterpy.transformations.LagrangeToNewton(p2)
         newt_p2 = l2n_p2()
 
-        max_poly_degree = np.max(np.array([p1.multi_index.poly_degree, p2.multi_index.poly_degree]))
-        max_lp_degree = np.max(np.array([p1.multi_index.lp_degree, p2.multi_index.lp_degree]))
+        max_poly_degree = np.max(
+            np.array([p1.multi_index.poly_degree, p2.multi_index.poly_degree])
+        )
+        max_lp_degree = np.max(
+            np.array([p1.multi_index.lp_degree, p2.multi_index.lp_degree])
+        )
 
         dim = p1.spatial_dimension  # must be the same for p2
 
@@ -137,8 +141,12 @@ def _lagrange_sub(poly1, poly2):
         l2n_p2 = minterpy.transformations.LagrangeToNewton(p2)
         newt_p2 = l2n_p2()
 
-        max_poly_degree = np.max(np.array([p1.multi_index.poly_degree, p2.multi_index.poly_degree]))
-        max_lp_degree = np.max(np.array([p1.multi_index.lp_degree, p2.multi_index.lp_degree]))
+        max_poly_degree = np.max(
+            np.array([p1.multi_index.poly_degree, p2.multi_index.poly_degree])
+        )
+        max_lp_degree = np.max(
+            np.array([p1.multi_index.lp_degree, p2.multi_index.lp_degree])
+        )
 
         dim = p1.spatial_dimension  # must be the same for p2
 
@@ -192,7 +200,9 @@ def _lagrange_mul(poly1, poly2):
         res_degree = int(degree_poly1 + degree_poly2)
         res_lpdegree = lpdegree_poly1 + lpdegree_poly2
 
-        res_mi = MultiIndexSet.from_degree(p1.spatial_dimension, res_degree, res_lpdegree)
+        res_mi = MultiIndexSet.from_degree(
+            p1.spatial_dimension, res_degree, res_lpdegree
+        )
         res_grid = Grid(res_mi)
 
         un = res_grid.unisolvent_nodes

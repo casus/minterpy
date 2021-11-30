@@ -6,18 +6,16 @@ from copy import deepcopy
 
 import numpy as np
 
+from minterpy.global_settings import DEBUG, FLOAT_DTYPE
 from minterpy.jit_compiled_utils import can_eval_mult
-from ..core.ABC import \
-    MultivariatePolynomialSingleABC
 
 from ..core import MultiIndexSet
-
-from minterpy.global_settings import DEBUG, FLOAT_DTYPE
+from ..core.ABC import MultivariatePolynomialSingleABC
 from ..core.verification import (convert_eval_output, rectify_eval_input,
-                                   verify_domain)
-
+                                 verify_domain)
 
 __all__ = ["CanonicalPolynomial"]
+
 
 def dummy():
     """Placeholder function.
@@ -127,7 +125,6 @@ def _match_dims(poly1, poly2, copy=None):
     else:
         p1 = poly1
         p2 = poly2
-
 
     dim1 = p1.multi_index.spatial_dimension
     dim2 = p2.multi_index.spatial_dimension

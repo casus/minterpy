@@ -7,13 +7,13 @@ from typing import Optional
 
 import numpy as np
 
-
+from minterpy.core.verification import check_shape, check_type_n_values
 from minterpy.dds import (compile_problem_sizes, compile_splits,
                           compile_subtree_sizes, jit_dds, precompute_masks)
 from minterpy.global_settings import ARRAY, ARRAY_DICT, FLOAT_DTYPE
-from minterpy.core.verification import check_shape, check_type_n_values
 
 __all__ = ["MultiIndexTree"]
+
 
 class MultiIndexTree:
     """Base class for MultiIndexTree
@@ -31,6 +31,7 @@ class MultiIndexTree:
     problem_sizes : List
 
     """
+
     #  TODO prevent dynamic attribute assignment (-> safe memory)
     # __slots__ = ["multi_index", "split_positions", "subtree_sizes", "stored_masks", "generating_points"]
 
