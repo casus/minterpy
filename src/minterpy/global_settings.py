@@ -31,7 +31,7 @@ DEFAULT_LP_DEG = 2.0
 
 NOT_FOUND = -1  # meaning: exponent vector is not contained
 
-ARRAY = np.typing.NDArray#np.ndarray
+ARRAY = np.typing.NDArray  # np.ndarray
 # TYPED_LIST = List[ARRAY]
 TYPED_LIST = numba.typed.List
 INT_TUPLE = Tuple[int, int]

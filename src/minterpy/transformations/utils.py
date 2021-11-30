@@ -10,9 +10,7 @@ from minterpy.dds import dds
 from minterpy.global_settings import ARRAY, DEBUG, FLOAT_DTYPE
 from minterpy.jit_compiled_utils import compute_vandermonde_n2c
 from minterpy.schemes.barycentric.precomp import (
-    _build_lagrange_to_newton_bary,
-    _build_newton_to_lagrange_bary,
-)
+    _build_lagrange_to_newton_bary, _build_newton_to_lagrange_bary)
 from minterpy.schemes.matrix_operator import MatrixOperator
 from minterpy.utils import eval_newt_polys_on
 

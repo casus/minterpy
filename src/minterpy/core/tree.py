@@ -7,12 +7,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from minterpy.dds import (
-    compile_problem_sizes,
-    compile_splits,
-    compile_subtree_sizes,
-    precompute_masks,
-)
+from minterpy.dds import (compile_problem_sizes, compile_splits,
+                          compile_subtree_sizes, precompute_masks)
 from minterpy.global_settings import ARRAY_DICT
 
 if TYPE_CHECKING:
