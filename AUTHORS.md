@@ -2,14 +2,15 @@
 
 ## Main code development
 - Uwe Hernandez Acosta (HZDR/CASUS) <u.hernandez@hzdr.de>
-- Jannik Michelfeit <jannik@michelfe.it>
 - Sachin Krishnan Thekke Veettil (HZDR/CASUS) <s.thekke-veettil@hzdr.de>
+- Damar Wicaksono (HZDR/CASUS) <d.wicaksono@hzdr.de>
 
 
 ## Mathematical foundation
 - Michael Hecht(HZDR/CASUS) <m.hecht@hzdr.de>
 
 ## Former Members and Contributions
+- Jannik Michelfeit
 - Nico Hoffman (HZDR)
 - Steve Schmerler (HZDR)
 - Vidya Chandrashekar (TU Dresden)
