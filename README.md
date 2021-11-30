@@ -206,6 +206,7 @@ For that we want to send big thanks to:
 [MIT](LICENSE) © minterpy development team
 
 [^1]: [arXiv:2010.10824](https://arxiv.org/abs/2010.10824)
+
 [conda]: https://docs.conda.io/
 [pip]: https://pip.pypa.io/en/stable/
 [venv]: https://docs.python.org/3/tutorial/venv.html
