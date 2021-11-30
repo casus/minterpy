@@ -17,17 +17,17 @@ in the docs and how they should be used.
      and :doc:`/how-to/index` are written as `Jupyter notebooks`_.
      The particularities of creating such documentation for the ``minterpy``
      documentation can be found in :doc:`/contributors/contrib-docs/guidelines/ipynb-based-docs`.
-   - API (in-code) documentation, while also uses reST markup,
-     have its own particularities and styling.
-     Refer to the :doc:`/contributors/contrib-docs/guidelines/py-based-docs`
-     section for details.
    - This section does not cover every single aspect and syntax of reST,
      see `reStructuredText Primer`_ if you don't find what you need here.
 
 ..
     Page structure
     ##############
-
+  - API (in-code) documentation, while also uses reST markup,
+     have its own particularities and styling.
+     Refer to the :doc:`/contributors/contrib-docs/guidelines/py-based-docs`
+     section for details.
+ 
 80-Character width rule
 #######################
 

@@ -100,7 +100,6 @@ Tutorials table of contents
    :maxdepth: 3
 
    one-dimensional-function-interpolation
-   multi-dimensional-function-interpolation
    polynomial-regression
 
 .. _conda: https://docs.conda.io/
