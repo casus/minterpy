@@ -1,5 +1,6 @@
 # minterpy
 
+TEST
 Classical interpolation schemes in arbitrary dimensions.
 
 ## Description
