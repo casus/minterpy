@@ -14,10 +14,13 @@
 `minterpy` is an open-source Python package for a multivariate generalization
 of the classical Newton and Lagrange interpolation schemes as well as related tasks.
 It is based on an optimized re-implementation of
-the multivariate interpolation prototype algorithm (*MIP*) by Hecht et al.[^1]
+the multivariate interpolation prototype algorithm (*MIP*) by Hecht et al. [[1]]
 and thereby provides software solutions that lift the curse of dimensionality from interpolation tasks.
 While interpolation occurs as the bottleneck of most computational challenges,
 `minterpy` aims to free empirical sciences from their computational limitations.
+
+
+[1]: https://arxiv.org/abs/2010.10824 "arXiv:2010.10824"
 
 `minterpy` is continuously extended and improved
 by adding further functionality and modules that provide novel digital solutions
@@ -175,7 +178,7 @@ namely
 
 ### Former Members and Contributions
 
-- Jannik Michelfeit
+- Jannik Michelfeit ([jannikmi](https://github.com/jannikmi))
 - Nico Hoffman ([HZDR])
 - Steve Schmerler ([HZDR])
 - Vidya Chandrashekar (TU Dresden)
@@ -204,8 +207,6 @@ For that we want to send big thanks to:
 ## License
 
 [MIT](LICENSE) © minterpy development team
-
-[^1]: [arXiv:2010.10824](https://arxiv.org/abs/2010.10824)
 
 [conda]: https://docs.conda.io/
 [pip]: https://pip.pypa.io/en/stable/
@@ -250,3 +251,4 @@ For that we want to send big thanks to:
 - write shorter installation section
 - write more comprehensive quickstart (maybe higher dimensionality)
 - discuss the License we want to use
+- add minterpy logo
