@@ -4,14 +4,9 @@ Testing module for lagrange_polynomial.py
 """
 
 import numpy as np
-from conftest import (
-    MultiIndices,
-    NrPoints,
-    NrSimilarPolynomials,
-    assert_polynomial_almost_equal,
-    build_rnd_coeffs,
-    build_rnd_points,
-)
+from conftest import (MultiIndices, NrPoints, NrSimilarPolynomials,
+                      assert_polynomial_almost_equal, build_rnd_coeffs,
+                      build_rnd_points)
 
 from minterpy import CanonicalPolynomial, LagrangePolynomial, MultiIndexSet
 from minterpy.transformations import CanonicalToLagrange, LagrangeToCanonical

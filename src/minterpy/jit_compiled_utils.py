@@ -5,17 +5,8 @@ Module containing several numba optimized functions.
 import numpy as np
 from numba import b1, njit, void
 
-from minterpy.global_settings import (
-    B_TYPE,
-    F_1D,
-    F_2D,
-    F_3D,
-    FLOAT,
-    I_1D,
-    I_2D,
-    INT,
-    NOT_FOUND,
-)
+from minterpy.global_settings import (B_TYPE, F_1D, F_2D, F_3D, FLOAT, I_1D,
+                                      I_2D, INT, NOT_FOUND)
 
 
 @njit(void(F_2D, F_2D, I_2D, F_2D), cache=True)

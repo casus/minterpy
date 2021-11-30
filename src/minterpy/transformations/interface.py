@@ -2,7 +2,8 @@
 Module providing high-level helper functions for polynomial basis transformations.
 """
 
-from minterpy.core.ABC import MultivariatePolynomialSingleABC, TransformationABC
+from minterpy.core.ABC import (MultivariatePolynomialSingleABC,
+                               TransformationABC)
 
 from .identity import Identity
 

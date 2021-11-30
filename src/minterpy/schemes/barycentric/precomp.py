@@ -15,22 +15,11 @@ import numpy as np
 from numba import njit
 from numba.typed import List
 
-from minterpy.dds import (
-    dds_1_dimensional,
-    get_direct_child_idxs,
-    get_leaf_idxs,
-    get_node_positions,
-)
-from minterpy.global_settings import (
-    ARRAY,
-    DEBUG,
-    DICT_TRAFO_TYPE,
-    FACTORISED_TRAFO_TYPE,
-    FLOAT_DTYPE,
-    INT_DTYPE,
-    TRAFO_DICT,
-    TYPED_LIST,
-)
+from minterpy.dds import (dds_1_dimensional, get_direct_child_idxs,
+                          get_leaf_idxs, get_node_positions)
+from minterpy.global_settings import (ARRAY, DEBUG, DICT_TRAFO_TYPE,
+                                      FACTORISED_TRAFO_TYPE, FLOAT_DTYPE,
+                                      INT_DTYPE, TRAFO_DICT, TYPED_LIST)
 from minterpy.utils import eval_newt_polys_on
 
 from .operators import BarycentricFactorisedOperator, BarycentricOperator
