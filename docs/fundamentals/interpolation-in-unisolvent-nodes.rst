@@ -2,33 +2,34 @@
 Interpolation in unisolvent nodes
 #################################
 
-.. todo::
+..
+    .. todo::
 
-   This page should provide explanations on interpolation on the unisolvent nodes.
-   Define and explain all the specific terms, including:
+       This page should provide explanations on interpolation on the unisolvent nodes.
+       Define and explain all the specific terms, including:
 
-   - Generating values (Chebyshev, etc.)
-   - Generating nodes
-   - Generating points
-   - Unisolvent nodes
-   - Newton interpolating polynomials
-   - Lagrange interpolating polynomials
+       - Generating values (Chebyshev, etc.)
+       - Generating nodes
+       - Generating points
+       - Unisolvent nodes
+       - Newton interpolating polynomials
+       - Lagrange interpolating polynomials
 
-   Note:
+       Note:
 
-   - Don't forget to include some pictures
-   - Clearly distinguish `Newton polynomials (basis)` and `Newton (interpolating) polynomials`
-   - Try to separate the implementation or algorithmic implementation details in other section of the documentation
+       - Don't forget to include some pictures
+       - Clearly distinguish `Newton polynomials (basis)` and `Newton (interpolating) polynomials`
+       - Try to separate the implementation or algorithmic implementation details in other section of the documentation
 
 
-   .. todo::
+       .. todo::
 
-      Generate the links to
+          Generate the links to
 
-      - multivariate DDS
-      - multi-index set
-      - notion of unisolvence
-      - wikipedia linkls to Leja ordering, Chebyshev Legenedre nodes etc.
+          - multivariate DDS
+          - multi-index set
+          - notion of unisolvence
+          - wikipedia linkls to Leja ordering, Chebyshev Legenedre nodes etc.
 
 
 
