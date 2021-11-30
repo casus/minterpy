@@ -1,14 +1,34 @@
-# -*- coding: utf-8 -*-
-from pkg_resources import get_distribution, DistributionNotFound
+"""
+This is the minterpy package init.
 
-try:
-    # Change here if project is renamed and does not equal the package name
-    dist_name = __name__
-    __version__ = get_distribution(dist_name).version
-except DistributionNotFound:
-    __version__ = 'unknown'
-finally:
-    del get_distribution, DistributionNotFound
+isort:skip_file
+"""
+
+from .version import version as __version__
+
+__all__ = [
+    "__version__",
+]
+
+from . import core  # noqa
+from .core import *  # noqa
+
+__all__ += core.__all__
 
 
-# here will be the integration of the submodules in the minterpy namespace
+from . import polynomials  # noqa
+from .polynomials import *  # noqa
+
+__all__ += polynomials.__all__
+
+
+from . import transformations  # noqa
+from .transformations import *  # noqa
+
+__all__ += transformations.__all__
+
+
+from . import interpolation  # noqa
+from .interpolation import *  # noqa
+
+__all__ += interpolation.__all__

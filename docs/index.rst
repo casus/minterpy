@@ -1,59 +1,63 @@
-========
-minterpy
-========
+##########################
+``minterpy`` Documentation
+##########################
 
-This is the documentation of **minterpy**.
+Welcome!
+This is the documentation for ``minterpy`` |version|, last updated on |today|.
 
-.. note::
+What is ``minterpy``?
+#####################
 
-    This is the main page of your project's `Sphinx`_ documentation.
-    It is formatted in `reStructuredText`_. Add additional pages
-    by creating rst-files in ``docs`` and adding them to the `toctree`_ below.
-    Use then `references`_ in order to link them from this page, e.g.
-    :ref:`authors` and :ref:`changes`.
+..
+    .. todo::
 
-    It is also possible to refer to the documentation of other Python packages
-    with the `Python domain syntax`_. By default you can reference the
-    documentation of `Sphinx`_, `Python`_, `NumPy`_, `SciPy`_, `matplotlib`_,
-    `Pandas`_, `Scikit-Learn`_. You can add more by extending the
-    ``intersphinx_mapping`` in your Sphinx's ``conf.py``.
+       This section should provide answers to the following questions:
 
-    The pretty useful extension `autodoc`_ is activated by default and lets
-    you include documentation from docstrings. Docstrings can be written in
-    `Google style`_ (recommended!), `NumPy style`_ and `classical style`_.
+       - What is ``minterpy``?
+       - What does it do? Which problems does it solve?
+       - Who is it for? Who is the intended audience?
+       - Why should you use it? Include some common use cases.
+
+The Python package ``minterpy`` is based on an optimized re-implementation of
+the multivariate interpolation prototype algorithm (*MIP*) by Hecht et al.\ :footcite:`Hecht2020`
+and thereby provides software solutions that lift the curse of dimensionality from interpolation tasks.
+While interpolation occurs as the bottleneck of most computational challenges,
+``minterpy`` aims to free empirical sciences from their computational limitations.
+
+``minterpy`` is continuously extended and improved
+by adding further functionality and modules that provide novel digital solutions
+to a broad field of computational challenges, including but not limited to:
+
+- multivariate interpolation
+- non-linear polynomial regression
+- numerical integration
+- global (black-box) optimization
+- surface level-set methods
+- non-periodic spectral partial differential equations (PDE) solvers on
+  flat and complex geometries
+- machine learning regularization
+- data reconstruction
+- computational solutions in algebraic geometry
+
+``minterpy`` is an open-source Python package that makes it easily accessible
+and allows for further development and improvement by the Python community.
 
 
-Contents
-========
+Full table of contents
+######################
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   License <license>
-   Authors <authors>
-   Changelog <changelog>
-   Module Reference <api/modules>
+   Getting Started <getting-started/index>
+   How-to <how-to/index>
+   Fundamentals <fundamentals/index>
+   API Reference <api/index>
+   Contributors <contributors/index>
+   Glossary <glossary>
+   Todo list <TODO>
 
+References
+##########
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-.. _toctree: http://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html
-.. _reStructuredText: http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
-.. _references: http://www.sphinx-doc.org/en/stable/markup/inline.html
-.. _Python domain syntax: http://sphinx-doc.org/domains.html#the-python-domain
-.. _Sphinx: http://www.sphinx-doc.org/
-.. _Python: http://docs.python.org/
-.. _Numpy: http://docs.scipy.org/doc/numpy
-.. _SciPy: http://docs.scipy.org/doc/scipy/reference/
-.. _matplotlib: https://matplotlib.org/contents.html#
-.. _Pandas: http://pandas.pydata.org/pandas-docs/stable
-.. _Scikit-Learn: http://scikit-learn.org/stable
-.. _autodoc: http://www.sphinx-doc.org/en/stable/ext/autodoc.html
-.. _Google style: https://github.com/google/styleguide/blob/gh-pages/pyguide.md#38-comments-and-docstrings
-.. _NumPy style: https://numpydoc.readthedocs.io/en/latest/format.html
-.. _classical style: http://www.sphinx-doc.org/en/stable/domains.html#info-field-lists
+.. footbibliography::
