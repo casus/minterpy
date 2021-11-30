@@ -42,24 +42,6 @@ to a broad field of computational challenges, including but not limited to:
 ``minterpy`` is an open-source Python package that makes it easily accessible
 and allows for further development and improvement by the Python community.
 
-..
-
-    How the documentation is organized
-    ##################################
-
-    .. todo::
-
-       This section should provide cross-references to the whole documentation
-       structure of ``minterpy`` each with a brief description.
-
-    How to cite
-    ###########
-
-    .. todo::
-
-       Provide an encouragement that if the package is used, people should provide
-       an attribution, most probably to the main reference paper.
-       Because there is no article in JOSS yet, then select another paper.
 
 Full table of contents
 ######################
