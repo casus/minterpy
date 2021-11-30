@@ -1,72 +1,5 @@
 # minterpy
 
-<<<<<<< HEAD
-Generalisations of classic Newton & Lagrange interpolation schemes to arbitrary multi-dimensions.
-
-## Description
-
-:construction: :construction: Here will follow a longer description of the project :construction: :construction:
-
-
-## Installation using venv/pip
-
-1. use the virtual environment of your choice, e.g. [virtualenv]:
-
-   ```bash
-   python -m venv <your_venv_name>
-   ```
-   and activate it:
-   ```bash
-   source <your_venv_name>/bin/activate
-   ```
-   so you use the python verion of your virtual environment.
-
-2. install `minterpy` via pip (in the activated venv):
-   ```bash
-   pip install [-e] .
-   ```
-   After installation, you might restart your virtual environment:
-   ```bash
-   deactivate && source <your_venv_name>/bin/activate
-   ```
-   or just run
-   ```bash
-   hash -r
-   ```
-   instead.
-3. run the unit_tests using [pytest].
-   ```bash
-   pytest
-   ```
-   if all tests are passed, the tested functions shall run properly. Here the restart of your venv mentioned above might be necessary.
-
-
-## Installation using conda/pip
-
-In order to set up the necessary environment:
-
-1. create an environment `minterpy` with the help of [conda],
-   ```bash
-   conda env create -f environment.yaml
-   ```
-2. activate the new environment with
-   ```bash
-   conda activate minterpy
-   ```
-3. install `minterpy` with:
-   ```bash
-   pip install -e .
-   ```
-4. run the unit_tests using `pytest`
-    ```bash
-    pytest
-    ```
-    if all tests are passed, the tested functions shall run properly.
-
-Take a quick look into `CONTRIBUTING.md` for more details.
-
-## Project Organization
-=======
 <figure class="quote">
   <blockquote>
   to minterpy *sth.* (transitive verb) -- to produce a multivariate polynomial representation of *sth.* .
@@ -78,7 +11,7 @@ Take a quick look into `CONTRIBUTING.md` for more details.
 
 ---
 
-`minterpy` is an open-source Python package for a multivariate generalization 
+`minterpy` is an open-source Python package for a multivariate generalization
 of the classical Newton and Lagrange interpolation schemes as well as related tasks.
 It is based on an optimized re-implementation of
 the multivariate interpolation prototype algorithm (*MIP*) by Hecht et al.[^1]
@@ -113,7 +46,6 @@ git clone https://gitlab.hzdr.de/interpol/minterpy.git
 
 Within the source directory,
 you may use the following package manager to install ``minterpy``.
->>>>>>> dev-doc
 
 A best practice is to create a virtual environment for `minterpy`.
 You can do this with the help of [conda] and the ``environment.yaml`` by:
@@ -141,7 +73,7 @@ The options `[all,dev,docs]` refer to the requirements defined
 in the `options.extras_require` section in `setup.cfg`.
 
 You **must not** use the command `python setup.py install` to install `minterpy`,
-as you cannot always assume the files `setup.py` will always be present 
+as you cannot always assume the files `setup.py` will always be present
 in the further development of `minterpy`.
 
 Finally, if you want to deactivate the conda environment, type:
@@ -178,7 +110,7 @@ one can use the top-level function `interpolate`:
 Here, interpolant is a callable function,
 which can be used as a representation of `test_function`.
 `interpolate` takes as arguments the function to interpolate,
-the number of dimensions (`spatial_dimension`), 
+the number of dimensions (`spatial_dimension`),
 and the degree of the underlying polynomial (`poly_degree`).
 
 You may adjust this parameter in order to get higher accuracy.
@@ -202,7 +134,7 @@ section of the ``minterpy`` docs.
 
 ## Testing
 
-After installation, we encourage you to at least run the unit tests of `minterpy`, 
+After installation, we encourage you to at least run the unit tests of `minterpy`,
 where we use [`pytest`](https://docs.pytest.org/en/6.2.x/) to run the tests.
 
 If you want to run all tests, type:
@@ -242,7 +174,7 @@ namely
 - Michael Hecht ([HZDR]/[CASUS]) (m.hecht@hzdr.de)
 
 ### Former Members and Contributions
- 
+
 - Jannik Michelfeit
 - Nico Hoffman ([HZDR])
 - Steve Schmerler ([HZDR])
@@ -264,7 +196,7 @@ from the community as well.
 For that we want to send big thanks to:
 
   - the guy who will show me how to include a list of contributors on github/gitlab
-  
+
 ## Citing
 
 :construction: Add here the informations how to cite ``minterpy``.

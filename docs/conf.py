@@ -36,10 +36,7 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.autosectionlabel",
     "sphinxcontrib.bibtex",
-<<<<<<< HEAD
-=======
     "nbsphinx"
->>>>>>> dev-doc
 ]
 
 
