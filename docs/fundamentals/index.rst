@@ -51,7 +51,7 @@ Fundamentals of ``minterpy``
 
    introduction
    polynomial-bases
-   interpolation-on-unisolvent-nodes
+   interpolation-in-unisolvent-nodes
    interpolation-evaluation
    multivariate-dds
    transformation
