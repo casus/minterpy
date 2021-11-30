@@ -23,20 +23,66 @@ Read on how to install it before moving on.
 Installation
 ############
 
-Requirements
-============
+Since this implementation is a prototype,
+we currently only provide the installation by self-building from source.
+We recommend to use ``git`` to get the ``minterpy`` source:
 
-Installing via conda
-====================
+.. code-block:: bash
 
-Installing from source code
-===========================
+   git clone https://gitlab.hzdr.de/interpol/minterpy.git
+
+Within the source directory,
+you may use the following package manager to install ``minterpy``.
+
+A best practice is to create a virtual environment for `minterpy`.
+You can do this with the help of `conda`_ and the ``environment.yaml`` by:
+
+.. code-block::
+
+   conda env create -f environment.yaml
+
+
+A new conda environment called ``minterpy`` is created.
+Activate the new environment by:
+
+.. code-block::
+
+   conda activate minterpy
+
+From within the environment, install the ``minterpy`` using `pip`_:
+
+.. code-block::
+
+   pip install [-e] .[all,dev,docs]
+
+where the flag ``-e`` means the package is directly linked
+into the python site-packages of your Python version.
+The options ``[all,dev,docs]`` refer to the requirements defined
+in the ``options.extras_require`` section in ``setup.cfg``.
+
+You **must not** use the command :code:`python setup.py install` to install `minterpy`,
+as you cannot always assume the files ``setup.py`` will always be present
+in the further development of ``minterpy``.
+
+Finally, if you want to deactivate the conda environment, type:
+
+.. code-block::
+
+   conda deactivate
 
 Testing the installation
 ========================
 
-Help?!
-######
+After installation, we encourage you to at least run the unit tests of ``minterpy``,
+where we use `pytest`_ to run the tests.
+
+If you want to run all tests, type:
+
+.. code-block:: bash
+
+   pytest [-vvv]
+
+from within the ``minterpy`` source directory.
 
 What's next
 ###########
@@ -56,3 +102,7 @@ Tutorials table of contents
    one-dimensional-function-interpolation
    multi-dimensional-function-interpolation
    polynomial-regression
+
+.. _conda: https://docs.conda.io/
+.. _pip: https://pip.pypa.io/en/stable/
+.. _pytest: https://docs.pytest.org/en/6.2.x/
