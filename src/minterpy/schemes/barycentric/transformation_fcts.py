@@ -13,12 +13,12 @@ then just use multiples of these results instead of performing actual matrix mul
 
 TODO test all different transformation formats!
 """
-
+from typing import no_type_check
 from numba import njit
 
 from minterpy.global_settings import ARRAY, TRAFO_DICT, TYPED_LIST
 
-
+@no_type_check
 @njit(cache=True)
 def transform_barycentric_dict(
     coeffs_in: ARRAY, coeffs_out: ARRAY, trafo_dict: TRAFO_DICT, leaf_positions: ARRAY

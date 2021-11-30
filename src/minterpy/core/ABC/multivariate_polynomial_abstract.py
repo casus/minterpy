@@ -6,7 +6,7 @@ This ensures that all polynomials work with the same interface, so futher featur
 """
 import abc
 from copy import deepcopy
-from typing import Optional, Union
+from typing import Optional, Union, Any
 
 import numpy as np
 
@@ -81,7 +81,7 @@ class MultivariatePolynomialABC(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _eval(self, arg) -> Union[float, ARRAY]:  # pragma: no cover
+    def _eval(self, x) -> Any:  # pragma: no cover
         """Abstract evaluation function.
 
         Notes
@@ -91,7 +91,7 @@ class MultivariatePolynomialABC(abc.ABC):
         pass
 
     # TODO *args, **kwargs ?! or rather "point" or "x"
-    def __call__(self, arg) -> Union[float, ARRAY]:
+    def __call__(self, x) -> Any:
         """Evaluation of the polynomial.
 
         This function is called, if an instance of the polynomial(s) is called: ``P(x)``
@@ -116,7 +116,7 @@ class MultivariatePolynomialABC(abc.ABC):
         """
         # TODO built in rescaling between user_domain and internal_domain
         #   IDEA: use sklearn min max scaler (transform() and inverse_transform())
-        return self._eval(arg)
+        return self._eval(x)
 
     # anything else any polynomial must support
     # TODO mathematical operations? abstract

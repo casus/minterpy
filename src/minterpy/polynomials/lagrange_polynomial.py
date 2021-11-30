@@ -1,7 +1,7 @@
 """
 LagrangePolynomial class
 """
-from typing import Optional
+from typing import Optional, Any, Callable
 
 import numpy as np
 
@@ -9,7 +9,7 @@ import minterpy
 from minterpy.global_settings import ARRAY
 
 from ..core import Grid, MultiIndexSet
-from ..core.ABC import MultivariatePolynomialSingleABC
+from ..core.ABC import MultivariatePolynomialSingleABC, MultivariatePolynomialABC
 from ..core.utils import insert_lexicographically
 from ..core.verification import verify_domain
 from .canonical_polynomial import _match_dims, _matching_internal_domain
@@ -17,7 +17,7 @@ from .canonical_polynomial import _match_dims, _matching_internal_domain
 __all__ = ["LagrangePolynomial"]
 
 
-def dummy():
+def dummy(x:Optional[Any]=None)->None:
     """Placeholder function.
 
     .. warning::
@@ -69,7 +69,7 @@ def _union_of_exponents(exp1, exp2):
 
 
 # TODO : poly2 can be of a different basis?
-def _lagrange_add(poly1, poly2):
+def _lagrange_add(poly1: MultivariatePolynomialSingleABC, poly2: MultivariatePolynomialSingleABC)->MultivariatePolynomialSingleABC:
     """Addition of two polynomials in Lagrange basis.
 
 
@@ -121,7 +121,7 @@ def _lagrange_add(poly1, poly2):
         )
 
 
-def _lagrange_sub(poly1, poly2):
+def _lagrange_sub(poly1:MultivariatePolynomialSingleABC, poly2:MultivariatePolynomialSingleABC)->MultivariatePolynomialSingleABC:
     """Subtraction of two polynomials in Lagrange basis.
 
 
@@ -172,7 +172,7 @@ def _lagrange_sub(poly1, poly2):
         )
 
 
-def _lagrange_mul(poly1, poly2):
+def _lagrange_mul(poly1:MultivariatePolynomialSingleABC, poly2:MultivariatePolynomialSingleABC)->MultivariatePolynomialSingleABC:
     """Multiplication of two polynomials in Lagrange basis.
 
 
@@ -256,9 +256,9 @@ class LagrangePolynomial(MultivariatePolynomialSingleABC):
     _add = staticmethod(_lagrange_add)
     _sub = staticmethod(_lagrange_sub)
     _mul = staticmethod(_lagrange_mul)
-    _div = staticmethod(dummy)
-    _pow = staticmethod(dummy)
-    _eval = staticmethod(dummy)
+    _div = staticmethod(dummy) # type: ignore
+    _pow = staticmethod(dummy) # type: ignore
+    _eval = staticmethod(dummy) # type: ignore
 
     generate_internal_domain = staticmethod(lagrange_generate_internal_domain)
     generate_user_domain = staticmethod(lagrange_generate_user_domain)

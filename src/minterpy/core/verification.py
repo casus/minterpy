@@ -2,7 +2,7 @@
 """ functions for input verification
 """
 
-from typing import Optional, Union
+from typing import Optional, Union,Sized
 
 import numpy as np
 from _warnings import warn
@@ -243,7 +243,7 @@ def check_type_n_values(a: np.ndarray, *args, **kwargs):
 
 
 def check_shape(
-    a: np.ndarray, shape: Union[list, tuple] = None, dimensionality: int = None
+    a: np.ndarray, shape: Optional[Sized] = None, dimensionality: int = None
 ):
     """Verify the shape of an input array.
 
@@ -259,15 +259,16 @@ def check_shape(
     :raise ValueError: If input array hasn't the expected size.
 
     """
+    if shape is None:
+        return
     if dimensionality is None:  # check for the dimensionality by the given shape:
         dimensionality = len(shape)
     if a.ndim != dimensionality:
         raise ValueError(
             f"expected {dimensionality}D array, but encountered array of dimensionality {len(a.shape)}"
         )
-    if shape is None:
-        return
-    for dim, (true_size, expected_size) in enumerate(zip(a.shape, shape)):
+
+    for dim, (true_size, expected_size) in enumerate(zip(a.shape, shape)): # type: ignore
         if isinstance(expected_size, int) and true_size != expected_size:
             raise ValueError(
                 f"expected array of size {expected_size} in dimension {dim},"

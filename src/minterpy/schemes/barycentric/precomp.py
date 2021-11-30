@@ -9,7 +9,7 @@ there are different formats for storing (and computing) these trees
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, no_type_check
 
 import numpy as np
 from numba import njit
@@ -61,7 +61,7 @@ def compute_1d_dds_solutions(
 
     return dds_solutions
 
-
+@no_type_check
 @njit(cache=True)
 def expand_solution(
     prev_solutions: TRAFO_DICT,

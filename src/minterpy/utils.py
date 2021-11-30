@@ -1,6 +1,7 @@
 """
 set of package wide utility functions
 """
+from typing import Union
 from numbers import Real
 
 import numpy as np
@@ -83,7 +84,7 @@ def cartesian_product(*arrays: np.ndarray) -> np.ndarray:
     return arr.reshape(-1, la)
 
 
-def lp_sum(arr: np.ndarray, p: Real) -> Real:
+def lp_sum(arr: np.ndarray, p: Union[float, int]) -> Union[float, int]:
     """
     Sum of powers, i.e. lp-norm to the lp-degree.
 

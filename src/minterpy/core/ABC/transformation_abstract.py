@@ -6,7 +6,7 @@ which all concrete implentations are derived.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Any, Dict
 
 import numpy as np
 
@@ -36,7 +36,7 @@ class TransformationABC(ABC):
 
     """
 
-    available_transforms = {}
+    available_transforms: Dict[Any, Any] = {}
 
     def __init__(self, origin_poly: MultivariatePolynomialSingleABC):
         if not isinstance(origin_poly, MultivariatePolynomialSingleABC):
@@ -142,9 +142,7 @@ class TransformationABC(ABC):
         origin_poly type, which have the same basis (and grid) as the origin_poly, to the target_poly type.
         """
         if self._transformation_operator is None:
-            self._transformation_operator: OperatorABC = (
-                self._get_transformation_operator()
-            )
+            self._transformation_operator = (self._get_transformation_operator())
         return self._transformation_operator
 
     @property

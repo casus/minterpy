@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from minterpy.dds import (compile_problem_sizes, compile_splits,
                           compile_subtree_sizes, precompute_masks)
-from minterpy.global_settings import ARRAY_DICT
+from minterpy.global_settings import ARRAY_DICT, ARRAY
 
 if TYPE_CHECKING:
     # https://stackoverflow.com/questions/39740632/python-type-hinting-without-cyclic-imports
@@ -84,11 +84,12 @@ class MultiIndexTree:
         return self.grid.multi_index
 
     @property
-    def stored_masks(self) -> ARRAY_DICT:  # the intermediary results required for DDS
+    def stored_masks(self) -> ARRAY_DICT:
         """Returns the stored masks of the tree.
 
         :return: correspondencies between the left and right nodes of the tree
         """
+        # the intermediary results required for DDS
         # TODO remove when regular DDS functionality is no longer required (together with the dds module)
         if self._stored_masks is None:  # lazy evaluation
             # based on the splittings one can compute all required correspondences

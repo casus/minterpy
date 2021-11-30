@@ -1,8 +1,8 @@
 """
 Here we store the core utilities of `minterpy`.
 """
-
-from typing import Iterable, List, Optional, Union
+from __future__ import annotations
+from typing import Iterable, List, Optional, Union, no_type_check, TYPE_CHECKING
 
 import numpy as np
 
@@ -11,6 +11,9 @@ from minterpy.jit_compiled_utils import (fill_match_positions,
                                          index_is_contained,
                                          lex_smaller_or_equal)
 from minterpy.utils import cartesian_product, lp_norm, lp_sum
+
+if TYPE_CHECKING:
+    from .tree import MultiIndexTree
 
 
 def _get_poly_degree(exponents, lp):
@@ -233,7 +236,7 @@ def is_lexicographically_complete(indices: np.ndarray) -> bool:
         return False
     return True
 
-
+@no_type_check
 def list_insert_single(
     list_of_indices: List[np.ndarray],
     index2insert: np.ndarray,
@@ -261,7 +264,7 @@ def list_insert_single(
     if not np.array_equal(contained_index, index2insert):
         list_of_indices.insert(insertion_idx, index2insert)
 
-
+@no_type_check
 def to_index_list(indices: Union[np.ndarray, Iterable[np.ndarray]]) -> List[np.ndarray]:
     if type(indices) is list:
         return indices  # already is a list
@@ -329,7 +332,7 @@ def insert_partial_derivatives(list_of_indices, exponent_vector):
 
 def make_derivable(indices: np.ndarray) -> np.ndarray:
     """inserts all missing multi index vectors "smaller by one" """
-    list_of_indices = []
+    list_of_indices: List[int] = []
     nr_exponents, spatial_dimension = indices.shape
     for i in reversed(range(nr_exponents)):  # start with the biggest multi index
         contained_exponent_vector = indices[i, :]

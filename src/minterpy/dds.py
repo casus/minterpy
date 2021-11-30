@@ -8,7 +8,7 @@ This module also includes the functionality for implicitly creating and traversi
 The tree structure is being encoded by numpy arrays for increased performance.
 """
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional,no_type_check
 
 import numpy as np
 from numba import njit
@@ -18,7 +18,7 @@ from minterpy.global_settings import (ARRAY, ARRAY_DICT, INT_DTYPE, INT_SET,
                                       INT_TUPLE, TYPED_LIST)
 
 if TYPE_CHECKING:
-    from .core import MultiIndexTree
+    from .core.tree import MultiIndexTree
 
 
 @njit(cache=True)
@@ -584,7 +584,7 @@ def dds_1_dimensional(grid_values: ARRAY, result_placeholder: ARRAY) -> None:
         coeff_diff = coeff_slice - c[i_prev]
         coeff_slice[:] = coeff_diff / val_diff
 
-
+@no_type_check
 @njit(cache=True)
 def project_n_update(
     dim_idx: int,
