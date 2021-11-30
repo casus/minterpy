@@ -2,25 +2,26 @@
 Introduction
 ############
 
-.. todo::
+..
+    .. todo::
 
-   Provide some explanation on:
+       Provide some explanation on:
 
-   - Interpolation problem
-   - Field of applications
-   - Runge phenomenon
-   - Curse of dimensionality
-   - Differentiating aspects of ``minterpy``
+       - Interpolation problem
+       - Field of applications
+       - Runge phenomenon
+       - Curse of dimensionality
+       - Differentiating aspects of ``minterpy``
 
-   What's written below is the older mathematical introduction to ``minterpy``.
-   While quite comprehensive, it is rather dense and can be splitted into
-   different parts of the documentation.
+       What's written below is the older mathematical introduction to ``minterpy``.
+       While quite comprehensive, it is rather dense and can be splitted into
+       different parts of the documentation.
 
-   get the refs upgraded
+       get the refs upgraded
 
-In this section we present the mathematical concepts and conventions,
-the implementation of ``minterpy`` is based on. Throughout, the documentation :math:`\Omega=[-1,1]^m\,, m \in \mathbb{N}`
-denotes the standard m-dimensional hypercube and we assume that all interpolation tasks are normalised to :math:`\Omega`.
+    In this section we present the mathematical concepts and conventions,
+    the implementation of ``minterpy`` is based on. Throughout, the documentation :math:`\Omega=[-1,1]^m\,, m \in \mathbb{N}`
+    denotes the standard m-dimensional hypercube and we assume that all interpolation tasks are normalised to :math:`\Omega`.
 
 Multivariate polynomial interpolation
 #####################################

@@ -2,10 +2,11 @@
 Multivariate polynomial bases
 #############################
 
-.. todo::
+..
+    .. todo::
 
-   This page should introduce and define all the supported multivariate
-   polynomial bases supported in ``minterpy``. Some pictures might help as well.
+       This page should introduce and define all the supported multivariate
+       polynomial bases supported in ``minterpy``. Some pictures might help as well.
 
 Multi-index sets and polynomial degree
 ######################################

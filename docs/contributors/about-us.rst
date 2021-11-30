@@ -2,13 +2,14 @@
 About Us
 ########
 
-.. todo::
+..
+    .. todo::
 
-   This page should present who are behind ``minterpy``, some funding sources,
-   the currently active and former contributors.
+       This page should present who are behind ``minterpy``, some funding sources,
+       the currently active and former contributors.
 
-History
-#######
+    History
+    #######
 
 Project maintainers
 ###################

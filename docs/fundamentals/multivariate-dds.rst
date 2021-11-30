@@ -2,25 +2,26 @@
 Multivariate divided difference scheme (DDS)
 ############################################
 
-.. todo::
+..
+    .. todo::
 
-   Multivariate DDS is central to the whole ``minterpy`` operation,
-   it is important somehow to *demistify* it.
-   In this page, all aspects related to the multivariate DDS should be defined
-   and explained from the data structure used, construction, and operation.
+       Multivariate DDS is central to the whole ``minterpy`` operation,
+       it is important somehow to *demistify* it.
+       In this page, all aspects related to the multivariate DDS should be defined
+       and explained from the data structure used, construction, and operation.
 
-   Provide illustrations and pictures for clarity and simple (numerical)
-   examples that one can do perhaps with hand to demistify it further.
-   ``minterpy`` "just" do it faster for larger problems.
+       Provide illustrations and pictures for clarity and simple (numerical)
+       examples that one can do perhaps with hand to demistify it further.
+       ``minterpy`` "just" do it faster for larger problems.
 
-   .. todo::
+       .. todo::
 
-      Generate the links to
+          Generate the links to
 
-      - downward closed multi-index sets
-      - polynomial space
-      - notion of unisolvence
-      - use latex label command for the Theorem enumeration etc
+          - downward closed multi-index sets
+          - polynomial space
+          - notion of unisolvence
+          - use latex label command for the Theorem enumeration etc
 
 Splitting Theorems
 ##################

@@ -27,7 +27,7 @@ in the docs and how they should be used.
      have its own particularities and styling.
      Refer to the :doc:`/contributors/contrib-docs/guidelines/py-based-docs`
      section for details.
- 
+
 80-Character width rule
 #######################
 
