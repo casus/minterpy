@@ -143,6 +143,9 @@ src/*/version.py
 # Mac OS stuff
 .DS_Store
 
+# BibTeX (JabRef)
+*.bib.bak
+*.bib.sav
 
 # JETBRAINS
 

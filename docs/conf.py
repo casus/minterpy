@@ -36,6 +36,10 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.autosectionlabel",
     "sphinxcontrib.bibtex",
+<<<<<<< HEAD
+=======
+    "nbsphinx"
+>>>>>>> dev-doc
 ]
 
 
@@ -50,7 +54,7 @@ intersphinx_mapping = {
 }
 
 # bibtex config
-bibtex_bibfiles = ["refs.bib"]
+bibtex_bibfiles = ["bibliography.bib"]
 
 # configure numpydoc
 
@@ -65,17 +69,23 @@ templates_path = []
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "**.ipynb_checkpoints", "Thumbs.db", ".DS_Store", ".env"]
+exclude_patterns = ["build", "**.ipynb_checkpoints", "Thumbs.db", ".DS_Store", ".env"]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 default_role = "autolink"
+
+# Make sure label sections are unique
+autosectionlabel_prefix_document = True
+
+# Math configurations
+math_eqref_format = 'Eq. ({number})'
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_rtd_theme"
+html_theme = "pydata_sphinx_theme"
 
 html_title = f"Minterpy {version[0:3]}"
 
@@ -86,3 +96,6 @@ html_baseurl = "https://minterpy.readthedocs.io/en/latest/"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path: List[str] = []
+
+html_favicon = './assets/favicon.ico'
+html_logo = './assets/minterpy-logo.png'

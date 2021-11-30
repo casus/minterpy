@@ -1,28 +1,81 @@
-######################
-Minterpy Documentation
-######################
+##########################
+``minterpy`` Documentation
+##########################
 
-The python package `minterpy` is based on an optimised re-implementation of the multivariate interpolation prototype algorithm (**MIP**), given in :cite:`hecht2020`
+Welcome!
+This is the documentation for ``minterpy`` |version|, last updated on |today|.
+
+What is ``minterpy``?
+#####################
+
+..
+    .. todo::
+
+       This section should provide answers to the following questions:
+
+       - What is ``minterpy``?
+       - What does it do? Which problems does it solve?
+       - Who is it for? Who is the intended audience?
+       - Why should you use it? Include some common use cases.
+
+The Python package ``minterpy`` is based on an optimized re-implementation of
+the multivariate interpolation prototype algorithm (*MIP*) by Hecht et al.\ :footcite:`Hecht2020`
 and thereby provides software solutions that lift the curse of dimensionality from interpolation tasks.
-While interpolation occurs as the bottleneck of most computational challenges, `minterpy` aims to free empirical sciences from their computational limitations. MINTERPY is continuously extended and improved by adding further functionality and modules that provide novel digital solutions to a broad field of computational challenges, including but not limited to:
+While interpolation occurs as the bottleneck of most computational challenges,
+``minterpy`` aims to free empirical sciences from their computational limitations.
 
-**multivariate interpolation, non-linear polynomial regression, numerical integration, global (black box) optimisation, surface level set methods, non-periodic spectral PDE solvers on flat and complex geometries,
-machine learning regularisation, data reconstruction, computational solutions in algebraic geometry**
+``minterpy`` is continuously extended and improved
+by adding further functionality and modules that provide novel digital solutions
+to a broad field of computational challenges, including but not limited to:
 
-`minterpy` is provided as an openSource PYTHON package that makes it easily accessable and allows further development and improvement by the PYTHON community. In the following short survey we give some crucial insights of the underlying theoretical aspects of multivariate polynomial interpolation.
+- multivariate interpolation
+- non-linear polynomial regression
+- numerical integration
+- global (black-box) optimization
+- surface level-set methods
+- non-periodic spectral partial differential equations (PDE) solvers on
+  flat and complex geometries
+- machine learning regularization
+- data reconstruction
+- computational solutions in algebraic geometry
 
+``minterpy`` is an open-source Python package that makes it easily accessible
+and allows for further development and improvement by the Python community.
 
-.. bibliography::
-  :filter: docname in docnames
-  :style: unsrt
+..
 
+    How the documentation is organized
+    ##################################
 
+    .. todo::
+
+       This section should provide cross-references to the whole documentation
+       structure of ``minterpy`` each with a brief description.
+
+    How to cite
+    ###########
+
+    .. todo::
+
+       Provide an encouragement that if the package is used, people should provide
+       an attribution, most probably to the main reference paper.
+       Because there is no article in JOSS yet, then select another paper.
+
+Full table of contents
+######################
 
 .. toctree::
-   :maxdepth: 1
-   :hidden:
+   :maxdepth: 3
 
-   Getting Started <usage/index>
-   Mathematical Introduction <math_intro/intro>
-   API reference <api/index>
+   Getting Started <getting-started/index>
+   How-to <how-to/index>
+   Fundamentals <fundamentals/index>
+   API Reference <api/index>
+   Contributors <contributors/index>
+   Glossary <glossary>
    Todo list <TODO>
+
+References
+##########
+
+.. footbibliography::

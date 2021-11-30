@@ -6,7 +6,7 @@ An abstract base class is provided as the blueprint on which every implementatio
 class must be derived from. Concrete implementations for basis transformations between the built-in
 polynomial basis (Canonical, Lagrange, and Newton) are also provided.
 
-For most common use cases, the high-level :ref:`Helper functions` provides a convenient way to do basis
+For most common use cases, the high-level :doc:`interface` provides a convenient way to do basis
 transformations.
 
 .. toctree::
