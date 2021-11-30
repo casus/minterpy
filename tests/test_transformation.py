@@ -6,23 +6,41 @@ testing module for Transformation classes.
 
 import numpy as np
 import pytest
-from conftest import (LpDegree, PolyDegree, SpatialDimension, assert_call,
-                      assert_polynomial_almost_equal, build_rnd_coeffs)
+from conftest import (
+    LpDegree,
+    PolyDegree,
+    SpatialDimension,
+    assert_call,
+    assert_polynomial_almost_equal,
+    build_rnd_coeffs,
+)
 from numpy.testing import assert_, assert_almost_equal, assert_raises
 
-from minterpy import (CanonicalPolynomial, LagrangePolynomial, MultiIndexSet,
-                      NewtonPolynomial)
+from minterpy import (
+    CanonicalPolynomial,
+    LagrangePolynomial,
+    MultiIndexSet,
+    NewtonPolynomial,
+)
 from minterpy.core.ABC import OperatorABC, TransformationABC
-from minterpy.transformations import (CanonicalToLagrange, CanonicalToNewton,
-                                      Identity, LagrangeToCanonical,
-                                      LagrangeToNewton, NewtonToCanonical,
-                                      NewtonToLagrange, get_transformation,
-                                      get_transformation_class)
-from minterpy.transformations.utils import (_build_lagrange_to_newton_bary,
-                                            _build_lagrange_to_newton_naive,
-                                            _build_newton_to_lagrange_bary,
-                                            _build_newton_to_lagrange_naive,
-                                            build_l2n_matrix_dds)
+from minterpy.transformations import (
+    CanonicalToLagrange,
+    CanonicalToNewton,
+    Identity,
+    LagrangeToCanonical,
+    LagrangeToNewton,
+    NewtonToCanonical,
+    NewtonToLagrange,
+    get_transformation,
+    get_transformation_class,
+)
+from minterpy.transformations.utils import (
+    _build_lagrange_to_newton_bary,
+    _build_lagrange_to_newton_naive,
+    _build_newton_to_lagrange_bary,
+    _build_newton_to_lagrange_naive,
+    build_l2n_matrix_dds,
+)
 
 transform_classes = [
     LagrangeToNewton,

@@ -20,11 +20,12 @@ from minterpy.core.ABC import OperatorABC
 from minterpy.global_settings import ARRAY, FLOAT_DTYPE
 
 from ..matrix_operator import MatrixOperator
-from .conversion import (merge_trafo_dict, merge_trafo_factorised,
-                         merge_trafo_piecewise)
-from .transformation_fcts import (transform_barycentric_dict,
-                                  transform_barycentric_factorised,
-                                  transform_barycentric_piecewise)
+from .conversion import merge_trafo_dict, merge_trafo_factorised, merge_trafo_piecewise
+from .transformation_fcts import (
+    transform_barycentric_dict,
+    transform_barycentric_factorised,
+    transform_barycentric_piecewise,
+)
 
 
 class BarycentricOperator(OperatorABC):
