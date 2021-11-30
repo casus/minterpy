@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, Optional, Set, Tuple
 
 import numba
 import numpy as np
@@ -31,12 +31,12 @@ DEFAULT_LP_DEG = 2.0
 
 NOT_FOUND = -1  # meaning: exponent vector is not contained
 
-ARRAY = np.ndarray
+ARRAY = np.ndarray  # type: ignore
 # TYPED_LIST = List[ARRAY]
 TYPED_LIST = numba.typed.List
 INT_TUPLE = Tuple[int, int]
-ARRAY_DICT = Dict[Tuple[int, int, int], Optional[ARRAY]]
-TRAFO_DICT = Dict[Tuple[int, int], ARRAY]
+ARRAY_DICT = Dict[Tuple[int, int, int], Optional[ARRAY]]  # type: ignore
+TRAFO_DICT = Dict[Tuple[int, int], ARRAY]  # type: ignore
 INT_SET = Set[int]
-DICT_TRAFO_TYPE = Tuple[TRAFO_DICT, ARRAY]
-FACTORISED_TRAFO_TYPE = Tuple[ARRAY, ARRAY, ARRAY, ARRAY]
+DICT_TRAFO_TYPE = Tuple[TRAFO_DICT, ARRAY]  # type: ignore
+FACTORISED_TRAFO_TYPE = Tuple[ARRAY, ARRAY, ARRAY, ARRAY]  # type: ignore

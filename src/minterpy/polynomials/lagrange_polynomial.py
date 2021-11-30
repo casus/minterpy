@@ -1,30 +1,29 @@
 """
 LagrangePolynomial class
 """
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 
-from .canonical_polynomial import (_match_dims,
-                                           _matching_internal_domain)
-from minterpy.global_settings import ARRAY
-from ..core.utils import insert_lexicographically
-from ..core.ABC import \
-    MultivariatePolynomialSingleABC
-from minterpy.utils import newt_eval
-from ..core.verification import verify_domain
-from ..core import MultiIndexSet,Grid
 import minterpy
+from minterpy.global_settings import ARRAY
+
+from ..core import Grid, MultiIndexSet
+from ..core.ABC import MultivariatePolynomialSingleABC
+from ..core.utils import insert_lexicographically
+from ..core.verification import verify_domain
+from .canonical_polynomial import _match_dims, _matching_internal_domain
+
 __all__ = ["LagrangePolynomial"]
 
 
-def dummy():
+def dummy(x: Optional[Any] = None) -> None:
     """Placeholder function.
 
     .. warning::
       This feature is not implemented yet!
     """
-    raise NotImplementedError(f"This feature is not implemented yet.")
+    raise NotImplementedError("This feature is not implemented yet.")
 
 
 # TODO: part of polynomial utils?
@@ -70,7 +69,9 @@ def _union_of_exponents(exp1, exp2):
 
 
 # TODO : poly2 can be of a different basis?
-def _lagrange_add(poly1, poly2):
+def _lagrange_add(
+    poly1: MultivariatePolynomialSingleABC, poly2: MultivariatePolynomialSingleABC
+) -> MultivariatePolynomialSingleABC:
     """Addition of two polynomials in Lagrange basis.
 
 
@@ -90,8 +91,12 @@ def _lagrange_add(poly1, poly2):
         l2n_p2 = minterpy.transformations.LagrangeToNewton(p2)
         newt_p2 = l2n_p2()
 
-        max_poly_degree = np.max(np.array([p1.multi_index.poly_degree, p2.multi_index.poly_degree]))
-        max_lp_degree = np.max(np.array([p1.multi_index.lp_degree, p2.multi_index.lp_degree]))
+        max_poly_degree = np.max(
+            np.array([p1.multi_index.poly_degree, p2.multi_index.poly_degree])
+        )
+        max_lp_degree = np.max(
+            np.array([p1.multi_index.lp_degree, p2.multi_index.lp_degree])
+        )
 
         dim = p1.spatial_dimension  # must be the same for p2
 
@@ -118,7 +123,9 @@ def _lagrange_add(poly1, poly2):
         )
 
 
-def _lagrange_sub(poly1, poly2):
+def _lagrange_sub(
+    poly1: MultivariatePolynomialSingleABC, poly2: MultivariatePolynomialSingleABC
+) -> MultivariatePolynomialSingleABC:
     """Subtraction of two polynomials in Lagrange basis.
 
 
@@ -137,8 +144,12 @@ def _lagrange_sub(poly1, poly2):
         l2n_p2 = minterpy.transformations.LagrangeToNewton(p2)
         newt_p2 = l2n_p2()
 
-        max_poly_degree = np.max(np.array([p1.multi_index.poly_degree, p2.multi_index.poly_degree]))
-        max_lp_degree = np.max(np.array([p1.multi_index.lp_degree, p2.multi_index.lp_degree]))
+        max_poly_degree = np.max(
+            np.array([p1.multi_index.poly_degree, p2.multi_index.poly_degree])
+        )
+        max_lp_degree = np.max(
+            np.array([p1.multi_index.lp_degree, p2.multi_index.lp_degree])
+        )
 
         dim = p1.spatial_dimension  # must be the same for p2
 
@@ -165,7 +176,9 @@ def _lagrange_sub(poly1, poly2):
         )
 
 
-def _lagrange_mul(poly1, poly2):
+def _lagrange_mul(
+    poly1: MultivariatePolynomialSingleABC, poly2: MultivariatePolynomialSingleABC
+) -> MultivariatePolynomialSingleABC:
     """Multiplication of two polynomials in Lagrange basis.
 
 
@@ -192,7 +205,9 @@ def _lagrange_mul(poly1, poly2):
         res_degree = int(degree_poly1 + degree_poly2)
         res_lpdegree = lpdegree_poly1 + lpdegree_poly2
 
-        res_mi = MultiIndexSet.from_degree(p1.spatial_dimension, res_degree, res_lpdegree)
+        res_mi = MultiIndexSet.from_degree(
+            p1.spatial_dimension, res_degree, res_lpdegree
+        )
         res_grid = Grid(res_mi)
 
         un = res_grid.unisolvent_nodes
@@ -247,9 +262,9 @@ class LagrangePolynomial(MultivariatePolynomialSingleABC):
     _add = staticmethod(_lagrange_add)
     _sub = staticmethod(_lagrange_sub)
     _mul = staticmethod(_lagrange_mul)
-    _div = staticmethod(dummy)
-    _pow = staticmethod(dummy)
-    _eval = staticmethod(dummy)
+    _div = staticmethod(dummy)  # type: ignore
+    _pow = staticmethod(dummy)  # type: ignore
+    _eval = staticmethod(dummy)  # type: ignore
 
     generate_internal_domain = staticmethod(lagrange_generate_internal_domain)
     generate_user_domain = staticmethod(lagrange_generate_user_domain)

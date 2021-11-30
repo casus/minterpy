@@ -6,21 +6,25 @@ It contains:
     - `Interpolant`, data type which acts like the function which interpolates a given function.
     - `Interpolator`, data type which builds all relevant parts for an interpolation and caches them.
 """
-from typing import Callable,Optional
+from typing import Callable, Optional
 
 import attr
 import numpy as np
-from .core import MultiIndexSet, Grid
-from .polynomials import NewtonPolynomial
-from .dds import dds
 
-__all__ = ["Interpolator","Interpolant","interpolate"]
+from .core import Grid, MultiIndexSet
+from .dds import dds
+from .polynomials import NewtonPolynomial
+
+__all__ = ["Interpolator", "Interpolant", "interpolate"]
+
 
 class InterpolationError(Exception):
     """Exception raised if the interpolation went wrong."""
+
     pass
 
-@attr.s(frozen=True,order=False,eq=False)
+
+@attr.s(frozen=True, order=False, eq=False)
 class Interpolator:
     """The construction class for interpolation.
 
@@ -35,23 +39,25 @@ class Interpolator:
     grid : `Grid` instance build from `multi_index`.
 
     """
+
     spatial_dimension: int = attr.ib()
     poly_degree: int = attr.ib()
     lp_degree: int = attr.ib()
 
-    multi_index = attr.ib(init=False,repr=False)
-    grid = attr.ib(init=False,repr = False)
-
+    multi_index = attr.ib(init=False, repr=False)
+    grid = attr.ib(init=False, repr=False)
 
     @multi_index.default
     def __multi_index_default(self) -> MultiIndexSet:
-        return MultiIndexSet.from_degree(self.spatial_dimension, self.poly_degree, self.lp_degree )
+        return MultiIndexSet.from_degree(
+            self.spatial_dimension, self.poly_degree, self.lp_degree
+        )
 
     @grid.default
     def __grid_default(self) -> Grid:
         return Grid(self.multi_index)
 
-    def __call__(self,fct: Callable) -> Optional[NewtonPolynomial]:
+    def __call__(self, fct: Callable) -> Optional[NewtonPolynomial]:
         """Interpolate a given function.
 
         Builds a `NewtonPolynomial` which interpolates the given `fct`, where the precomuted setting of the current instance is used.
@@ -66,14 +72,14 @@ class Interpolator:
         """
         try:
             fct_values = fct(self.grid.unisolvent_nodes)
-            interpol_coeffs = np.squeeze(dds(fct_values,self.grid.tree))
+            interpol_coeffs = np.squeeze(dds(fct_values, self.grid.tree))
         except Exception as e:
-            raise InterpolationError(e)
+            raise InterpolationError(e) from e
 
-        return NewtonPolynomial(self.multi_index,interpol_coeffs)
+        return NewtonPolynomial(self.multi_index, interpol_coeffs)
 
 
-@attr.s(frozen=True,order=False,eq=False)
+@attr.s(frozen=True, order=False, eq=False)
 class Interpolant:
     """Data type representing the result of an interpolation.
 
@@ -84,16 +90,17 @@ class Interpolant:
     fct : Function to be interpolated. Needs to be (numpy) universal function which shall be interpolated. If `arr` is an :class:`np.ndarray` with shape ``arr.shape == (N,spatial_dimension)``, the signature needs to be ``fct(arr) -> res``, where ``res`` is an :class:`np.ndarray` with shape ``(N,)``.
     interpolator : Instance of :class:`Interpolator`, which represents the interpolation scheme to be used.
     """
-    fct : Callable = attr.ib(repr=False)
-    interpolator : Interpolator = attr.ib(repr=False)
-    __interpolation_poly: NewtonPolynomial = attr.ib(init=False, repr = False)
+
+    fct: Callable = attr.ib(repr=False)
+    interpolator: Interpolator = attr.ib(repr=False)
+    __interpolation_poly: NewtonPolynomial = attr.ib(init=False, repr=False)
 
     @__interpolation_poly.default
     def __interpolation_poly_default(self):
         return self.interpolator(self.fct)
 
     @classmethod
-    def from_degree(cls,fct,spatial_dimension,poly_degree,lp_degree):
+    def from_degree(cls, fct, spatial_dimension, poly_degree, lp_degree):
         """Custom constructor of an interpolant using dimensionality and degree parameter.
 
         :param fct: Function to be interpolated. Needs to be (numpy) universal function which shall be interpolated. If `arr` is an :class:`np.ndarray` with shape ``arr.shape == (N,spatial_dimension)``, the signature needs to be ``fct(arr) -> res``, where ``res`` is an :class:`np.ndarray` with shape ``(N,)``.
@@ -109,7 +116,7 @@ class Interpolant:
         :return: The interpolant of ``fct`` using the default interpolator build from ``(spatial_dimension, poly_degree, lp_degree)``.
         :rtype: Interpolant
         """
-        return cls(fct,Interpolator(spatial_dimension,poly_degree,lp_degree))
+        return cls(fct, Interpolator(spatial_dimension, poly_degree, lp_degree))
 
     @property
     def spatial_dimension(self):
@@ -141,7 +148,7 @@ class Interpolant:
         """
         return self.interpolator.lp_degree
 
-    def __call__(self,pts):
+    def __call__(self, pts):
         """Evaulate the interpolant on a given array of points.
 
         :param pts: Array of points, where the shape needs to be ``pts.shape == (N,spatial_dimension)``,
@@ -150,7 +157,7 @@ class Interpolant:
         return self.__interpolation_poly(pts)
 
 
-def interpolate(fct,spatial_dimension,poly_degree,lp_degree = None):
+def interpolate(fct, spatial_dimension, poly_degree, lp_degree=None):
     """Interpolate a given function.
 
     Return an interpolant, which represents the given function on the domain :math:`[-1, 1]^d`, where :math:`d` is the dimension of the domain space.
@@ -170,4 +177,4 @@ def interpolate(fct,spatial_dimension,poly_degree,lp_degree = None):
     :return: The interpolant of ``fct`` using the default interpolator build from ``(spatial_dimension, poly_degree, lp_degree)``.
     :rtype: Interpolant
     """
-    return Interpolant.from_degree(fct,spatial_dimension,poly_degree,lp_degree)
+    return Interpolant.from_degree(fct, spatial_dimension, poly_degree, lp_degree)

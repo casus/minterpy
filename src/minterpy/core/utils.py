@@ -1,22 +1,32 @@
-from math import gamma
-from typing import Iterable, List, Optional, Union
-from warnings import warn
+"""
+Here we store the core utilities of `minterpy`.
+"""
+from __future__ import annotations
+
+from typing import Iterable, no_type_check
 
 import numpy as np
-from scipy.special import binom
 
 from minterpy.global_settings import DEFAULT_LP_DEG, INT_DTYPE
-from minterpy.jit_compiled_utils import (fill_match_positions,
-                                         index_is_contained,
-                                         lex_smaller_or_equal)
-from minterpy.utils import lp_norm,cartesian_product,lp_sum
+from minterpy.jit_compiled_utils import (
+    fill_match_positions,
+    index_is_contained,
+    lex_smaller_or_equal,
+)
+from minterpy.utils import cartesian_product, lp_norm, lp_sum
+
+# if TYPE_CHECKING:
+#    from .tree import MultiIndexTree
 
 
 def _get_poly_degree(exponents, lp):
     norms = lp_norm(exponents, lp, axis=1)
     return norms.max()
 
-def get_exponent_matrix(spatial_dimension: int, poly_degree: int, lp_degree: Union[float, int]) -> np.ndarray:
+
+def get_exponent_matrix(
+    spatial_dimension: int, poly_degree: int, lp_degree: float | int
+) -> np.ndarray:
     """
     Generate exponent matrix.
 
@@ -34,17 +44,27 @@ def get_exponent_matrix(spatial_dimension: int, poly_degree: int, lp_degree: Uni
 
     """
     if lp_degree == np.inf:
-        right_choices = cartesian_product(*[np.arange(poly_degree+1,dtype=INT_DTYPE)]*spatial_dimension)
+        right_choices = cartesian_product(
+            *[np.arange(poly_degree + 1, dtype=INT_DTYPE)] * spatial_dimension
+        )
     else:
-        candidates_without_diag = cartesian_product(*[np.arange(poly_degree,dtype=INT_DTYPE)]*spatial_dimension)
-        candidates =np.vstack((candidates_without_diag,np.diag([INT_DTYPE(poly_degree)]*spatial_dimension)))
-        cond =  lp_sum(candidates,lp_degree)<=poly_degree**lp_degree
+        candidates_without_diag = cartesian_product(
+            *[np.arange(poly_degree, dtype=INT_DTYPE)] * spatial_dimension
+        )
+        candidates = np.vstack(
+            (
+                candidates_without_diag,
+                np.diag([INT_DTYPE(poly_degree)] * spatial_dimension),
+            )
+        )
+        cond = lp_sum(candidates, lp_degree) <= poly_degree ** lp_degree
         right_choices = candidates[cond]
     lex_idx = np.lexsort(right_choices.T)
     return right_choices[lex_idx]
 
 
 NORM_FCT = lp_norm
+
 
 def _gen_multi_index_exponents_recur(m, n, gamma, gamma2, lp_degree):
     """DEPRECATED. only for reference. TODO remove
@@ -126,7 +146,7 @@ def _gen_multi_index_exponents(spatial_dimension, poly_degree, lp_degree):
     return exponents
 
 
-def _expand_dim(grid_nodes, target_dim,point_pinned = None):
+def _expand_dim(grid_nodes, target_dim, point_pinned=None):
     """
     Expansion of a given array to a given dimension, where the additional dimensions will filled with tiles of given elements
 
@@ -142,9 +162,7 @@ def _expand_dim(grid_nodes, target_dim,point_pinned = None):
     grid_dtype = grid_nodes.dtype
     if target_dim < dim:
         # TODO maybe build a reduce function which removes dims where all exps are 0
-        raise ValueError(
-            f"Can't expand grid from dim {dim} to dim {target_dim}."
-        )
+        raise ValueError(f"Can't expand grid from dim {dim} to dim {target_dim}.")
     if target_dim == dim:
         return grid_nodes
     num_expand_dim = target_dim - dim
@@ -153,14 +171,16 @@ def _expand_dim(grid_nodes, target_dim,point_pinned = None):
     else:
         point_pinned = np.atleast_1d(point_pinned)
         if len(point_pinned) is not num_expand_dim:
-            raise ValueError(f"Given point_pinned {point_pinned} has not enough elements to fill the extra dimensions! <{num_expand_dim}> required.")
-        new_dim_exps = np.require(np.tile(point_pinned,(grid_len,1)),dtype=grid_dtype)
+            raise ValueError(
+                f"Given point_pinned {point_pinned} has not enough elements to fill the extra dimensions! <{num_expand_dim}> required."
+            )
+        new_dim_exps = np.require(
+            np.tile(point_pinned, (grid_len, 1)), dtype=grid_dtype
+        )
     return np.concatenate((grid_nodes, new_dim_exps), axis=1)
 
 
-def iterate_indices(
-    indices: Union[np.ndarray, Iterable[np.ndarray]]
-) -> Iterable[np.ndarray]:
+def iterate_indices(indices: np.ndarray | Iterable[np.ndarray]) -> Iterable[np.ndarray]:
     if isinstance(indices, np.ndarray) and indices.ndim == 1:  # just a single index
         yield indices
     else:  # already iterable as is:
@@ -218,8 +238,9 @@ def is_lexicographically_complete(indices: np.ndarray) -> bool:
     return True
 
 
+@no_type_check
 def list_insert_single(
-    list_of_indices: List[np.ndarray],
+    list_of_indices: list[np.ndarray],
     index2insert: np.ndarray,
     check_for_inclusion: bool = True,
 ):
@@ -246,14 +267,15 @@ def list_insert_single(
         list_of_indices.insert(insertion_idx, index2insert)
 
 
-def to_index_list(indices: Union[np.ndarray, Iterable[np.ndarray]]) -> List[np.ndarray]:
+@no_type_check
+def to_index_list(indices: np.ndarray | Iterable[np.ndarray]) -> list[np.ndarray]:
     if type(indices) is list:
         return indices  # already is a list
     list_of_indices = list(iterate_indices(indices))  # include all existing indices
     return list_of_indices
 
 
-def to_index_array(list_of_indices: List[np.ndarray]) -> np.ndarray:
+def to_index_array(list_of_indices: list[np.ndarray]) -> np.ndarray:
     # NOTE: shape is: (N, m)
     index_array = np.array(list_of_indices, dtype=INT_DTYPE)
     return index_array
@@ -271,8 +293,8 @@ def to_index_array(list_of_indices: List[np.ndarray]) -> np.ndarray:
 
 
 def insert_lexicographically(
-    indices: Union[List[np.ndarray], np.ndarray],
-    indices2insert: Optional[Iterable[np.ndarray]],
+    indices: list[np.ndarray] | np.ndarray,
+    indices2insert: Iterable[np.ndarray] | None,
 ) -> np.ndarray:
     """inserts possibly multiple index vectors into a given array of indices maintaining lexicographical ordering
 
@@ -313,7 +335,7 @@ def insert_partial_derivatives(list_of_indices, exponent_vector):
 
 def make_derivable(indices: np.ndarray) -> np.ndarray:
     """inserts all missing multi index vectors "smaller by one" """
-    list_of_indices = []
+    list_of_indices: list[int] = []
     nr_exponents, spatial_dimension = indices.shape
     for i in reversed(range(nr_exponents)):  # start with the biggest multi index
         contained_exponent_vector = indices[i, :]
@@ -324,7 +346,7 @@ def make_derivable(indices: np.ndarray) -> np.ndarray:
 
 
 def make_complete(indices: np.ndarray, lp_degree: float = None) -> np.ndarray:
-    """ Make a given array of exponents complete.
+    """Make a given array of exponents complete.
 
     :param indices: The exponent array to be completed.
     :type indices: np.ndarray
@@ -337,10 +359,9 @@ def make_complete(indices: np.ndarray, lp_degree: float = None) -> np.ndarray:
     """
     if lp_degree is None:
         lp_degree = DEFAULT_LP_DEG
-    poly_degree = _get_poly_degree(indices,lp_degree)
+    poly_degree = _get_poly_degree(indices, lp_degree)
     spatial_dimension = indices.shape[-1]
-    return get_exponent_matrix(spatial_dimension,poly_degree,lp_degree)
-
+    return get_exponent_matrix(spatial_dimension, poly_degree, lp_degree)
 
 
 def find_match_between(

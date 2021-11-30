@@ -6,9 +6,9 @@ Module of the NewtonPolyomial class
 """
 
 from minterpy.global_settings import DEBUG
-from ..core.ABC.multivariate_polynomial_abstract import \
-    MultivariatePolynomialSingleABC
 from minterpy.utils import newt_eval
+
+from ..core.ABC.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC
 from ..core.verification import verify_domain
 
 __all__ = ["NewtonPolynomial"]
@@ -21,7 +21,7 @@ def dummy():
       This feature is not implemented yet!
     """
     # move dummy to util?
-    raise NotImplementedError(f"This feature is not implemented yet.")
+    raise NotImplementedError("This feature is not implemented yet.")
 
 
 def newton_eval(newton_poly, x):

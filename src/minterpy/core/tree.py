@@ -3,17 +3,26 @@ Module defining the base class for MultiIndexTree.
 """
 
 
-from typing import Optional
+from __future__ import annotations
 
-import numpy as np
+from typing import TYPE_CHECKING
 
+from minterpy.dds import (
+    compile_problem_sizes,
+    compile_splits,
+    compile_subtree_sizes,
+    precompute_masks,
+)
+from minterpy.global_settings import ARRAY, ARRAY_DICT  # noqa
 
-from minterpy.dds import (compile_problem_sizes, compile_splits,
-                          compile_subtree_sizes, jit_dds, precompute_masks)
-from minterpy.global_settings import ARRAY, ARRAY_DICT, FLOAT_DTYPE
-from minterpy.core.verification import check_shape, check_type_n_values
+if TYPE_CHECKING:
+    # https://stackoverflow.com/questions/39740632/python-type-hinting-without-cyclic-imports
+    from .grid import Grid
+    from .multi_index import MultiIndexSet
+
 
 __all__ = ["MultiIndexTree"]
+
 
 class MultiIndexTree:
     """Base class for MultiIndexTree
@@ -31,10 +40,11 @@ class MultiIndexTree:
     problem_sizes : List
 
     """
+
     #  TODO prevent dynamic attribute assignment (-> safe memory)
     # __slots__ = ["multi_index", "split_positions", "subtree_sizes", "stored_masks", "generating_points"]
 
-    def __init__(self, grid: "Grid"):
+    def __init__(self, grid: Grid):
         multi_index = grid.multi_index
         if not multi_index.is_complete:
             raise ValueError(
@@ -67,10 +77,10 @@ class MultiIndexTree:
 
         # TODO improvement: also "pre-compute" more of the recursion through the tree,
         #  avoid computing the node indices each time
-        self._stored_masks: Optional[ARRAY_DICT] = None
+        self._stored_masks: ARRAY_DICT | None = None
 
     @property
-    def multi_index(self) -> "MultiIndex":
+    def multi_index(self) -> MultiIndexSet:
         """Returns the multi index set of the grid used to construct the tree.
 
         :return: the multi index set of the grid
@@ -78,11 +88,12 @@ class MultiIndexTree:
         return self.grid.multi_index
 
     @property
-    def stored_masks(self) -> ARRAY_DICT:  # the intermediary results required for DDS
+    def stored_masks(self) -> ARRAY_DICT:
         """Returns the stored masks of the tree.
 
         :return: correspondencies between the left and right nodes of the tree
         """
+        # the intermediary results required for DDS
         # TODO remove when regular DDS functionality is no longer required (together with the dds module)
         if self._stored_masks is None:  # lazy evaluation
             # based on the splittings one can compute all required correspondences

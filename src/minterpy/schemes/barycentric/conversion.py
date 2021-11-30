@@ -5,13 +5,21 @@ and to construct a full size array for testing purposes (comparison with the reg
 .. todo::
     implement all other conversion functions
 """
+from typing import no_type_check
 
 import numpy as np
 from numba import njit
 
-from minterpy.global_settings import (ARRAY, FLOAT_DTYPE, INT_DTYPE,
-                                      TRAFO_DICT, TYPED_LIST)
+from minterpy.global_settings import (
+    ARRAY,
+    FLOAT_DTYPE,
+    INT_DTYPE,
+    TRAFO_DICT,
+    TYPED_LIST,
+)
 
+
+@no_type_check
 @njit(cache=True)
 def merge_trafo_dict(trafo_dict: TRAFO_DICT, leaf_positions: ARRAY) -> ARRAY:
     """Reconstructing the global transformation matrix from the precomputed transformation in dictionary format.

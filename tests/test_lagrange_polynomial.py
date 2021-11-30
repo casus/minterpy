@@ -4,12 +4,17 @@ Testing module for lagrange_polynomial.py
 """
 
 import numpy as np
+from conftest import (
+    MultiIndices,
+    NrPoints,
+    NrSimilarPolynomials,
+    assert_polynomial_almost_equal,
+    build_rnd_coeffs,
+    build_rnd_points,
+)
 
-from conftest import (MultiIndices, NrPoints, NrSimilarPolynomials,
-                      build_rnd_coeffs, build_rnd_points, assert_polynomial_almost_equal)
-
-from minterpy import (MultiIndexSet, CanonicalPolynomial, LagrangePolynomial)
-from minterpy.transformations import LagrangeToCanonical, CanonicalToLagrange
+from minterpy import CanonicalPolynomial, LagrangePolynomial, MultiIndexSet
+from minterpy.transformations import CanonicalToLagrange, LagrangeToCanonical
 
 
 def test_neg(MultiIndices, NrSimilarPolynomials):
@@ -23,6 +28,7 @@ def test_neg(MultiIndices, NrSimilarPolynomials):
 
 Mi1 = MultiIndices
 Mi2 = MultiIndices
+
 
 def test_add_poly(Mi1, Mi2):
     coeffs1 = build_rnd_coeffs(Mi1)
@@ -114,7 +120,9 @@ def test_add_different_poly():
 
     groundtruth_multi_index = mi1
 
-    groundtruth_canonical = CanonicalPolynomial(groundtruth_multi_index, groundtruth_coeffs)
+    groundtruth_canonical = CanonicalPolynomial(
+        groundtruth_multi_index, groundtruth_coeffs
+    )
 
     transform_c2l_res = CanonicalToLagrange(groundtruth_canonical)
     groundtruth = transform_c2l_res()

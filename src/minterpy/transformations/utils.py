@@ -2,15 +2,19 @@
 Utility functions for computing matrices for transformation between canonical, lagrange, and newton basis.
 
 """
+from typing import no_type_check
 
 import numpy as np
-from minterpy.schemes.barycentric.precomp import (_build_lagrange_to_newton_bary,
-                                          _build_newton_to_lagrange_bary)
+
+from minterpy.core.ABC import OperatorABC, TransformationABC
 from minterpy.dds import dds
-from minterpy.schemes.matrix_operator import MatrixOperator
 from minterpy.global_settings import ARRAY, DEBUG, FLOAT_DTYPE
 from minterpy.jit_compiled_utils import compute_vandermonde_n2c
-from minterpy.core.ABC import OperatorABC,TransformationABC
+from minterpy.schemes.barycentric.precomp import (
+    _build_lagrange_to_newton_bary,
+    _build_newton_to_lagrange_bary,
+)
+from minterpy.schemes.matrix_operator import MatrixOperator
 from minterpy.utils import eval_newt_polys_on
 
 # NOTE: avoid looping over a numpy array! e.g. for j in np.arange(num_monomials):
@@ -73,9 +77,7 @@ def _build_newton_to_lagrange_naive(
     transformation_matrix = _build_n2l_array(
         grid, transformation.origin_poly.multi_index
     )
-    transformation_operator = MatrixOperator(
-        transformation, transformation_matrix
-    )
+    transformation_operator = MatrixOperator(transformation, transformation_matrix)
     return transformation_operator
 
 
@@ -101,9 +103,7 @@ def _build_lagrange_to_newton_naive(
     """
     newton_to_lagrange = _build_n2l_array(transformation.grid, require_invertible=True)
     transformation_matrix = invert_triangular(newton_to_lagrange)
-    transformation_operator = MatrixOperator(
-        transformation, transformation_matrix
-    )
+    transformation_operator = MatrixOperator(transformation, transformation_matrix)
     return transformation_operator
 
 
@@ -127,6 +127,7 @@ def _build_n2c_array(transformation: TransformationABC) -> ARRAY:
 # TODO own module?
 
 
+@no_type_check
 def _build_newton_to_lagrange_operator(
     transformation: TransformationABC,
 ) -> OperatorABC:
@@ -151,6 +152,7 @@ def _build_newton_to_lagrange_operator(
     return transformation_operator
 
 
+@no_type_check
 def _build_lagrange_to_newton_operator(
     transformation: TransformationABC,
 ) -> OperatorABC:
@@ -181,17 +183,13 @@ def _build_lagrange_to_newton_operator(
 def _build_canonical_to_newton_operator(
     transformation: TransformationABC,
 ) -> MatrixOperator:
-    return MatrixOperator(
-        transformation, _build_c2n_array(transformation)
-    )
+    return MatrixOperator(transformation, _build_c2n_array(transformation))
 
 
 def _build_newton_to_canonical_operator(
     transformation: TransformationABC,
 ) -> MatrixOperator:
-    return MatrixOperator(
-        transformation, _build_n2c_array(transformation)
-    )
+    return MatrixOperator(transformation, _build_n2c_array(transformation))
 
 
 def _build_lagrange_to_canonical_operator(

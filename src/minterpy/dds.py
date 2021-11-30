@@ -8,14 +8,23 @@ This module also includes the functionality for implicitly creating and traversi
 The tree structure is being encoded by numpy arrays for increased performance.
 """
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional, no_type_check
 
 import numpy as np
 from numba import njit
 from numba.typed import List
 
-from minterpy.global_settings import (ARRAY, ARRAY_DICT, INT_DTYPE, INT_SET,
-                                      INT_TUPLE, TYPED_LIST)
+from minterpy.global_settings import (
+    ARRAY,
+    ARRAY_DICT,
+    INT_DTYPE,
+    INT_SET,
+    INT_TUPLE,
+    TYPED_LIST,
+)
+
+if TYPE_CHECKING:
+    from .core.tree import MultiIndexTree
 
 
 @njit(cache=True)
@@ -164,11 +173,6 @@ def compile_problem_sizes(
     # independent in each dimension
     nr_dims = len(splits)
     amounts = List()  # use Numba typed list
-    # TODO rename
-    # TODO
-    # NOTE: the leaf nodes have no direct children -> they have a size of 0 (unused)
-    nr_of_leaves = len(splits[0])
-    # amounts.append(np.zeros(nr_of_leaves, dtype=INT_DTYPE))
     amounts.append(sizes[0])
 
     split_row_child = splits[0]
@@ -587,6 +591,7 @@ def dds_1_dimensional(grid_values: ARRAY, result_placeholder: ARRAY) -> None:
         coeff_slice[:] = coeff_diff / val_diff
 
 
+@no_type_check
 @njit(cache=True)
 def project_n_update(
     dim_idx: int,

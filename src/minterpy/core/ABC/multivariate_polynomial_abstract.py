@@ -5,23 +5,20 @@ This module contains the abstract base classes, from which all concrete implemen
 This ensures that all polynomials work with the same interface, so futher features can be formulated without referencing the concrete polynomial implementation. See e.g. :PEP:`3119` for further explanations on that topic.
 """
 import abc
-from copy import copy, deepcopy
-from typing import Optional, Union
+from copy import deepcopy
+from typing import Any, Optional, Union
 
 import numpy as np
 
 from minterpy.global_settings import ARRAY
+
 from ..grid import Grid
 from ..multi_index import MultiIndexSet
-
-
-
-from ..utils import find_match_between,_expand_dim
-from ..verification import (check_shape, check_type_n_values,
-                                   verify_domain)
-
+from ..utils import _expand_dim, find_match_between
+from ..verification import check_shape, check_type_n_values, verify_domain
 
 __all__ = ["MultivariatePolynomialABC", "MultivariatePolynomialSingleABC"]
+
 
 class MultivariatePolynomialABC(abc.ABC):
     """the most general abstract base class for multivariate polynomials.
@@ -39,7 +36,7 @@ class MultivariatePolynomialABC(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def coeffs(self) -> ARRAY: # pragma: no cover
+    def coeffs(self) -> ARRAY:  # pragma: no cover
         """Abstract container which stores the coefficients of the polynomial.
 
         This is a placeholder of the ABC, which is overwritten by the concrete implementation.
@@ -52,7 +49,7 @@ class MultivariatePolynomialABC(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def nr_active_monomials(self): # pragma: no cover
+    def nr_active_monomials(self):  # pragma: no cover
         """Abstract container for the number of monomials of the polynomial(s).
 
         Notes
@@ -63,7 +60,7 @@ class MultivariatePolynomialABC(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def spatial_dimension(self): # pragma: no cover
+    def spatial_dimension(self):  # pragma: no cover
         """Abstract container for the dimension of space where the polynomial(s) live on.
 
         Notes
@@ -74,7 +71,7 @@ class MultivariatePolynomialABC(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def unisolvent_nodes(self): # pragma: no cover
+    def unisolvent_nodes(self):  # pragma: no cover
         """Abstract container for unisolvent nodes the polynomial(s) is(are) defined on.
 
         Notes
@@ -84,7 +81,7 @@ class MultivariatePolynomialABC(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _eval(self, arg) -> Union[float, ARRAY]: # pragma: no cover
+    def _eval(self, x) -> Any:  # pragma: no cover
         """Abstract evaluation function.
 
         Notes
@@ -94,7 +91,7 @@ class MultivariatePolynomialABC(abc.ABC):
         pass
 
     # TODO *args, **kwargs ?! or rather "point" or "x"
-    def __call__(self, arg) -> Union[float, ARRAY]:
+    def __call__(self, x) -> Any:
         """Evaluation of the polynomial.
 
         This function is called, if an instance of the polynomial(s) is called: ``P(x)``
@@ -119,7 +116,7 @@ class MultivariatePolynomialABC(abc.ABC):
         """
         # TODO built in rescaling between user_domain and internal_domain
         #   IDEA: use sklearn min max scaler (transform() and inverse_transform())
-        return self._eval(arg)
+        return self._eval(x)
 
     # anything else any polynomial must support
     # TODO mathematical operations? abstract
@@ -159,44 +156,46 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
     @staticmethod
     @abc.abstractmethod
-    def generate_internal_domain(internal_domain, spatial_dimension): # pragma: no cover
+    def generate_internal_domain(
+        internal_domain, spatial_dimension
+    ):  # pragma: no cover
         # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
-    def generate_user_domain(user_domain, spatial_dimension): # pragma: no cover
+    def generate_user_domain(user_domain, spatial_dimension):  # pragma: no cover
         # no docstring here, since it is given in the concrete implementation
         pass
 
     # TODO static methods should not have a parameter "self"
     @staticmethod
     @abc.abstractmethod
-    def _add(self, other): # pragma: no cover
+    def _add(self, other):  # pragma: no cover
         # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
-    def _sub(self, other): # pragma: no cover
+    def _sub(self, other):  # pragma: no cover
         # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
-    def _mul(self, other): # pragma: no cover
+    def _mul(self, other):  # pragma: no cover
         # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
-    def _div(self, other): # pragma: no cover
+    def _div(self, other):  # pragma: no cover
         # no docstring here, since it is given in the concrete implementation
         pass
 
     @staticmethod
     @abc.abstractmethod
-    def _pow(self, pow): # pragma: no cover
+    def _pow(self, pow):  # pragma: no cover
         # no docstring here, since it is given in the concrete implementation
         pass
 
@@ -329,7 +328,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         p = polynomial
         if new_coeffs is None:  # use the same coefficients
             new_coeffs = p.coeffs
-            
+
         return cls(p.multi_index, new_coeffs, p.internal_domain, p.user_domain, p.grid)
 
     # Arithmetic operations:
@@ -706,7 +705,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         return self._new_instance_if_necessary(grid_completed)
 
     def add_points(self, exponents: ARRAY) -> "MultivariatePolynomialSingleABC":
-        """ Extend ``grid`` and ``multi_index``
+        """Extend ``grid`` and ``multi_index``
 
         Adds points ``grid`` and exponents to ``multi_index`` related to a given set of additional exponents.
 
@@ -734,7 +733,12 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
     #     new_indices = self.multi_index.make_derivable()
     #     return self._new_instance_if_necessary(new_indices)
 
-    def expand_dim(self, dim:int, extra_internal_domain:ARRAY=None, extra_user_domain:ARRAY=None):
+    def expand_dim(
+        self,
+        dim: int,
+        extra_internal_domain: ARRAY = None,
+        extra_user_domain: ARRAY = None,
+    ):
         """Expand the spatial dimention.
 
         Expands the dimension of the domain space of the polynomial by adding zeros to the multi_indices
@@ -750,13 +754,11 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
             dim
         )  # breaks if dim<spacial_dimension, i.e. expand_dim<0
 
-
-
         grid = self.grid
-        new_gen_pts = _expand_dim(grid.generating_points,dim)
-        new_gen_vals = _expand_dim(grid.generating_values.reshape(-1,1),dim)
+        new_gen_pts = _expand_dim(grid.generating_points, dim)
+        new_gen_vals = _expand_dim(grid.generating_values.reshape(-1, 1), dim)
 
-        self.grid = Grid(self.multi_index,new_gen_pts,new_gen_vals)
+        self.grid = Grid(self.multi_index, new_gen_pts, new_gen_vals)
 
         extra_internal_domain = verify_domain(extra_internal_domain, expand_dim)
         self.internal_domain = np.concatenate(
