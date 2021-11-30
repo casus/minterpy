@@ -175,7 +175,7 @@ def assert_interpolant_almost_equal(interpolant1, interpolant2):
 
 # fixtures for spatial dimension
 
-spatial_dimensions = [1, 5]
+spatial_dimensions = [1, 3]
 
 
 @pytest.fixture(params=spatial_dimensions)
