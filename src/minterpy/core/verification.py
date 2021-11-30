@@ -2,7 +2,7 @@
 """ functions for input verification
 """
 
-from typing import Optional, Union,Sized
+from typing import Optional, Sized
 
 import numpy as np
 from _warnings import warn
@@ -268,7 +268,7 @@ def check_shape(
             f"expected {dimensionality}D array, but encountered array of dimensionality {len(a.shape)}"
         )
 
-    for dim, (true_size, expected_size) in enumerate(zip(a.shape, shape)): # type: ignore
+    for dim, (true_size, expected_size) in enumerate(zip(a.shape, shape)):  # type: ignore
         if isinstance(expected_size, int) and true_size != expected_size:
             raise ValueError(
                 f"expected array of size {expected_size} in dimension {dim},"

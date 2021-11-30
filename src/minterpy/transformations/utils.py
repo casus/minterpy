@@ -2,10 +2,10 @@
 Utility functions for computing matrices for transformation between canonical, lagrange, and newton basis.
 
 """
-from typing import Type, no_type_check
-
+from typing import no_type_check
 
 import numpy as np
+
 from minterpy.core.ABC import OperatorABC, TransformationABC
 from minterpy.dds import dds
 from minterpy.global_settings import ARRAY, DEBUG, FLOAT_DTYPE
@@ -124,6 +124,7 @@ def _build_n2c_array(transformation: TransformationABC) -> ARRAY:
 
 # TODO own module?
 
+
 @no_type_check
 def _build_newton_to_lagrange_operator(
     transformation: TransformationABC,
@@ -147,6 +148,7 @@ def _build_newton_to_lagrange_operator(
         transformation_operator = _build_newton_to_lagrange_naive(transformation)
 
     return transformation_operator
+
 
 @no_type_check
 def _build_lagrange_to_newton_operator(

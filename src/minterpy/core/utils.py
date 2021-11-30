@@ -2,7 +2,8 @@
 Here we store the core utilities of `minterpy`.
 """
 from __future__ import annotations
-from typing import Iterable, List, Optional, Union, no_type_check, TYPE_CHECKING
+
+from typing import Iterable, no_type_check
 
 import numpy as np
 
@@ -12,8 +13,8 @@ from minterpy.jit_compiled_utils import (fill_match_positions,
                                          lex_smaller_or_equal)
 from minterpy.utils import cartesian_product, lp_norm, lp_sum
 
-if TYPE_CHECKING:
-    from .tree import MultiIndexTree
+# if TYPE_CHECKING:
+#    from .tree import MultiIndexTree
 
 
 def _get_poly_degree(exponents, lp):
@@ -22,7 +23,7 @@ def _get_poly_degree(exponents, lp):
 
 
 def get_exponent_matrix(
-    spatial_dimension: int, poly_degree: int, lp_degree: Union[float, int]
+    spatial_dimension: int, poly_degree: int, lp_degree: float | int
 ) -> np.ndarray:
     """
     Generate exponent matrix.
@@ -177,9 +178,7 @@ def _expand_dim(grid_nodes, target_dim, point_pinned=None):
     return np.concatenate((grid_nodes, new_dim_exps), axis=1)
 
 
-def iterate_indices(
-    indices: Union[np.ndarray, Iterable[np.ndarray]]
-) -> Iterable[np.ndarray]:
+def iterate_indices(indices: np.ndarray | Iterable[np.ndarray]) -> Iterable[np.ndarray]:
     if isinstance(indices, np.ndarray) and indices.ndim == 1:  # just a single index
         yield indices
     else:  # already iterable as is:
@@ -236,9 +235,10 @@ def is_lexicographically_complete(indices: np.ndarray) -> bool:
         return False
     return True
 
+
 @no_type_check
 def list_insert_single(
-    list_of_indices: List[np.ndarray],
+    list_of_indices: list[np.ndarray],
     index2insert: np.ndarray,
     check_for_inclusion: bool = True,
 ):
@@ -264,15 +264,16 @@ def list_insert_single(
     if not np.array_equal(contained_index, index2insert):
         list_of_indices.insert(insertion_idx, index2insert)
 
+
 @no_type_check
-def to_index_list(indices: Union[np.ndarray, Iterable[np.ndarray]]) -> List[np.ndarray]:
+def to_index_list(indices: np.ndarray | Iterable[np.ndarray]) -> list[np.ndarray]:
     if type(indices) is list:
         return indices  # already is a list
     list_of_indices = list(iterate_indices(indices))  # include all existing indices
     return list_of_indices
 
 
-def to_index_array(list_of_indices: List[np.ndarray]) -> np.ndarray:
+def to_index_array(list_of_indices: list[np.ndarray]) -> np.ndarray:
     # NOTE: shape is: (N, m)
     index_array = np.array(list_of_indices, dtype=INT_DTYPE)
     return index_array
@@ -290,8 +291,8 @@ def to_index_array(list_of_indices: List[np.ndarray]) -> np.ndarray:
 
 
 def insert_lexicographically(
-    indices: Union[List[np.ndarray], np.ndarray],
-    indices2insert: Optional[Iterable[np.ndarray]],
+    indices: list[np.ndarray] | np.ndarray,
+    indices2insert: Iterable[np.ndarray] | None,
 ) -> np.ndarray:
     """inserts possibly multiple index vectors into a given array of indices maintaining lexicographical ordering
 
@@ -332,7 +333,7 @@ def insert_partial_derivatives(list_of_indices, exponent_vector):
 
 def make_derivable(indices: np.ndarray) -> np.ndarray:
     """inserts all missing multi index vectors "smaller by one" """
-    list_of_indices: List[int] = []
+    list_of_indices: list[int] = []
     nr_exponents, spatial_dimension = indices.shape
     for i in reversed(range(nr_exponents)):  # start with the biggest multi index
         contained_exponent_vector = indices[i, :]

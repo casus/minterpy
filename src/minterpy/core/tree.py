@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from minterpy.dds import (compile_problem_sizes, compile_splits,
                           compile_subtree_sizes, precompute_masks)
-from minterpy.global_settings import ARRAY_DICT, ARRAY
+from minterpy.global_settings import ARRAY, ARRAY_DICT  # noqa
 
 if TYPE_CHECKING:
     # https://stackoverflow.com/questions/39740632/python-type-hinting-without-cyclic-imports

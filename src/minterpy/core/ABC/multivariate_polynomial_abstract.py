@@ -6,7 +6,7 @@ This ensures that all polynomials work with the same interface, so futher featur
 """
 import abc
 from copy import deepcopy
-from typing import Optional, Union, Any
+from typing import Any, Optional, Union
 
 import numpy as np
 

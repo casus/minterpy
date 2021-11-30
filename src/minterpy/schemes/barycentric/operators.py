@@ -11,7 +11,7 @@ The following implementations are provided:
 """
 
 from abc import abstractmethod
-from typing import Optional, Union, List
+from typing import Optional, Union
 
 import numpy as np
 from _warnings import warn
@@ -47,7 +47,7 @@ class BarycentricOperator(OperatorABC):
                 "building a full transformation matrix from a barycentric transformation. this is inefficient."
             )
             # NOTE: 'self' arg must not be passed to the the merging fcts (@staticmethod)
-            full_array = self.__class__.merging_fct(*self.transformation_data) # type: ignore
+            full_array = self.__class__.merging_fct(*self.transformation_data)  # type: ignore
             self._array_representation = full_array
         return self._array_representation
 
@@ -88,7 +88,7 @@ class BarycentricOperator(OperatorABC):
         # NOTE: 'self' arg must not be passed to the the transformation fcts (@staticmethod)
         self.__class__.transformation_fct(
             coeffs_in, coeffs_out_placeholder, *self.transformation_data
-        ) # type: ignore
+        )  # type: ignore
         return coeffs_out_placeholder
 
     def _get_array_repr(self):

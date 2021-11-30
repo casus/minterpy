@@ -61,6 +61,7 @@ def compute_1d_dds_solutions(
 
     return dds_solutions
 
+
 @no_type_check
 @njit(cache=True)
 def expand_solution(

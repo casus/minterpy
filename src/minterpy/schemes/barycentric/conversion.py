@@ -13,6 +13,7 @@ from numba import njit
 from minterpy.global_settings import (ARRAY, FLOAT_DTYPE, INT_DTYPE,
                                       TRAFO_DICT, TYPED_LIST)
 
+
 @no_type_check
 @njit(cache=True)
 def merge_trafo_dict(trafo_dict: TRAFO_DICT, leaf_positions: ARRAY) -> ARRAY:

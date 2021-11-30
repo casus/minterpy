@@ -8,7 +8,7 @@ This module also includes the functionality for implicitly creating and traversi
 The tree structure is being encoded by numpy arrays for increased performance.
 """
 
-from typing import TYPE_CHECKING, Optional,no_type_check
+from typing import TYPE_CHECKING, Optional, no_type_check
 
 import numpy as np
 from numba import njit
@@ -583,6 +583,7 @@ def dds_1_dimensional(grid_values: ARRAY, result_placeholder: ARRAY) -> None:
         val_diff = np.expand_dims(val_diff, -1)
         coeff_diff = coeff_slice - c[i_prev]
         coeff_slice[:] = coeff_diff / val_diff
+
 
 @no_type_check
 @njit(cache=True)

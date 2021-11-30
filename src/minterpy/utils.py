@@ -2,7 +2,6 @@
 set of package wide utility functions
 """
 from typing import Union
-from numbers import Real
 
 import numpy as np
 
