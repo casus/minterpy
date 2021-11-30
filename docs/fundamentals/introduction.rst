@@ -98,7 +98,7 @@ Given :math:`A=A_{m,n,p}` we ask for:
 by satisfying :math:`Q_{f,A}(p_{\alpha}) = f(p_{\alpha})`, :math:`\forall p_{\alpha} \in P_A`, :math:`\alpha \in A`.
 
 
-:math:`ii)` An interpolation scheme **DDS** that computes the uniquely determined interpolant :math:`Q_{f,A} \in \Pi_A`
+:math:`ii)` An interpolation scheme :doc:`/fundamentals/multivariate-dds` that computes the uniquely determined interpolant :math:`Q_{f,A} \in \Pi_A`
 efficiently and numerically accurate (with machine precision).
 
 :math:`iii)` The unisolvent nodes :math:`P_A` that scale sub-exponentially with the space dimension :math:`m \in \mathbb{N}`,
@@ -110,7 +110,7 @@ fitting) as the Runge function :math:`f_R(x) = 1/(1+\|x\|^2)` by fast (ideally e
 
        Approximation errors rates for interpolating the Runge function in dimension :math:`m = 4`.
 
-In fact, the results of\ :footcite:`Hecht2020` suggest that the therein presented **multivariate DDS** resolves issues :math:`i) - iii)` for so called *Trefethen functions*
+In fact, the results of\ :footcite:`Hecht2020` suggest that the therein presented :doc:`multivariate DDS </fundamentals/multivariate-dds>` resolves issues :math:`i) - iii)` for so called *Trefethen functions*
 when choosing Euclidian :math:`l_2`-degree and **Leja ordered Chebyshev-Lobatto unisolvent interpolation nodes** :math:`P_A`. Thereby,
 
 .. math::
@@ -133,7 +133,7 @@ There is an optimal (upper bound) approximation rate
 
 known\ :footcite:`trefethen2017`,which we call the *Trefethen rate*.
 
-In fact, the **minterpy DDS** scheme numerically reaches the optimal Trefethen rate.
+In fact, the :doc:`/fundamentals/multivariate-dds` scheme numerically reaches the optimal Trefethen rate.
 In contrast,
 spline-type interpolation is based on works of Carl de Boor
 et al.\ :footcite:`deboor1972, deboor1977, deboor1978, deboor2010` and limited
@@ -151,7 +151,7 @@ The notion of unisolvence
 
 
 The pioneering works of\ :footcite:`kuntz, Guenther, Chung` gave constructions of nodes :math:`P_A` that turn out o be unisolvent
-for downward closed **multi-index sets**  :math:`A= A_{m,n,1}` or :math:`A =A_{m,n,\infty}`
+for downward closed :ref:`multi-index sets <fundamentals/polynomial-bases:Multi-index sets and polynomial degree>`  :math:`A= A_{m,n,1}` or :math:`A =A_{m,n,\infty}`
 given by :math:`l_1`- or :math:`l_\infty`-degree.
 
 
@@ -187,7 +187,7 @@ Indeed, the coefficients :math:`C` of such a polynomial would be a non-trivial s
 However, even if :math:`P_A` is unisolvent, the matrix :math:`V(P_A)` rapidly becomes numerically ill-conditioned for higher dimensions or degrees
 when using the canonical basis :math:`q_{\alpha}(x) =x^\alpha`, :math:`\alpha \in A`.
 While previous approaches addressed this problem by *tensorial interpolation*\ :footcite:`sauertens, Dyn2014,chebfun`, ``minterpy``
-is based on the **multivariate DDS** that even for non-tensorial interpolation nodes such as the by default choosen
+is based on the :doc:`/fundamentals/multivariate-dds` that even for non-tensorial interpolation nodes such as the by default choosen
 **Leja ordered Chebyshev-Lobatto nodes** realises efficient and accurate polynomial interpolation.
 
 
