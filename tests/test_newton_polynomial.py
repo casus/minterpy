@@ -6,18 +6,10 @@ The subclassing is not tested here, see tesing module `test_polynomial.py`
 
 import numpy as np
 import pytest
-from conftest import (
-    SEED,
-    LpDegree,
-    MultiIndices,
-    NrPoints,
-    NrSimilarPolynomials,
-    PolyDegree,
-    SpatialDimension,
-    assert_polynomial_almost_equal,
-    build_rnd_coeffs,
-    build_rnd_points,
-)
+from conftest import (SEED, LpDegree, MultiIndices, NrPoints,
+                      NrSimilarPolynomials, PolyDegree, SpatialDimension,
+                      assert_polynomial_almost_equal, build_rnd_coeffs,
+                      build_rnd_points)
 from numpy.testing import assert_, assert_almost_equal
 
 from minterpy import NewtonPolynomial, NewtonToCanonical

@@ -8,10 +8,8 @@ from minterpy import CanonicalPolynomial, LagrangePolynomial
 from minterpy.core.ABC import TransformationABC
 from minterpy.polynomials.newton_polynomial import NewtonPolynomial
 
-from .utils import (
-    _build_newton_to_canonical_operator,
-    _build_newton_to_lagrange_operator,
-)
+from .utils import (_build_newton_to_canonical_operator,
+                    _build_newton_to_lagrange_operator)
 
 __all__ = ["NewtonToCanonical", "NewtonToLagrange"]
 

@@ -9,13 +9,8 @@ and to construct a full size array for testing purposes (comparison with the reg
 import numpy as np
 from numba import njit
 
-from minterpy.global_settings import (
-    ARRAY,
-    FLOAT_DTYPE,
-    INT_DTYPE,
-    TRAFO_DICT,
-    TYPED_LIST,
-)
+from minterpy.global_settings import (ARRAY, FLOAT_DTYPE, INT_DTYPE,
+                                      TRAFO_DICT, TYPED_LIST)
 
 
 @njit(cache=True)

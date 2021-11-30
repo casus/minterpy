@@ -3,31 +3,19 @@ Test suite for multi_index_utils.py
 """
 import numpy as np
 import pytest
-from conftest import (
-    LpDegree,
-    PolyDegree,
-    SpatialDimension,
-    assert_call,
-    build_rnd_exponents,
-)
+from conftest import (LpDegree, PolyDegree, SpatialDimension, assert_call,
+                      build_rnd_exponents)
 from numpy.testing import assert_, assert_equal
 
-from minterpy.core.utils import (
-    _gen_multi_index_exponents,
-    _get_poly_degree,
-    find_match_between,
-    get_exponent_matrix,
-    insert_lexicographically,
-    is_lexicographically_complete,
-    make_complete,
-    make_derivable,
-)
-from minterpy.jit_compiled_utils import (
-    all_indices_are_contained,
-    have_lexicographical_ordering,
-    index_is_contained,
-    lex_smaller_or_equal,
-)
+from minterpy.core.utils import (_gen_multi_index_exponents, _get_poly_degree,
+                                 find_match_between, get_exponent_matrix,
+                                 insert_lexicographically,
+                                 is_lexicographically_complete, make_complete,
+                                 make_derivable)
+from minterpy.jit_compiled_utils import (all_indices_are_contained,
+                                         have_lexicographical_ordering,
+                                         index_is_contained,
+                                         lex_smaller_or_equal)
 
 MIN_POLY_DEG = 1
 MAX_POLY_DEG = 5

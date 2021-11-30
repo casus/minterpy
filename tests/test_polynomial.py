@@ -8,12 +8,8 @@ import pytest
 from conftest import assert_call
 from numpy.testing import assert_
 
-from minterpy import (
-    CanonicalPolynomial,
-    LagrangePolynomial,
-    MultiIndexSet,
-    NewtonPolynomial,
-)
+from minterpy import (CanonicalPolynomial, LagrangePolynomial, MultiIndexSet,
+                      NewtonPolynomial)
 from minterpy.core.ABC import MultivariatePolynomialSingleABC
 
 classes = [CanonicalPolynomial, NewtonPolynomial, LagrangePolynomial]
