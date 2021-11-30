@@ -8,11 +8,17 @@ implentations are derived.
     "inverse" property useful?
 """
 
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from minterpy.global_settings import ARRAY
+
+if TYPE_CHECKING:
+    # https://stackoverflow.com/questions/39740632/python-type-hinting-without-cyclic-imports
+    from .transformation_abstract import TransformationABC
+
 
 __all__ = ["OperatorABC"]
 
@@ -31,15 +37,15 @@ class OperatorABC(ABC):
 
     # ATTENTION: this approach is only valid for single polynomials
     transformation_data = None
-    _array_repr_full: Optional[ARRAY] = None
+    _array_repr_full: ARRAY | None = None
 
     # TODO useful to store the attached bases (Polynomial classes)...
-    def __init__(self, transformation: "TransformationABC", transformation_data):
-        self.transformation: "TransformationABC" = transformation
+    def __init__(self, transformation: TransformationABC, transformation_data):
+        self.transformation: TransformationABC = transformation
         self.transformation_data = transformation_data
 
     @abstractmethod
-    def __matmul__(self, other: Union[ARRAY, "OperatorABC"]):
+    def __matmul__(self, other: ARRAY | OperatorABC):
         """Applies the transformation operator on the input.
 
         This is a placeholder of the ABC, which is overwritten by the concrete implementation.

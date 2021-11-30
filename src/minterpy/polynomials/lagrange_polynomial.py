@@ -7,7 +7,6 @@ import numpy as np
 
 import minterpy
 from minterpy.global_settings import ARRAY
-from minterpy.utils import newt_eval
 
 from ..core import Grid, MultiIndexSet
 from ..core.ABC import MultivariatePolynomialSingleABC
@@ -24,7 +23,7 @@ def dummy():
     .. warning::
       This feature is not implemented yet!
     """
-    raise NotImplementedError(f"This feature is not implemented yet.")
+    raise NotImplementedError("This feature is not implemented yet.")
 
 
 # TODO: part of polynomial utils?

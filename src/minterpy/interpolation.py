@@ -74,7 +74,7 @@ class Interpolator:
             fct_values = fct(self.grid.unisolvent_nodes)
             interpol_coeffs = np.squeeze(dds(fct_values, self.grid.tree))
         except Exception as e:
-            raise InterpolationError(e)
+            raise InterpolationError(e) from e
 
         return NewtonPolynomial(self.multi_index, interpol_coeffs)
 

@@ -63,7 +63,7 @@ def remap_indices(gen_pts_from: ARRAY, gen_pts_to: ARRAY, exponents: ARRAY) -> A
                 )
             if nr_zero_entries > 1:
                 raise ValueError(
-                    f"the given generating values are not unique. remapping the indices not possible."
+                    "the given generating values are not unique. remapping the indices not possible."
                 )
             idx_new = np.argmin(abs_diff)
             exponents_remapped[mask, i] = idx_new

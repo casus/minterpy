@@ -7,35 +7,40 @@ this can be done very efficiently, enabling trees for very large (e.g. high dime
 due to the nested (recursive) structure of the trees
 there are different formats for storing (and computing) these trees
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 from numba import njit
 from numba.typed import List
 
-from minterpy.core.tree import MultiIndexTree
-from minterpy.dds import (dds_1_dimensional, get_direct_child_idxs,
-                          get_leaf_idxs, get_node_positions)
-from minterpy.global_settings import (ARRAY, ARRAY_DICT, DEBUG,
-                                      DICT_TRAFO_TYPE, FACTORISED_TRAFO_TYPE,
-                                      FLOAT_DTYPE, INT_DTYPE, TRAFO_DICT,
-                                      TYPED_LIST)
+from minterpy.dds import (
+    dds_1_dimensional,
+    get_direct_child_idxs,
+    get_leaf_idxs,
+    get_node_positions,
+)
+from minterpy.global_settings import (
+    ARRAY,
+    DEBUG,
+    DICT_TRAFO_TYPE,
+    FACTORISED_TRAFO_TYPE,
+    FLOAT_DTYPE,
+    INT_DTYPE,
+    TRAFO_DICT,
+    TYPED_LIST,
+)
 from minterpy.utils import eval_newt_polys_on
 
-from .operators import (BarycentricDictOperator, BarycentricFactorisedOperator,
-                        BarycentricOperator)
+from .operators import BarycentricFactorisedOperator, BarycentricOperator
 
-__author__ = "Jannik Michelfeit"
-__copyright__ = "Copyright 2021, minterpy"
-__credits__ = ["Jannik Michelfeit"]
-# __license__ =
-# __version__ =
-# __maintainer__ =
-__email__ = "jannik@michelfe.it"
-__status__ = "Development"
+if TYPE_CHECKING:
+    # https://stackoverflow.com/questions/39740632/python-type-hinting-without-cyclic-imports
+    from minterpy.core.ABC import TransformationABC
 
 
 # functions for the L2N tree:
-
-
 @njit(cache=True)
 def compute_1d_dds_solutions(
     generating_points: ARRAY, problem_sizes: TYPED_LIST
@@ -651,7 +656,7 @@ def compute_n2l_factorised(
 
 
 def _build_lagrange_to_newton_bary(
-    transformation: "TransformationABC",
+    transformation: TransformationABC,
 ) -> BarycentricOperator:
     """Construct the barycentric transformation operator for Lagrange-to-Newton.
 
@@ -686,7 +691,7 @@ def _build_lagrange_to_newton_bary(
 
 
 def _build_newton_to_lagrange_bary(
-    transformation: "TransformationABC",
+    transformation: TransformationABC,
 ) -> BarycentricFactorisedOperator:
     """Construct the barycentric transformation operator for Newton to Lagrange.
 

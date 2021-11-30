@@ -3,8 +3,13 @@ Test suite for multi_index.py
 """
 import numpy as np
 import pytest
-from conftest import (LpDegree, PolyDegree, SpatialDimension, assert_call,
-                      assert_multi_index_equal)
+from conftest import (
+    LpDegree,
+    PolyDegree,
+    SpatialDimension,
+    assert_call,
+    assert_multi_index_equal,
+)
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from minterpy import MultiIndexSet

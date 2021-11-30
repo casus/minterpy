@@ -11,8 +11,7 @@ from minterpy.jit_compiled_utils import can_eval_mult
 
 from ..core import MultiIndexSet
 from ..core.ABC import MultivariatePolynomialSingleABC
-from ..core.verification import (convert_eval_output, rectify_eval_input,
-                                 verify_domain)
+from ..core.verification import convert_eval_output, rectify_eval_input, verify_domain
 
 __all__ = ["CanonicalPolynomial"]
 
@@ -23,7 +22,7 @@ def dummy():
     .. warning::
       This function is not implemented yet!
     """
-    raise NotImplementedError(f"This feature is not implemented yet.")
+    raise NotImplementedError("This feature is not implemented yet.")
 
 
 # Arithmetics

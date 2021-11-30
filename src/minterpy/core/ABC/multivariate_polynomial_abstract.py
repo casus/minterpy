@@ -5,7 +5,7 @@ This module contains the abstract base classes, from which all concrete implemen
 This ensures that all polynomials work with the same interface, so futher features can be formulated without referencing the concrete polynomial implementation. See e.g. :PEP:`3119` for further explanations on that topic.
 """
 import abc
-from copy import copy, deepcopy
+from copy import deepcopy
 from typing import Optional, Union
 
 import numpy as np

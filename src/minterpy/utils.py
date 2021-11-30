@@ -5,9 +5,12 @@ from numbers import Real
 
 import numpy as np
 
-from minterpy.core.verification import (check_dtype, convert_eval_output,
-                                        rectify_eval_input,
-                                        rectify_query_points)
+from minterpy.core.verification import (
+    check_dtype,
+    convert_eval_output,
+    rectify_eval_input,
+    rectify_query_points,
+)
 from minterpy.global_settings import DEBUG, FLOAT_DTYPE, INT_DTYPE
 from minterpy.jit_compiled_utils import eval_all_newt_polys, evaluate_multiple
 
@@ -178,19 +181,19 @@ def report_error(errors, description=None):
         - if necessary, ship this to tests, since it is only used there.
     """
     if description is not None:
-        print("\n\n")
-        print(description)
+        print("\n\n")  # noqa
+        print(description)  # noqa
 
-    print(f"mean: {np.mean(errors):.2e}")
-    print(f"median: {np.median(errors):.2e}")
-    print(f"variance: {np.var(errors):.2e}")
-    print(f"l2-norm: {np.linalg.norm(errors):.2e}")
+    print(f"mean: {np.mean(errors):.2e}")  # noqa
+    print(f"median: {np.median(errors):.2e}")  # noqa
+    print(f"variance: {np.var(errors):.2e}")  # noqa
+    print(f"l2-norm: {np.linalg.norm(errors):.2e}")  # noqa
     # f"l_infty error (max): {np.linalg.norm(errors, ord=np.inf)}\n")
     errors = np.abs(errors)
-    print(f"abs mean: {np.mean(errors):.2e}")
-    print(f"abs median: {np.median(errors):.2e}")
-    print(f"abs variance: {np.var(errors):.2e}")
-    print(f"max abs {np.max(errors):.2e}")
+    print(f"abs mean: {np.mean(errors):.2e}")  # noqa
+    print(f"abs median: {np.median(errors):.2e}")  # noqa
+    print(f"abs variance: {np.var(errors):.2e}")  # noqa
+    print(f"max abs {np.max(errors):.2e}")  # noqa
 
 
 def eval_newt_polys_on(

@@ -7,15 +7,23 @@ from typing import Optional
 import numpy as np
 
 from minterpy.global_settings import ARRAY, INT_DTYPE
-from minterpy.jit_compiled_utils import (all_indices_are_contained,
-                                         have_lexicographical_ordering)
+from minterpy.jit_compiled_utils import (
+    all_indices_are_contained,
+    have_lexicographical_ordering,
+)
 
-from .utils import (_expand_dim, get_exponent_matrix, insert_lexicographically,
-                    is_lexicographically_complete, make_complete,
-                    verify_lp_deg)
+from .utils import (
+    _expand_dim,
+    get_exponent_matrix,
+    insert_lexicographically,
+    is_lexicographically_complete,
+    make_complete,
+    verify_lp_deg,
+)
 from .verification import check_shape, check_values
 
 __all__ = ["MultiIndexSet"]
+
 
 # TODO implement (set) comparison operations based on the multi index utils (>=, == ...)
 class MultiIndexSet:
