@@ -11,13 +11,15 @@
 
 ---
 
-``minterpy`` is an open-source python package for multivariate generalisations of the classical Newton and Lagrange interpolation schemes as well as related tasks. It is based on an optimized re-implementation of
-the multivariate interpolation prototype algorithm (*MIP*) by Hecht et al.\ :footcite:`Hecht2020`
+`minterpy` is an open-source Python package for a multivariate generalization 
+of the classical Newton and Lagrange interpolation schemes as well as related tasks.
+It is based on an optimized re-implementation of
+the multivariate interpolation prototype algorithm (*MIP*) by Hecht et al.[^1]
 and thereby provides software solutions that lift the curse of dimensionality from interpolation tasks.
 While interpolation occurs as the bottleneck of most computational challenges,
-``minterpy`` aims to free empirical sciences from their computational limitations.
+`minterpy` aims to free empirical sciences from their computational limitations.
 
-``minterpy`` is continuously extended and improved
+`minterpy` is continuously extended and improved
 by adding further functionality and modules that provide novel digital solutions
 to a broad field of computational challenges, including but not limited to:
 
@@ -34,55 +36,86 @@ to a broad field of computational challenges, including but not limited to:
 
 ## Installation
 
-Since this implementation is a prototype, we currently only provide the installation by self-building from source. It is recommended to use ``git`` to get the ``minterpy`` source:
+Since this implementation is a prototype,
+we currently only provide the installation by self-building from source.
+We recommend to use `git` to get the `minterpy` source:
+
 ```bash
 git clone https://gitlab.hzdr.de/interpol/minterpy.git
 ```
-Within the source directory, one may use the following package manager to install ``minterpy``.
 
-#### Using [conda](https://conda.io/projects/conda/en/latest/index.html):
-Best practice is to create an environment ``minterpy`` with the help of [conda] and the ``environment.yaml``,
+Within the source directory,
+you may use the following package manager to install ``minterpy``.
+
+A best practice is to create a virtual environment for `minterpy`.
+You can do this with the help of [conda] and the ``environment.yaml`` by:
+
 ```bash
 conda env create -f environment.yaml
 ```
-After building the virtual environments, one need to activate it
+
+A new conda environment called `minterpy` is created.
+Activate the new environment by:
+
 ```bash
 conda activate minterpy
 ```
-Maybe you need to `init` the conda environment. To deactivate the conda environment, just hit:
-```bash
-conda deactivate
-```
-#### using [pip](https://pip.pypa.io/en/stable/)
-Installing ``minterpy`` via [pip] (in the activated environment, see above) it is also recommended to use a virtual environment (see [CONTRIBUTING.md](./CONTRIBUTING.md) for details). To install ``minterpy``, just run
+
+From within the environment, install the `minterpy` using [pip],
+
 ```bash
 pip install [-e] .[all,dev,docs]
 ```
-where the flag `-e` means the package is directly linked into the python site-packages of your python version (e.g. the one in the virtualenv).
-The options `[all,dev,docs]` refer to the requirements defined in the `options.extras_require` section in `setup.cfg`.
-One shall **not** use :code:`python setup.py install`, since one shall not assume that the file `setup.py` will be always present in further developments of ``minterpy``.
 
-## Quickstart
-With ``minterpy`` one can easily interpolate a given function. For instance, take the function :math:`f(x) = x\sin(10x)`in one spacial dimentsion:
+where the flag `-e` means the package is directly linked
+into the python site-packages of your Python version.
+The options `[all,dev,docs]` refer to the requirements defined
+in the `options.extras_require` section in `setup.cfg`.
 
-```python
+You **must not** use the command `python setup.py install` to install `minterpy`,
+as you cannot always assume the files `setup.py` will always be present 
+in the further development of `minterpy`.
 
-    import numpy as np
-    import minterpy as mp
+Finally, if you want to deactivate the conda environment, type:
 
-    def test_function(x):
-        return x*sin(10*x)
+```bash
+conda deactivate
 ```
 
-In order to ``minterpy`` the function :code:`test_function` one can use the top-level function :code:`interpolate`:
+Alternative to conda, you can create a new virtual environment via
+[venv], [virtualenv], or [pyenv-virtualenv].
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
+
+## Quickstart
+
+With `minterpy` one can easily interpolate a given function.
+For instance, take the function `f(x) = x\sin(10x)` in one dimension:
 
 ```python
+    import numpy as np
+
+    def test_function(x):
+        return x * np.sin(10*x)
+```
+
+In order to `minterpy` the function `test_function`
+one can use the top-level function `interpolate`:
+
+```python
+    import minterpy as mp
 
     interpolant = mp.interpolate(test_function,spatial_dimension=1, poly_degree=64)
 ```
 
-Here, interpolant is a callable function, which can be used as a representation of :code:`test_function`.
-Beside the keyword argument :code:`spatial_dimension`, which is self-explanatory, there is the keyword :code:`poly_degree`, which denotes the degree of the underlying polynomial. Therefore, one may adjust this parameter in order to get higher accuracy. For the example above, a degree of 64 produces an interpolant which reproduces the :code:`test_function` almost up to machine precision:
+Here, interpolant is a callable function,
+which can be used as a representation of `test_function`.
+`interpolate` takes as arguments the function to interpolate,
+the number of dimensions (`spatial_dimension`), 
+and the degree of the underlying polynomial (`poly_degree`).
+
+You may adjust this parameter in order to get higher accuracy.
+For the example above, a degree of 64 produces an interpolant which reproduces
+the `test_function` almost up to machine precision:
 
 ```python
     import matplotlib.pylab as plt
@@ -96,38 +129,59 @@ Beside the keyword argument :code:`spatial_dimension`, which is self-explanatory
 ```
 
 ![Compare test function with its interpolant](docs/assets/test_function1D.png)
-For a more comprehensive examples, see the [tutorial](link-to-tutorials) section of the ``minterpy`` documentation.
+For a more comprehensive examples, see the [getting started guides](link-to-tutorials)
+section of the ``minterpy`` docs.
 
 ## Testing
-After installation, it is recommended to at least run the unit tests of ``minterpy``, where we use [`pytest`](https://docs.pytest.org/en/6.2.x/) to run the tests. If you want to run all tests, just hit
+
+After installation, we encourage you to at least run the unit tests of `minterpy`, 
+where we use [`pytest`](https://docs.pytest.org/en/6.2.x/) to run the tests.
+
+If you want to run all tests, type:
+
 ```bash
 pytest [-vvv]
 ```
-within the ``minterpy`` source directory.
 
-## Contributing to ``minterpy``
-Contributions to the ``minterpy`` packages are highly wellcome. For that it is recommended to have a look on the [CONTRIBUTING.md] first. For a more complehensive contribution guide visit the [developer section](link-to-developer-section) of the documentation.
+from within the `minterpy` source directory.
 
-## Credits and contributers
-This work was partly funded by the Center for Advanced Systems Understanding (CASUS) that is financed by Germany’s Federal Ministry of Education and Research (BMBF) and by the Saxon Ministry for Science, Culture and Tourism (SMWK) with tax funds on the basis of the budget approved by the Saxon State Parliament.
+## Contributing to `minterpy`
 
-#### the minterpy development team
-The core development of the ``minterpy`` is currently done by a small team at the Center for Advanced Systems Understanding ([CASUS]), namely
+Contributions to the `minterpy` packages are highly welcome.
+We recommend you to have a look at the [CONTRIBUTING.md](./CONTRIBUTING.md) first.
+For a more comprehensive contribution guide visit
+the [Contributors section](link-to-developer-section) of the documentation.
+
+## Credits and contributors
+
+This work was partly funded by the Center for Advanced Systems Understanding (CASUS)
+that is financed by Germany’s Federal Ministry of Education and Research (BMBF)
+and by the Saxony Ministry for Science, Culture and Tourism (SMWK)
+with tax funds on the basis of the budget approved by the Saxony State Parliament.
+
+### The minterpy development team
+
+The core development of the `minterpy` is currently done
+by a small team at the Center for Advanced Systems Understanding ([CASUS]),
+namely
 
 - Uwe Hernandez Acosta ([HZDR]/[CASUS]) (u.hernandez@hzdr.de)
 - Sachin Krishnan Thekke Veettil ([HZDR]/[CASUS]) (s.thekke-veettil@hzdr.de)
-- Damar Wicaksono (add-email-here)
+- Damar Wicaksono ([HZDR]/[CASUS]) (d.wicaksono@hzdr.de)
 
-#### Mathematical foundation
+### Mathematical foundation
+
 - Michael Hecht ([HZDR]/[CASUS]) (m.hecht@hzdr.de)
 
-#### Former Members and Contributions
+### Former Members and Contributions
+ 
 - Jannik Michelfeit
 - Nico Hoffman ([HZDR])
 - Steve Schmerler ([HZDR])
 - Vidya Chandrashekar (TU Dresden)
 
-#### Acknowledgement
+### Acknowledgement
+
 - Klaus Steiniger ([HZDR])
 - Patrick Stiller ([HZDR])
 - Matthias Werner ([HZDR])
@@ -135,25 +189,28 @@ The core development of the ``minterpy`` is currently done by a small team at th
 - Attila Cangi ([HZDR]/[CASUS])
 - Michael Bussmann ([HZDR]/[CASUS])
 
-#### Community
-This package would not be possible without many contributions done from the commuity as well. For that we want send big thanks to:
+### Community
 
-  - the guy who will show me how to include a list of contributers on github/gitlab
+This package would not be possible without many contributions done
+from the community as well.
+For that we want to send big thanks to:
 
-
+  - the guy who will show me how to include a list of contributors on github/gitlab
+  
 ## Citing
+
 :construction: Add here the informations how to cite ``minterpy``.
 
-## References
-:construction: Add here the relevant references the code is based on. Maybe use a [REFERENCES.bib] for that.
-
 ## License
+
 [MIT](LICENSE) © minterpy development team
 
-
-
-
+[^1]: [arXiv:2010.10824](https://arxiv.org/abs/2010.10824)
 [conda]: https://docs.conda.io/
+[pip]: https://pip.pypa.io/en/stable/
+[venv]: https://docs.python.org/3/tutorial/venv.html
+[virtualenv]: https://virtualenv.pypa.io/en/latest/
+[pyenv-virtualenv]: https://github.com/pyenv/pyenv-virtualenv
 [pre-commit]: https://pre-commit.com/
 [Jupyter]: https://jupyter.org/
 [nbstripout]: https://github.com/kynan/nbstripout
@@ -164,7 +221,6 @@ This package would not be possible without many contributions done from the comm
 [HZDR]: https://www.hzdr.de
 [MPI-CBG]: https://www.mpi-cbg.de
 [CSBD]: https://www.csbdresden.de
-
 
 ## :construction: :construction:  Useful badges:
 
