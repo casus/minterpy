@@ -11,7 +11,7 @@ implentations are derived.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 from minterpy.global_settings import ARRAY
 
