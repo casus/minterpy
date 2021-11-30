@@ -92,7 +92,8 @@ While in general the DDS requires :math:`\mathcal{O}(|A|^3)` runtime complexity,
 hyperplanes are chosen to be parallel and thereby the resulting **unisolvent nodes** are given as a sub-grid.
 
 1D Divided Difference Scheme
-################
+############################
+
 We recapture the classic 1D DDS being the algorithmic solution of 1D Newton interpolation, see e.g.\ :footcite:`stoer2002,gautschi2012`.
 Given :math:`n+1` distinct nodes  :math:`p_0,\ldots, p_n\in [-1,1]` and a function :math:`f : [-1,1] \longrightarrow  \mathbb{R}` one recursively
 defines
