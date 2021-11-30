@@ -5,8 +5,7 @@ from __future__ import annotations
 
 from typing import no_type_check
 
-from minterpy.core.ABC import (MultivariatePolynomialSingleABC,
-                               TransformationABC)
+from minterpy.core.ABC import MultivariatePolynomialSingleABC, TransformationABC
 
 from .identity import Identity
 

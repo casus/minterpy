@@ -11,8 +11,7 @@ from minterpy.jit_compiled_utils import can_eval_mult
 
 from ..core import MultiIndexSet
 from ..core.ABC import MultivariatePolynomialSingleABC
-from ..core.verification import (convert_eval_output, rectify_eval_input,
-                                 verify_domain)
+from ..core.verification import convert_eval_output, rectify_eval_input, verify_domain
 
 __all__ = ["CanonicalPolynomial"]
 

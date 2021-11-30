@@ -6,11 +6,20 @@ Here the functionality of the respective attribute is not tested.
 
 import numpy as np
 import pytest
-from conftest import (LpDegree, MultiIndices, NrPoints, PolyDegree,
-                      SpatialDimension, assert_call, assert_grid_equal,
-                      assert_interpolant_almost_equal,
-                      assert_multi_index_equal, assert_polynomial_almost_equal,
-                      build_random_newton_polynom, build_rnd_points)
+from conftest import (
+    LpDegree,
+    MultiIndices,
+    NrPoints,
+    PolyDegree,
+    SpatialDimension,
+    assert_call,
+    assert_grid_equal,
+    assert_interpolant_almost_equal,
+    assert_multi_index_equal,
+    assert_polynomial_almost_equal,
+    build_random_newton_polynom,
+    build_rnd_points,
+)
 from numpy.testing import assert_, assert_almost_equal
 
 import minterpy as mp

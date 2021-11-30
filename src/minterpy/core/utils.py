@@ -8,9 +8,11 @@ from typing import Iterable, no_type_check
 import numpy as np
 
 from minterpy.global_settings import DEFAULT_LP_DEG, INT_DTYPE
-from minterpy.jit_compiled_utils import (fill_match_positions,
-                                         index_is_contained,
-                                         lex_smaller_or_equal)
+from minterpy.jit_compiled_utils import (
+    fill_match_positions,
+    index_is_contained,
+    lex_smaller_or_equal,
+)
 from minterpy.utils import cartesian_product, lp_norm, lp_sum
 
 # if TYPE_CHECKING:
