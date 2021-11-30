@@ -9,5 +9,3 @@ Documentation contribution guidelines
 
    reST-based docs <rest-based-docs>
    Jupyter-notebook-based docs <ipynb-based-docs>
-   Python docstrings <py-based-docs>
-   Writing style <writing-style>
