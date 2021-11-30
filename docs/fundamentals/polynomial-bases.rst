@@ -7,8 +7,8 @@ Multivariate polynomial bases
    This page should introduce and define all the supported multivariate
    polynomial bases supported in ``minterpy``. Some pictures might help as well.
 
-Multi-index sets and polynomial :math:`l_p`-degree
-##################################################
+Multi-index sets and polynomial degree
+######################################
 
 Multi-index sets :math:`A\subseteq \mathbb{N}^m` generalise the notion of polynomial degree to multi-dimensions :math:`m \in \mathbb{N}`.
 We call a multi-index set **downward closed** if and only if there is no :math:`\beta = (b_1,\dots,b_m) \in \mathbb{N}^m \setminus A`

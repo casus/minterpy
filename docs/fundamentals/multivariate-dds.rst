@@ -22,6 +22,8 @@ Multivariate divided difference scheme (DDS)
       - notion of unisolvence
       - use latex label command for the Theorem enumeration etc
 
+Splitting Theorems
+##################
 
 The Multivariate DDS is based on two general splitting Theorems\ :footcite:`Hecht2020` that can be stated in a simplified version as:
 
@@ -142,16 +144,26 @@ Thus, by using the Newton polynomials from :eq:`eq_NP` and observing that in thi
     &= \sum_{i=0}^n c_i \prod_{j=0}^{i-1}(x- p_j)\\
     &= \sum_{i=0}^n c_i N_i(x)\,.
 
-In light of this perspective, we generalise the tree decomposition of the Newton interpolation to multi-dimensions.
-The challenge thereby relies on assigning the analogons of the divided difference values  :math:`[p_i,\dots,p_j]f` to the leafs of the
-**Multi-index tree** resulting when applying Theorems 1 \& 2 recursively to the multi-dimensional case.
+In light of this perspective, we can visualise the the recursion of the 1D-DDS in a dependency graph resting on the underlying tree structure as
+given below:
+
+.. figure:: ./images/split_tree_1D_dep.png
+  :align: center
+
+  Visulaisation of the dependencies of the leaf nodes accordingly to the 1D-DDS.
+
+In order to generalise the tree decomposition of the Newton interpolation to multi-dimensions, we introduce the
+**Multi-index tree** allowing to decode the dependencies given by recursively applying Theorems 1 \& 2 for the multi-dimensional case
+in a compactified way.
 
 Multi-index tree
 ################
 
 The multi-index tree provides the data structure that is needed to generalise
 the classic 1D Divided Difference Scheme of degree :math:`n \in \mathbb{N}` to downward closed multi-index sets :math:`A \subseteq \mathbb{N}^m`, e.g.
-:math:`A =A_{m,n,p}`. Here, we give an example for dimension :math:`m=3` degree :math:`n=3` with respect to Euclidian :math:`l_p`-degree :math:`p=2`.
+:math:`A =A_{m,n,p}`.
+
+Here, we give an example for dimension :math:`m=3` degree :math:`n=3` with respect to Euclidian :math:`l_p`-degree :math:`p=2`.
 As visualised below the multi-index set :math:`A_{3,3,2}` is splitted into subsets that yield the corresponding interpolation sub problems.
 
 .. figure:: ./images/split_tree_l2c.png
@@ -160,23 +172,42 @@ As visualised below the multi-index set :math:`A_{3,3,2}` is splitted into subse
   The tree structure of the splitting of the multi-indices :math:`\alpha \in A_{3,3,2}`.
 
 
+As one can observe, the splitting separates multi-indices :math:`\alpha, \beta  \in A` whenever they differ in the higher dimensional entries :math:`\alpha_j \not = \beta_j\,, 1 \leq j \leq m` depending on the considered dimension
+:math:`j`. In other words: The splitting
+assigns multi-indices to the same sub-tree whenever all higher dimensional entries coincide  :math:`\alpha_i  = \beta_i\,,  \forall \, i  \geq j`.
+The  *split positions* and  *subtree sizes* are thereby stored when constucting the multi-index-tree.
 
+Splitting of the unisolvent nodes
+#################################
 
-The splittings are thereby stored as ...
-
-
-Each of the leafs of the multi-index tree induces an interpolation node and the splitting reflects the parallel 1 \& 2 dimensional hyper-sub-planes(lines) :math:`H`
-to which the nodes belong.
+Each of the leafs of the multi-index tree induces an **unisolvent interpolation node** and the splitting reflects the parallel 1 \& 2 dimensional hyper-sub-planes(lines)
+:math:`H \subseteq \mathbb{R}^m` to which the nodes belong.
 
 .. figure:: ./images/plane.png
   :align: center
 
-  The spliiting of the multi-indicies is reflected in the geometric separation of the corresponding **unisolvent nodes** :math:`P_A=\{p_\alpha = (p_{\alpha_1,1},p_{\alpha_2,2},p_{\alpha_3,3}) : \alpha \in A \}` accordingly to the parallel hyper-sub-planes.
+  The splitting of the multi-indicies is reflected in the geometric separation of the corresponding **unisolvent nodes**
+  :math:`P_A=\left\{p_\alpha = (p_{\alpha_1,1},p_{\alpha_2,2},p_{\alpha_3,3}) : \alpha \in A \right\}`.
 
 
+Sub-tree recursion
+##################
 
-Construction
-############
+Indeed the node distributions on each hyperplane :math:`H` are subsetes of the projections of the prior (more occupied) plane.
+This fact is refleceted when fixing the highest dimension and treating the subtrees belonging to lower dimensional
+problems as nodes. The dependencies and recursion of the multivariate DDS with respect to that highest fixed dimensions
+result in the prior considered ones of the 1D-DDS as visualised below.
+
+.. figure:: ./images/split_tree_l2_depp.png
+  :align: center
+
+  First recursion step of the multivariate DDS (fixing the highest dimension).
+
+The recursion step is thereby realised by using a precomputed *mask* that matches the nodes/multi-indicies
+of each sub-problem/hyperplane to the next one, accordingly.
+The recursion is analogously repeated for each subtree independently as sketched (in grey) above.
+
+
 
 References
 ##########
