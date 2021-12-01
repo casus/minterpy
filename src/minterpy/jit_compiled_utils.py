@@ -465,27 +465,6 @@ def fill_match_positions(larger_idx_set, smaller_idx_set, positions):
                 break
 
 
-@njit(FLOAT(I_1D, FLOAT), cache=True)
-def lp_norm_for_exponents(exp_vect, p):
-    """Robust lp-norm function. Works essentially like numpy.linalg.norm, but is numerically stable for big arguments.
-
-    :param exp_vect: a multi index entry.
-    :param p: a real number
-    :return: the Lp norm of ``exp_vect``.
-
-    """
-    a = np.abs(exp_vect).max()
-    if a == 0:  # NOTE: avoid division by 0
-        return 0.0
-
-    if p == 1.0:
-        return np.sum(exp_vect)
-    elif p == np.inf:
-        return np.max(exp_vect)
-    else:
-        return a * np.linalg.norm(exp_vect / a, p)
-
-
 @njit(void(F_3D, I_2D), cache=True)
 def compute_grad_c2c(grad_c2c: np.ndarray, exponents: np.ndarray):
     """Computes the gradient operator from canonical basis to canonical basis.
