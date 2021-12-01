@@ -322,10 +322,6 @@ def insert_lexicographically(
     return index_array
 
 
-def sort_lexicographically(indices: Iterable[np.ndarray]) -> np.ndarray:
-    return insert_lexicographically([], indices)
-
-
 def insert_partial_derivatives(list_of_indices, exponent_vector):
     for deriv_vect in gen_partial_derivatives(
         exponent_vector
