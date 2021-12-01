@@ -9,7 +9,6 @@ from minterpy.global_settings import (
     B_TYPE,
     F_1D,
     F_2D,
-    F_3D,
     FLOAT,
     I_1D,
     I_2D,
@@ -463,4 +462,3 @@ def fill_match_positions(larger_idx_set, smaller_idx_set, positions):
                 #   most of the times the index won't be smaller and the check can be performed with fewer comparisons
                 positions[i] = search_pos
                 break
-

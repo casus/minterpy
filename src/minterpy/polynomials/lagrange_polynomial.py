@@ -10,7 +10,6 @@ from minterpy.global_settings import ARRAY
 
 from ..core import Grid, MultiIndexSet
 from ..core.ABC import MultivariatePolynomialSingleABC
-from ..core.utils import insert_lexicographically
 from ..core.verification import verify_domain
 from .canonical_polynomial import _match_dims, _matching_internal_domain
 
