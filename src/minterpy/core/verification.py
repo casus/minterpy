@@ -275,27 +275,6 @@ def check_shape(
             )
 
 
-def check_is_square(a: np.ndarray, size: Optional[int] = None):
-    """Check if input array represents a square matrix.
-
-    This is a special case of ``check_shape`` for ``shape = (size,size)``.
-
-    :param a: Array to be checked
-    :type a: np.ndarray
-
-    :param size: expected length of each axes of the matrix. If :class:`None` is passed, ``size`` is set to the length of the first axis of the input array.
-    :type size: int
-
-    See Also
-    --------
-    check_shape : general verification of array shapes.
-
-    """
-    if size is None:
-        size = a.shape[0]
-    check_shape(a, shape=(size, size))
-
-
 DOMAIN_WARN_MSG2 = "the grid points must fit the interpolation domain [-1;1]^m."
 DOMAIN_WARN_MSG = (
     "this may lead to unexpected behaviour, "
