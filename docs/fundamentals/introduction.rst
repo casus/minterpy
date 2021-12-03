@@ -165,13 +165,13 @@ the *multivariate Vandermonde matrix* is given by
 .. math::
   V(P_A) = \big (q_{\beta}(p_{\alpha})\big)_{\alpha,\beta \in A} \in \mathbb{R}^{|A|\times|A|}\,.
 
-For :math:`q_{\alpha}(x) = x^\alpha`, this results in the classic :math:`V(P_A) = \big (p_{\alpha}^\beta\big)_{\alpha,\beta \in A}`\ :footcite:`gautschi`.
+For :math:`q_{\alpha}(x) = x^\alpha`, this results in the classic :math:`V(P_A) = \big (p_{\alpha}^\beta\big)_{\alpha,\beta \in A}`\ :footcite:`Gautschi2012`.
 If :math:`V(P_A)` is (numerically) invertible, then one can interpolate `f` by solving the linear system of equations
 
 .. math::
   V(P_A)C =F \,,  \quad C= (c_{\alpha})_{\alpha \in A} \,, \,\, \quad F= (f(p_{\alpha}))_{\alpha \in A} \in \mathbb{R}^{|A|}.
 
-This requires :math:`\mathcal{O}(|A|^r)` operations with :math:`r>2`\ :footcite:`strassen,COPPER`,
+This requires :math:`\mathcal{O}(|A|^r)` operations with :math:`r>2`\ :footcite:`Strassen1969,Coppersmith1990`,
 whereas the present **DDS** achieves quadratic runtime :math:`\mathcal{O}(|A|^2)`.
 Indeed,
 
