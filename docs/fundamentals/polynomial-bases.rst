@@ -14,7 +14,7 @@ Multi-index sets and polynomial degree
 Multi-index sets :math:`A\subseteq \mathbb{N}^m` generalise the notion of polynomial degree to multi-dimensions :math:`m \in \mathbb{N}`.
 We call a multi-index set **downward closed** if and only if there is no :math:`\beta = (b_1,\dots,b_m) \in \mathbb{N}^m \setminus A`
 with :math:`b_i \leq a_i`,  for all :math:`i=1,\dots,m` and some :math:`\alpha = (a_1,\dots,a_m) \in A`.
-This follows the classic terminology introduced for instance by \ :footcite:`cohen2018`.
+This follows the classic terminology introduced for instance by \ :footcite:`Cohen2018`.
 
 Any (not necessarily downward closed) multi-index set :math:`A\subseteq \mathbb{N}^m` is assumed to be orderd with respect to the
 **lexicographical order** :math:`\preceq` from the last entry to the first, e.g.,
