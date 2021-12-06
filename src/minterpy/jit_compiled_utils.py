@@ -412,34 +412,6 @@ def all_indices_are_contained(subset_indices: np.ndarray, indices: np.ndarray) -
     return True
 
 
-@njit(void(I_1D, I_2D, I_2D), cache=True)
-def insert_single_index_numba(index2insert, indices, indices_out):
-    """Insert a multi index entry to a set of indices.
-
-    :param index2insert: the multi index entry to be inserted.
-    :param indices: the set of multi indices given as input.
-    :param indices_out: the resulting multi indices after (lexicographical) insertion.
-
-    """
-    i = 0
-    bigger_entry_exists = False
-    spatial_dimension, nr_exponents = indices.shape
-    for i in range(nr_exponents):
-        contained_index = indices[:, i]
-        if lex_smaller_or_equal(index2insert, contained_index):
-            bigger_entry_exists = True
-            break
-        indices_out[:, i] = contained_index  # insert the already contained index
-    if bigger_entry_exists:
-        # the multi-index should be inserted at the THIS position
-        indices_out[:, i] = index2insert
-        indices_out[:, i + 1 :] = indices[
-            :, i:
-        ]  # fill up the indices with the remaining indices
-    else:  # no smaller entry exists, simply insert at the end
-        indices_out[:, -1] = index2insert
-
-
 @njit(void(I_2D, I_2D, I_1D), cache=True)
 def fill_match_positions(larger_idx_set, smaller_idx_set, positions):
     """Finds matching positions (array indices) for multi index entries in two multi indices.
