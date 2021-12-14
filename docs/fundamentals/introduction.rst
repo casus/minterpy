@@ -126,7 +126,7 @@ scales sub-expomemtially with space dimension :math:`m` and
 
 converges uniformly and fast (exponentially) on :math:`\Omega = [-1,1]^m`.
 Figure 2 shows the approximation rates of the classic Runge function\ :footcite:`runge1901` in dimension :math:`m=4`,
-which is known to cause Runge's pehenomenon (over-fitting) when interpolated naïvely.
+which is known to cause Runge's phenomenon (over-fitting) when interpolated naïvely.
 There is an optimal (upper bound) approximation rate
 
 .. math::
@@ -151,7 +151,7 @@ The notion of unisolvence
 #########################
 
 
-The pioneering works of\ :footcite:`kuntz, Guenther, Chung` gave constructions of nodes :math:`P_A` that turn out o be unisolvent
+The pioneering works of\ :footcite:`kuntz, Guenther, Chung` gave constructions of nodes :math:`P_A` that turn out to be unisolvent
 for downward closed :ref:`multi-index sets <fundamentals/polynomial-bases:Multi-index sets and polynomial degree>`  :math:`A= A_{m,n,1}` or :math:`A =A_{m,n,\infty}`
 given by :math:`l_1`- or :math:`l_\infty`-degree.
 
