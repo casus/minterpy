@@ -202,11 +202,6 @@ def gen_partial_derivatives(exponent_vector: np.ndarray):
         yield partial_derivative
 
 
-def get_partial_derivatives(exponent_vector: np.ndarray) -> np.ndarray:
-    """compiles the exponent vectors of all partial derivatives of a given exponent vector"""
-    return np.array(list(gen_partial_derivatives(exponent_vector)), dtype=INT_DTYPE)
-
-
 def gen_missing_derivatives(indices: np.ndarray) -> Iterable[np.ndarray]:
     """yields all the partial derivative exponent vectors missing from the given set of multi indices
 
@@ -320,10 +315,6 @@ def insert_lexicographically(
         return indices
     index_array = to_index_array(list_of_indices)
     return index_array
-
-
-def sort_lexicographically(indices: Iterable[np.ndarray]) -> np.ndarray:
-    return insert_lexicographically([], indices)
 
 
 def insert_partial_derivatives(list_of_indices, exponent_vector):

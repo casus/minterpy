@@ -11,7 +11,6 @@ from minterpy.utils import gen_chebychev_2nd_order_leja_ordered
 
 from .multi_index import MultiIndexSet
 from .tree import MultiIndexTree
-from .utils import sort_lexicographically
 from .verification import check_domain_fit, check_shape, check_type_n_values
 
 __all__ = ["Grid"]
@@ -36,41 +35,6 @@ def get_points_from_values(spatial_dimension: int, generating_values: ARRAY):
 
 
 DEFAULT_GRID_VAL_GEN_FCT = gen_chebychev_2nd_order_leja_ordered
-
-
-def remap_indices(gen_pts_from: ARRAY, gen_pts_to: ARRAY, exponents: ARRAY) -> ARRAY:
-    """replaces the exponents such that they point to new given generating points (values)
-
-    .. todo::
-        - document this function but ship it to utils first.
-    """
-    exponents_remapped = exponents.copy()  # create an independent copy!
-    nr_grid_vals_n, m = gen_pts_from.shape
-    for i in range(m):  # NOTE: the generating points are independent in each dimension!
-        cheby_values_2n_dim = gen_pts_to[:, i]
-        cheby_values_n_dim = gen_pts_from[:, i]
-        indices_dim = exponents[:, i]
-        for idx_old, cheby_val in enumerate(cheby_values_n_dim):
-            mask = np.where(indices_dim == idx_old)
-            abs_diff = np.abs(cheby_values_2n_dim - cheby_val)
-            # TODO use a mutable tolerance
-            zero_entries = np.isclose(abs_diff, 0.0)
-            nr_zero_entries = np.sum(zero_entries)
-            if nr_zero_entries == 0:
-                raise ValueError(
-                    f"the value {cheby_val} does not appear in the previous generating values. "
-                    "remapping the indices not possible."
-                )
-            if nr_zero_entries > 1:
-                raise ValueError(
-                    "the given generating values are not unique. remapping the indices not possible."
-                )
-            idx_new = np.argmin(abs_diff)
-            exponents_remapped[mask, i] = idx_new
-
-    # by changing the indices the lexicographical sorting might get destroyed -> restore
-    exponents_remapped = sort_lexicographically(exponents_remapped)
-    return exponents_remapped
 
 
 # TODO implement comparison operations based on multi index comparison operations and the generating values used
@@ -254,38 +218,6 @@ class Grid:
         if self._tree is None:  # lazy evaluation
             self._tree = MultiIndexTree(self)
         return self._tree
-
-    def enlarge(self):
-        """
-        .. todo::
-            - find out what it does and then document it.
-        """
-        # TODO: find more meaningful name
-        if self.poly_degree == 0:
-            double_degree = 1
-        else:
-            # special property: the grid of degree n is contained in the grid of degree 2n (when using chebychev values)
-            double_degree = self.poly_degree * 2
-        generating_values_2n = DEFAULT_GRID_VAL_GEN_FCT(double_degree)
-        generating_points_2n = get_points_from_values(
-            self.spatial_dimension, generating_values_2n
-        )
-        # ATTENTION: the ordering of the grid values might change! remap
-        generating_points_n = self.generating_points
-        exponents_remapped = remap_indices(
-            generating_points_n, generating_points_2n, self.multi_index.exponents
-        )
-        # create a new multi index instance
-        multi_index_remapped = MultiIndexSet(exponents_remapped)
-        # construct a new instance
-        new_instance = self.__class__(
-            multi_index_remapped, generating_points_2n, generating_values_2n
-        )
-        # NOTE: the unisolvent nodes stay equal!
-        # NOTE: might not be initialised yet!
-        # new_instance._unisolvent_nodes = self.unisolvent_nodes
-        new_instance._unisolvent_nodes = self._unisolvent_nodes
-        return new_instance
 
     def apply_func(self, func, out=None):
         """This function is not implemented yet and will raise a :class:`NotImplementedError` if called.

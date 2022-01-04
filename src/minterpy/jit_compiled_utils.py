@@ -9,7 +9,6 @@ from minterpy.global_settings import (
     B_TYPE,
     F_1D,
     F_2D,
-    F_3D,
     FLOAT,
     I_1D,
     I_2D,
@@ -413,34 +412,6 @@ def all_indices_are_contained(subset_indices: np.ndarray, indices: np.ndarray) -
     return True
 
 
-@njit(void(I_1D, I_2D, I_2D), cache=True)
-def insert_single_index_numba(index2insert, indices, indices_out):
-    """Insert a multi index entry to a set of indices.
-
-    :param index2insert: the multi index entry to be inserted.
-    :param indices: the set of multi indices given as input.
-    :param indices_out: the resulting multi indices after (lexicographical) insertion.
-
-    """
-    i = 0
-    bigger_entry_exists = False
-    spatial_dimension, nr_exponents = indices.shape
-    for i in range(nr_exponents):
-        contained_index = indices[:, i]
-        if lex_smaller_or_equal(index2insert, contained_index):
-            bigger_entry_exists = True
-            break
-        indices_out[:, i] = contained_index  # insert the already contained index
-    if bigger_entry_exists:
-        # the multi-index should be inserted at the THIS position
-        indices_out[:, i] = index2insert
-        indices_out[:, i + 1 :] = indices[
-            :, i:
-        ]  # fill up the indices with the remaining indices
-    else:  # no smaller entry exists, simply insert at the end
-        indices_out[:, -1] = index2insert
-
-
 @njit(void(I_2D, I_2D, I_1D), cache=True)
 def fill_match_positions(larger_idx_set, smaller_idx_set, positions):
     """Finds matching positions (array indices) for multi index entries in two multi indices.
@@ -463,96 +434,3 @@ def fill_match_positions(larger_idx_set, smaller_idx_set, positions):
                 #   most of the times the index won't be smaller and the check can be performed with fewer comparisons
                 positions[i] = search_pos
                 break
-
-
-@njit(FLOAT(I_1D, FLOAT), cache=True)
-def lp_norm_for_exponents(exp_vect, p):
-    """Robust lp-norm function. Works essentially like numpy.linalg.norm, but is numerically stable for big arguments.
-
-    :param exp_vect: a multi index entry.
-    :param p: a real number
-    :return: the Lp norm of ``exp_vect``.
-
-    """
-    a = np.abs(exp_vect).max()
-    if a == 0:  # NOTE: avoid division by 0
-        return 0.0
-
-    if p == 1.0:
-        return np.sum(exp_vect)
-    elif p == np.inf:
-        return np.max(exp_vect)
-    else:
-        return a * np.linalg.norm(exp_vect / a, p)
-
-
-@njit(void(F_3D, I_2D), cache=True)
-def compute_grad_c2c(grad_c2c: np.ndarray, exponents: np.ndarray):
-    """Computes the gradient operator from canonical basis to canonical basis.
-
-    The operator (=tensor) transforming the coefficients of a polynomial
-    into the coefficients of its gradient (in canonical basis)
-
-    :param grad_c2c: the empty tensor which should hold the result
-    :param exponents: matrix of all exponent vectors
-
-    Notes
-    -----
-    - Complexity is ``O(m^2 N^2)``.
-    - For the canonical case this tensor is sparse!
-    - obtaining the gradient operator for different bases by matrix multiplications with the transformation matrices is inefficient.
-
-    """
-    nr_monomials, dimensionality = exponents.shape
-    for coeff_idx_from in range(nr_monomials):  # O(N)
-        monomial_exponents = exponents[coeff_idx_from, :]
-        for dim_idx in range(dimensionality):  # derivation in every dimension, O(m)
-            monomial_exponent_dim = monomial_exponents[dim_idx]
-            if monomial_exponent_dim > 0:
-                mon_exponents_derived = monomial_exponents.copy()
-                mon_exponents_derived[dim_idx] -= 1
-                # "gradient exponential mapping":
-                # determine where each coefficient gets mapped to
-                # -> the idx of the derivative monomial
-                coeff_idx_to = get_match_idx(exponents, mon_exponents_derived)  # O(mN)
-                # also multiply with exponent
-                grad_c2c[dim_idx, coeff_idx_to, coeff_idx_from] = monomial_exponent_dim
-
-
-@njit(void(F_3D, I_2D, F_2D), cache=True)
-def compute_grad_x2c(grad_x2c: np.ndarray, exponents: np.ndarray, x2c: np.ndarray):
-    """Computes the gradient operator from an origin basis to canonical basis.
-
-    The operator (=tensor) transforming the coefficients of a polynomial
-    into the coefficients of its gradient (from a variable basis into canonical basis)
-
-    :param grad_x2c: the empty tensor which should hold the result
-    :param exponents: matrix of all exponent vectors
-    :param x2c: the transformation matrix from origin into canonical basis
-
-    Notes
-    -----
-    Exploits the sparsity of the canonical gradient operator.
-
-    """
-    nr_monomials, dimensionality = exponents.shape
-    for coeff_idx_from in range(nr_monomials):  # deriving every monomial, O(N)
-        monomial_exponents = exponents[coeff_idx_from, :]
-        for dim_idx in range(dimensionality):  # derivation in every dimension, O(m)
-            mon_exp_in_dim = monomial_exponents[dim_idx]
-            if mon_exp_in_dim > 0:  # use sparsity and avoid unnecessary operations
-                mon_exponents_derived = monomial_exponents.copy()
-                mon_exponents_derived[dim_idx] -= 1
-                # "gradient exponential mapping":
-                # determine where each coefficient gets mapped to
-                # -> the idx of the derivative monomial
-                coeff_idx_to = get_match_idx(exponents, mon_exponents_derived)  # O(mN)
-                # also multiply with exponent (cf. with canonical case: get_canonical_gradient_operator() )
-                # general case:
-                # gradient_x = gradient_canonical @ x2c
-                # matrix multiplication: C = A @ B
-                # -> C[i,:] += A[i,j] * B[j,:] ("from j to i")
-                # NOTE: addition required!
-                grad_x2c[dim_idx, coeff_idx_to, :] += (
-                    mon_exp_in_dim * x2c[coeff_idx_from, :]
-                )

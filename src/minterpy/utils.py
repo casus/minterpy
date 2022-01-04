@@ -174,28 +174,6 @@ def gen_chebychev_2nd_order_leja_ordered(n: int):
     return leja_points
 
 
-def report_error(errors, description=None):
-    """
-
-    .. todo::
-        - if necessary, ship this to tests, since it is only used there.
-    """
-    if description is not None:
-        print("\n\n")  # noqa
-        print(description)  # noqa
-
-    print(f"mean: {np.mean(errors):.2e}")  # noqa
-    print(f"median: {np.median(errors):.2e}")  # noqa
-    print(f"variance: {np.var(errors):.2e}")  # noqa
-    print(f"l2-norm: {np.linalg.norm(errors):.2e}")  # noqa
-    # f"l_infty error (max): {np.linalg.norm(errors, ord=np.inf)}\n")
-    errors = np.abs(errors)
-    print(f"abs mean: {np.mean(errors):.2e}")  # noqa
-    print(f"abs median: {np.median(errors):.2e}")  # noqa
-    print(f"abs variance: {np.var(errors):.2e}")  # noqa
-    print(f"max abs {np.max(errors):.2e}")  # noqa
-
-
 def eval_newt_polys_on(
     x: np.ndarray,
     exponents: np.ndarray,
