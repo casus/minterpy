@@ -27,164 +27,212 @@ if TYPE_CHECKING:
     from .core.tree import MultiIndexTree
 
 
-@njit(cache=True)
-def find_splits(exponent_row: ARRAY, prev_splits: INT_SET) -> INT_SET:
-    """Finds the positions of the "splits" in the exponent row.
+def compile_splits(exponents: ARRAY) -> TYPED_LIST:
+    """Identify all the split positions in a multi-index set.
 
-    :param exponent_row: a vector of single exponents in one dimension
-        ATTENTION: the first entry must be a 0 (it is being assumed that the 0 vector is always the first exponent!)
-    :param prev_splits: the set of split indices found in "higher" dimensions
-    :return: the set of all the indices of 0 which appear right of a non zero entry plus the indices of previous splits
+    A split in a given dimension of a multi-index set is indicated
+    by a change of value (a "jump") of an exponent one dimension higher.
+    The split position is taken after the jump takes place.
+
+    Notes
+    -----
+    - The first split position is always set to [0].
+    - The last dimension contains no split and the split position
+      is taken to be [0].
+      In other words, one-dimensional multi-index set has no split
+      with a split position [0].
+    - The splits in a lower dimension includes all the splits
+      in the higher dimensions.
+
+    Parameters
+    ----------
+    exponents : ARRAY
+        An array of exponents of a multi-index set.
+
+    Returns
+    -------
+    TYPED_LIST
+        A list of all the split positions for the given multi-index set.
+        The length of the list is the number of spatial dimension in
+        the set (or the number of columns).
+
+    Examples
+    --------
+    >>> xx = np.array([
+    ...      [0, 0, 0],
+    ...      [1, 0, 0],
+    ...      [2, 0, 0],
+    ...      [0, 1, 0],
+    ...      [1, 1, 0],
+    ...      [0, 2, 0],
+    ...      [0, 0, 1],
+    ...      [1, 0, 1],
+    ...      [0, 1, 1],
+    ...      [1, 1, 1],
+    ...      [0, 0, 2],
+    ... ])
+    >>> compile_splits_numpy(xx)
+    ListType[array(int32, 1d, C)]([[ 0  3  5  6  8 10], [ 0  6 10], [0]])
     """
 
-    # ATTENTION: the splits of a "higher" dimension are also included in the lower dimensions
-    # (even though they are not detectable by appearing 0s)
-    split_positions = prev_splits.copy()  # ATTENTION: independent copy
-    non_0_entry_found = True  # in order to register the first split
-    for i, exp in enumerate(exponent_row):
-        if exp == 0:
-            if non_0_entry_found:  # the previous entry was non 0
-                # a "split" occurred -> store the position
-                split_positions.add(i)
-                non_0_entry_found = False
-        else:
-            non_0_entry_found = True
+    # Initialize the list of split positions
+    split_positions = List()
+    # The last element has no split (split position [0])
+    split_positions.append(np.array([0], dtype=INT_DTYPE))
+    # NOTE: the first split position is always [0]
+    prev_split = np.array([0], dtype=INT_DTYPE)
+
+    # A split is indicated when the exponents change value over the rows
+    found_splits = exponents[:-1, :] != exponents[1:, :]
+
+    # Iterate over dimension up to the 2nd
+    # and find the splits in each dimension
+    for i in range(exponents.shape[1] - 1, 0, -1):
+        # NOTE: Shift by one to get after the shift takes place not before.
+        # np.where returns np.int64,
+        # so make sure it's consistent with what Numba expects
+        found_split = np.where(found_splits[:, i])[0].astype(INT_DTYPE) + 1
+        # Splits in higher dimension is included in the lower dimension
+        union = np.union1d(prev_split, found_split)
+        prev_split = union
+        split_positions.insert(0, union)
+
     return split_positions
 
 
-# @njit(cache=True) # TODO not working.
-def compile_splits(exponents: ARRAY) -> TYPED_LIST:
-    """Identify the split positions (nodes) in the MultiIndexTree.
+def compile_subtree_sizes(nr_exponents: int, split_positions: TYPED_LIST) -> TYPED_LIST:
+    """Compute the sizes of all subtrees in a multi-index tree.
 
-    :param exponents: array of exponents
-    :return: split positions for the given multi index set
+    Each dimension in the multi-index tree contains one or more subtrees (or nodes).
+    The size of a subtree refers to the number of the multi-index set elements
+    that belongs to that subtree.
+
+    Notes
+    -----
+    - The largest subtree, that contains all the dimensions, has all the elements
+      of the multi-index set. This subtree is the last element of the list.
+    - The term subtree and node may be used interchangeably.
+
+    Parameters
+    ----------
+    nr_exponents : int
+        The number of elements in the corresponding multi-index set.
+    split_positions: TYPED_LIST
+        The list of all the split positions in the corresponding
+        multi-index set.
+
+    Returns
+    -------
+    TYPED_LIST
+        A list of all the subtree sizes for the given multi-index tree.
+        The length of the list equals to the number of spatial dimension
+        in the corresponding multi-index set (or the number of columns).
+
+    Examples
+    --------
+    >>> xx = np.array([
+    ...      [0, 0, 0],
+    ...      [1, 0, 0],
+    ...      [2, 0, 0],
+    ...      [0, 1, 0],
+    ...      [1, 1, 0],
+    ...      [0, 2, 0],
+    ...      [0, 0, 1],
+    ...      [1, 0, 1],
+    ...      [0, 1, 1],
+    ...      [1, 1, 1],
+    ...      [0, 0, 2],
+    ... ])
+    >>> split_positions = compile_splits_numpy(xx)
+    >>> compile_subtree_sizes_numpy(len(xx), split_positions)
+    ListType[array(int32, 1d, C)]([[3 2 1 2 2 1], [6 4 1], [11]])
     """
-    # NOTE: except for the first entry, the last dimension contains no splits
-    # (due to lexicographical ordering all 0 entries will only appear in the beginning of the array)
-    prev_splits = set()  # TODO use Numba typed Set. not implemented yet
-    prev_splits.add(0)
-    splits = [prev_splits]
-    nr_dimensions = exponents.shape[1]
-    for dim_idx in range(nr_dimensions - 2, -1, -1):
-        exp_row = exponents[:, dim_idx]
-        found_splits = find_splits(exp_row, prev_splits)
-        splits.insert(0, found_splits)  # at the first position
-        prev_splits = found_splits
 
-    # convert into sorted numpy arrays
-    split_arrays = List()  # use Numba typed list
-    for split_sets in splits:
-        found_splits = np.array(list(split_sets), dtype=INT_DTYPE)
-        found_splits.sort()
-        split_arrays.append(found_splits)
-    return split_arrays
+    # Initialize the list of subtree sizes
+    subtree_sizes = List()
+
+    # Iterate over split positions in each dimension, excluding the last
+    for split_position in split_positions[:-1]:
+        # NOTE: Include the total number of exponents
+        # to get the size of the last subtree in this dimension
+        subtree_size = np.diff(split_position, append=nr_exponents)
+        subtree_sizes.append(subtree_size)
+
+    # The last element of the list is the largest subtree
+    # NOTE: Make sure the array has the correct data type
+    subtree_sizes.append(np.array([nr_exponents], dtype=INT_DTYPE))
+
+    return subtree_sizes
 
 
-@njit(cache=True)
-def compute_sizes(nr_exp_total: int, split_row: ARRAY) -> ARRAY:
-    """Compute the sizes of all sub problems in a dimension.
+def compile_problem_sizes(subtree_sizes: TYPED_LIST) -> TYPED_LIST:
+    """Computes the sub-problem sizes for each subtree in the multi-index tree.
 
-    :param nr_exp_total: how many multi indices (exponent vectors) there are in total
-    :param split_row: the split positions for a single dimension
-    :return: an array with the sizes of all sub problems in this dimension
+    The sub-problem size of a given dimension corresponds to the number
+    of subtrees (or nodes) that belong to a single subtree of the higher dimension.
+
+    Notes
+    -----
+    - The sub-problem size in one-dimension is the same as the subtree size
+      in one-dimension.
+
+    Parameters
+    ----------
+    subtree_sizes: TYPED_LIST
+        The list of all the subtree sizes for the given multi-index tree.
+
+    Returns
+    -------
+    TYPED_LIST
+        A list of the problem sizes for the given multi-index tree.
+        The length of the list equals to the number of spatial dimension
+        in the corresponding multi-index set (or the number of columns).
+
+    Examples
+    --------
+    >>> xx = np.array([
+    ...      [0, 0, 0],
+    ...      [1, 0, 0],
+    ...      [2, 0, 0],
+    ...      [0, 1, 0],
+    ...      [1, 1, 0],
+    ...      [0, 2, 0],
+    ...      [0, 0, 1],
+    ...      [1, 0, 1],
+    ...      [0, 1, 1],
+    ...      [1, 1, 1],
+    ...      [0, 0, 2],
+    ... ])
+    >>> nr_exponents = len(xx)
+    >>> split_positions = compile_splits_numpy(xx)
+    >>> subtree_sizes = compile_subtree_sizes_numpy(nr_exponents, split_positions)
+    >>> compile_problem_sizes_numpy(subtree_sizes)
+    ListType[array(int32, 1d, C)]([[3 2 1 2 2 1], [3 2 1], [3]])
     """
-    split_sizes = []
-    # assert split_row[0] == 0  # the first entry (split position) is always 0
-    prev_pos = 0  # for the case that there is just a single split
-    for curr_pos in split_row[1:]:  # the first entry (0) is not required
-        split_sizes.append(curr_pos - prev_pos)
-        prev_pos = curr_pos
-    split_sizes.append(
-        nr_exp_total - prev_pos
-    )  # the remaining exponents belong to the last sub tree
-    return np.array(split_sizes, dtype=INT_DTYPE)
 
+    # Initialize the list of problem sizes
+    problem_sizes = List()
 
-@njit(cache=True)
-def compile_subtree_sizes(nr_exponents: int, splits: TYPED_LIST) -> TYPED_LIST:
-    """Compute the sizes of all sub trees.
+    # The first problem size is the first subtree size
+    problem_sizes.append(subtree_sizes[0])
 
-    :param nr_exponents: number of exponents
-    :param splits: split positions along each dimension
-    :return: the size of all sub trees
-    """
-    # independent in each dimension
-    sizes = List()  # use Numba typed list
-    for row in splits[:-1]:
-        sizes_of_row = compute_sizes(nr_exponents, row)
-        sizes.append(sizes_of_row)
-    last_entry = np.array(
-        [nr_exponents], dtype=INT_DTYPE
-    )  # the biggest tree has full size
-    sizes.append(last_entry)
-    return sizes
+    subtree_size_child = subtree_sizes[0]
+    # Iterate over parent (i.e., higher dimension) subtrees
+    for subtree_size_parent in subtree_sizes[1:]:
+        problem_size = np.digitize(
+            np.cumsum(subtree_size_parent),
+            np.cumsum(subtree_size_child)
+        ).astype(INT_DTYPE)
 
-
-@njit(cache=True)
-def compute_problem_sizes(
-    nr_exponents, split_row_par: ARRAY, split_row_child: ARRAY
-) -> ARRAY:
-    """Computes problem sizes of all child nodes of a given parent dimension.
-
-    :param split_row_par: the split positions of the nodes in a particular dimension ("parents")
-    :param split_row_child: the split positions of the nodes in the next lower dimension ("children")
-    :return: an array with the amount of direct child nodes of each node in a given parent dimension
-    """
-    problem_sizes = np.empty(split_row_par.shape, dtype=INT_DTYPE)
-    nr_child_nodes_total = len(split_row_child)
-    child_idx = 0
-    # NOTE: the first entry is always 0
-    # iterate over the END split positions!
-    # ATTENTION: this requires to access the next split position (=start pos of the neighbouring node)
-    for par_idx, split_pos_par in enumerate(split_row_par[1:]):
-        child_ctr = 0  # count the amount of child nodes belonging to this split
-        while split_row_child[child_idx] < split_pos_par:
-            child_idx += 1
-            child_ctr += 1
-            if child_idx == nr_child_nodes_total:
-                break
-
-        problem_sizes[par_idx] = child_ctr
-
-    # NOTE: the last split ends at the last position
-    par_idx = -1
-    split_pos_par = nr_exponents
-    child_ctr = 0
-    while split_row_child[child_idx] < split_pos_par:
-        child_idx += 1
-        child_ctr += 1
-        if child_idx == nr_child_nodes_total:
-            break
-    problem_sizes[par_idx] = child_ctr
-    return problem_sizes
-
-
-@njit(cache=True)
-def compile_problem_sizes(
-    nr_exponents: int, splits: TYPED_LIST, sizes: TYPED_LIST
-) -> TYPED_LIST:
-    """Computes the sub problem size for each node in the tree.
-
-    :param nr_exponents: number of exponents
-    :param splits: split positions
-    :param sizes: subtree sizes
-    :return: the sub problem size for each node in the tree.
-    """
-    # independent in each dimension
-    nr_dims = len(splits)
-    amounts = List()  # use Numba typed list
-    amounts.append(sizes[0])
-
-    split_row_child = splits[0]
-    for dim_idx_par in range(1, nr_dims):
-        split_row_par = splits[dim_idx_par]
-        problem_sizes = compute_problem_sizes(
-            nr_exponents, split_row_par, split_row_child
+        # NOTE: Include 0 at the beginning
+        # to get the first problem size in this dimension
+        problem_sizes.append(
+            np.diff(problem_size, prepend=0)
         )
-        amounts.append(problem_sizes)
-        split_row_child = split_row_par
 
-    return amounts
+        subtree_size_child = subtree_size_parent
+
+    return problem_sizes
 
 
 @njit(cache=True)

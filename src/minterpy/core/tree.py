@@ -71,9 +71,7 @@ class MultiIndexTree:
         # (position and amount of children etc.)
         self.subtree_sizes = compile_subtree_sizes(nr_exponents, self.split_positions)
 
-        self.problem_sizes = compile_problem_sizes(
-            nr_exponents, self.split_positions, self.subtree_sizes
-        )
+        self.problem_sizes = compile_problem_sizes(self.subtree_sizes)
 
         # TODO improvement: also "pre-compute" more of the recursion through the tree,
         #  avoid computing the node indices each time
