@@ -195,7 +195,7 @@ def PolyDegree(request):
 
 # fixture for lp degree
 
-lp_degree = [1, 2, np.inf]
+lp_degree = [0.5, 1, 2, np.inf]
 
 
 @pytest.fixture(params=lp_degree)
