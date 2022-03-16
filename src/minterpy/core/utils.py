@@ -28,7 +28,7 @@ def _get_poly_degree(exponents: np.ndarray, lp_degree: float) -> int:
     exponents : np.ndarray
         An array of exponents of a multi-index set.
     
-    lp_degree: float
+    lp_degree : float
         The lp-degree of the multi-index set.
 
     Returns
