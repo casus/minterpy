@@ -6,6 +6,7 @@ from __future__ import annotations
 from typing import Iterable, no_type_check
 
 import numpy as np
+from math import ceil
 
 from minterpy.global_settings import DEFAULT_LP_DEG, INT_DTYPE
 from minterpy.jit_compiled_utils import (
@@ -19,9 +20,26 @@ from minterpy.utils import cartesian_product, lp_norm, lp_sum
 #    from .tree import MultiIndexTree
 
 
-def _get_poly_degree(exponents, lp):
-    norms = lp_norm(exponents, lp, axis=1)
-    return norms.max()
+def _get_poly_degree(exponents: np.ndarray, lp_degree: float) -> int:
+    """Get the polynomial degree from a multi-index set for a given lp-degree.
+    
+    Parameters
+    ----------
+    exponents : np.ndarray
+        An array of exponents of a multi-index set.
+    
+    lp_degree: float
+        The lp-degree of the multi-index set.
+
+    Returns
+    -------
+    int
+        The polynomial degree from the multi-index set
+        for the given lp-degree.
+    """
+    norms = lp_norm(exponents, lp_degree, axis=1)
+    # NOTE: math.ceil() returns int, np.ceil() returns float
+    return ceil(norms.max())
 
 
 def get_exponent_matrix(
@@ -43,6 +61,13 @@ def get_exponent_matrix(
     :rtype: np.ndarray
 
     """
+    # Validate poly_degree, allow float if finite with integral value
+    if isinstance(poly_degree, float):
+        if not poly_degree.is_integer():
+            raise ValueError(
+                f"poly_degree needs to be a whole number! <{poly_degree} given."
+            )
+
     if lp_degree == np.inf:
         right_choices = cartesian_product(
             *[np.arange(poly_degree + 1, dtype=INT_DTYPE)] * spatial_dimension
