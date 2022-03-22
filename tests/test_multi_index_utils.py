@@ -69,11 +69,13 @@ def test_call_get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree):
     # The function can be called
     assert_call(get_exponent_matrix, SpatialDimension, PolyDegree, LpDegree)
 
-    # Testing the fix for Issue #65: Polynomial degree must be a whole number
-    # The function can be called with finite integral float as polynomial degree
+    # The function can be called with finite integral float as poly. degree
+    # NOTE: This test is related to the fix for Issue #65
     poly_degree = float(PolyDegree)
     assert_call(get_exponent_matrix, SpatialDimension, poly_degree, LpDegree)
+    
     # The function can't be called non-finite integral float
+    # NOTE: This test is related to the fix for Issue #65
     poly_degree = PolyDegree + np.random.rand(1)[0]
     assert_raises(
         ValueError,
@@ -191,8 +193,8 @@ def test_make_complete(SpatialDimension, PolyDegree, LpDegree):
         assert_equal(exp_vect, completed_exponents1[1, :])
         assert_equal(exp_vect, completed_exponents2[1, :])
 
-    # Testing the fix for Issue #65
     # Insertion of a term that belongs to a higher-degree set
+    # NOTE: This test is related to the fix for Issue #65
     incomplete_exponents = np.insert(
         exponents, len(exponents), exponents[-1]+2, axis=0
     )
