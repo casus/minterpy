@@ -14,6 +14,7 @@ from minterpy.jit_compiled_utils import (
 
 from .utils import (
     _expand_dim,
+    _get_poly_degree,
     get_exponent_matrix,
     insert_lexicographically,
     is_lexicographically_complete,
@@ -62,13 +63,12 @@ class MultiIndexSet:
         #     self.poly_deg_dtype = poly_deg_dtype
         self.poly_deg_dtype = INT_DTYPE
 
-        # self.poly_degree = _get_poly_degree(exponents, self._lp_degree)
+        self.poly_degree = _get_poly_degree(exponents, self._lp_degree)
         # if self.poly_degree == 0:
         #     raise ValueError('the degree must be bigger than 0')
         # if self.poly_degree % 1.0 == 0.0:
         # self.poly_degree = int(self.poly_degree)
-        self.poly_degree = np.max(exponents)
-
+    
         self._is_complete: Optional[bool] = None
         # for avoiding to complete the exponents multiple times
         self._exponents_completed: Optional[ARRAY] = None
