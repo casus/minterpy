@@ -10,11 +10,10 @@ from conftest import (
     assert_call,
     build_rnd_exponents,
 )
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from minterpy.core.utils import (
     _gen_multi_index_exponents,
-    _get_poly_degree,
     find_match_between,
     get_exponent_matrix,
     insert_lexicographically,
@@ -64,6 +63,27 @@ def NumOfMonomials(request):
 
 
 # test utilities
+
+def test_call_get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree):
+    
+    # The function can be called
+    assert_call(get_exponent_matrix, SpatialDimension, PolyDegree, LpDegree)
+
+    # The function can be called with finite integral float as poly. degree
+    # NOTE: This test is related to the fix for Issue #65
+    poly_degree = float(PolyDegree)
+    assert_call(get_exponent_matrix, SpatialDimension, poly_degree, LpDegree)
+    
+    # The function can't be called non-finite integral float
+    # NOTE: This test is related to the fix for Issue #65
+    poly_degree = PolyDegree + np.random.rand(1)[0]
+    assert_raises(
+        ValueError,
+        get_exponent_matrix,
+        SpatialDimension,
+        poly_degree,
+        LpDegree
+        )
 
 
 def test_index_is_contained(SpatialDimension, PolyDegree, LpDegree):
@@ -148,7 +168,8 @@ def test_make_complete(SpatialDimension, PolyDegree, LpDegree):
 
     exp_vect = exponents[0]
     incomplete_exponents = np.delete(exponents, 0, axis=0)
-    # completion should be identical to "make derivable" after just deleting a single exponent vector
+    # completion should be identical to "make derivable"
+    # after just deleting a single exponent vector
     completed_exponents1 = make_derivable(incomplete_exponents)
     completed_exponents2 = make_complete(incomplete_exponents, LpDegree)
 
@@ -161,7 +182,8 @@ def test_make_complete(SpatialDimension, PolyDegree, LpDegree):
     if PolyDegree != 1:
         exp_vect = exponents[1]
         incomplete_exponents = np.delete(exponents, 1, axis=0)
-        # completion should be identical to "make derivable" after just deleting a single exponent vector
+        # completion should be identical to "make derivable"
+        # after just deleting a single exponent vector
         completed_exponents1 = make_derivable(incomplete_exponents)
         completed_exponents2 = make_complete(incomplete_exponents, LpDegree)
 
@@ -170,6 +192,20 @@ def test_make_complete(SpatialDimension, PolyDegree, LpDegree):
 
         assert_equal(exp_vect, completed_exponents1[1, :])
         assert_equal(exp_vect, completed_exponents2[1, :])
+
+    # Insertion of a term that belongs to a higher-degree set
+    # NOTE: This test is related to the fix for Issue #65
+    incomplete_exponents = np.insert(
+        exponents, len(exponents), exponents[-1]+2, axis=0
+    )
+    # Make sure that the incomplete set is indeed incomplete
+    assert_(not is_lexicographically_complete(incomplete_exponents))
+    # Make the set complete
+    completed_exponents = make_complete(incomplete_exponents, LpDegree)
+    # Completed set must be lexicographically ordered
+    assert_(have_lexicographical_ordering(completed_exponents))
+    # Completed set must be complete
+    assert_(is_lexicographically_complete(completed_exponents))
 
 
 def test_all_indices_are_contained(SpatialDimension, PolyDegree, LpDegree):
