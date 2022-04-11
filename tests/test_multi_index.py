@@ -13,8 +13,12 @@ from conftest import (
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from minterpy import MultiIndexSet
-from minterpy.core.utils import find_match_between, get_exponent_matrix
-
+from minterpy.core.utils import (
+    find_match_between,
+    get_exponent_matrix,
+    _get_poly_degree,
+    is_lexicographically_complete,
+)
 
 # test initialization
 def test_init_from_exponents(SpatialDimension, PolyDegree, LpDegree):
@@ -60,3 +64,35 @@ def test_attributes(SpatialDimension, PolyDegree, LpDegree):
     number_of_monomials, dim = exponents.shape
     assert_(len(multi_index) == number_of_monomials)
     assert_(multi_index.spatial_dimension == dim)
+
+
+def test_attributes_incomplete_exponents(SpatialDimension, PolyDegree, LpDegree):
+    """Test the attributes with an incomplete exponents for MultiIndexSet.
+    
+    Notes
+    -----
+    - This is related to the fix for Issue #66.
+    """
+    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+
+    # Create an incomplete multi-index set
+    # by adding a new exponent of higher degree
+    exponents_incomplete = np.insert(
+        exponents, len(exponents), exponents[-1]+2, axis=0)
+    multi_index_incomplete = MultiIndexSet(
+        exponents_incomplete, lp_degree=LpDegree)
+
+    # Make sure the incomplete exponents are indeed incomplete
+    assert_(not is_lexicographically_complete(exponents_incomplete))
+
+    # Compute the reference polynomial degree given the multi-index set    
+    poly_degree = _get_poly_degree(exponents_incomplete, LpDegree)
+
+    # Assertion of attributes
+    assert_equal(exponents_incomplete, multi_index_incomplete.exponents)
+    assert_(multi_index_incomplete.lp_degree == LpDegree)
+    assert_(multi_index_incomplete.poly_degree == poly_degree)
+
+    num_of_monomials_incomplete, dim_incomplete = exponents_incomplete.shape
+    assert_(len(multi_index_incomplete) == num_of_monomials_incomplete)
+    assert_(multi_index_incomplete.spatial_dimension == dim_incomplete)
