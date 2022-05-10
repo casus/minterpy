@@ -1,6 +1,7 @@
 """
 set of package wide utility functions
 """
+import itertools
 from typing import Union
 
 import numpy as np
@@ -322,3 +323,104 @@ def newt_eval(
         results_placeholder,
     )
     return convert_eval_output(results_placeholder)
+
+def deriv_newt_eval(x, coefficients, exponents, generating_points, derivative_order_along):
+    """ Generalized implementation of polynomial derivative evaluation in Newton form.
+
+     n = polynomial degree
+     N = amount of coefficients
+     k = amount of points
+
+    advantage:
+        - can compute derivative polynomials without transforming to canonical basis
+
+    Parameters
+    ----------
+    x: (k, m) the k points to evaluate on with dimensionality m.
+    coefficients: (N) the coefficients of the Newton polynomial.
+    exponents: (m, N) a multi index "alpha" for every Newton polynomial
+        corresponding to the exponents of this "monomial"
+    generating_points: (m, n+1) grid values for every dimension (e.g. Leja ordered Chebychev values).
+    derivative_order_along: (m) specifying the order along each dimension to compute the derivative eg. [2,3,1] will
+        compute 2nd order derivative along x, 3rd order along y, and 1st order along z
+
+    Returns
+    -------
+    (k) the value of derivative of the polynomial evaluated at each point.
+
+    Notes
+    -----
+    This derivative evaluation is done by taking derivatives of the basis Newton monomials. Therefore this
+    function looks very similar to `newt_eval`. JIT compilation using Numba was not used here as
+    itertools.combinations() does not work with Numba.
+
+    """
+
+    N, m = exponents.shape
+    nr_points = x.shape[0]
+    max_exponents = np.max(exponents, axis=0)
+
+    # Result of the derivative evaluation
+    results = np.empty(nr_points, dtype=FLOAT_DTYPE)
+    # Array to store individial basis monomial evaluations
+    monomial_vals= np.empty(N, dtype=FLOAT_DTYPE)
+    # Array to store products in basis monomial along each dimension
+    products = np.empty((np.max(max_exponents) + 1, m), dtype=FLOAT_DTYPE)
+
+    # Newton monomials have to be evaluated at each input point separately
+    for point_nr in range(nr_points):
+        x_single = x[point_nr, :]
+
+        # Constructing the products array
+        for i in range(m):
+            max_exp_in_dim = max_exponents[i]
+            x_i = x_single[i]
+            order = derivative_order_along[i]
+            if order == 0: # no partial derivative along this dimension
+                prod = 1.0
+                for j in range(max_exp_in_dim):  # O(n)
+                    p_ij = generating_points[j, i]
+                    prod *= (x_i - p_ij)
+                    # NOTE: shift index by one
+                    exponent = j + 1  # NOTE: otherwise the result type is float
+                    products[exponent, i] = prod
+            else: # take partial derivative of 'order' along this dimension
+
+                # derivative of first 'order' newt monomials will be 0 as their degree < order
+                for r in range(order):
+                    products[r, i] = 0.0
+
+                # derivative of newt monomial 'order' will be just factorial of order
+                fact = np.math.factorial(order)
+                products[order, i] = fact
+
+                # for all bigger monomials, use chain rule of differentiation to compute derivative of products
+                for q in range(order + 1, max_exp_in_dim + 1):
+                    combs = itertools.combinations(list(range(q)), q-order)
+                    res = 0.0
+                    for comb in combs: # combs is a generator for combinations
+                        prod = np.prod(x_i - generating_points[list(comb), i])
+                        res += prod
+
+                    res *= fact
+                    products[q, i] = res
+
+        # evaluate all Newton polynomials. O(Nm)
+        for j in range(N):
+            # the exponents of each monomial ("alpha")
+            # are the indices of the products which need to be multiplied
+            newt_mon_val = 1.0  # required as multiplicative identity
+            for i in range(m):
+                exp = exponents[j, i]
+                # NOTE: an exponent of 0 should not cause a multiplication
+                if exp > 0:
+                    newt_mon_val *= products[exp, i]
+                else:
+                    order = derivative_order_along[i]
+                    if order > 0:
+                        newt_mon_val = 0.0
+            monomial_vals[j] = newt_mon_val
+
+        results[point_nr] = np.dot(coefficients, monomial_vals)
+
+    return results

@@ -766,3 +766,30 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         )
         extra_user_domain = verify_domain(extra_user_domain, expand_dim)
         self.user_domain = np.concatenate((self.user_domain, extra_user_domain))
+
+    def partial_derivative(self, dim: int) -> "MultivariatePolynomialSingleABC":
+        """Compute the polynomial that is the partial derivative along a dimension.
+
+        Parameters
+        ----------
+        dim: spatial dimension along which to take the derivative
+
+        Returns
+        -------
+        a new polynomial instance that represents the partial derivative
+        """
+
+        return self._partial_diff(self, dim)
+
+    def derivative(self, order: ARRAY):
+        """Compute the polynomial that is the partial derivative of a particular order along each dimension.
+
+        Parameters
+        ----------
+        order: integer array specifying the order of derivative along each dimension
+
+        Returns
+        -------
+        a new polynomial instance that represents the partial derivative
+        """
+        return self._diff(self, order)

@@ -7,7 +7,7 @@ from copy import deepcopy
 import numpy as np
 
 from minterpy.global_settings import DEBUG, FLOAT_DTYPE
-from minterpy.jit_compiled_utils import can_eval_mult
+from minterpy.jit_compiled_utils import can_eval_mult, get_match_idx
 
 from ..core import MultiIndexSet
 from ..core.ABC import MultivariatePolynomialSingleABC
@@ -279,6 +279,25 @@ def canonical_eval(canonical_poly, x: np.ndarray):
 canonical_generate_internal_domain = verify_domain
 canonical_generate_user_domain = verify_domain
 
+def _canonical_partial_diff(poly, dim):
+    """ Partial differentiation in Canonical basis.
+    """
+    coeffs_canonical = poly.coeffs
+    exponents = poly.multi_index.exponents
+
+    coeffs_canonical_deriv = np.zeros(coeffs_canonical.shape)
+    for monomial_idx, coeff in enumerate(coeffs_canonical):
+        monomial_exponents = exponents[monomial_idx, :]
+        if monomial_exponents[dim] > 0:
+            mon_exponents_derived = monomial_exponents.copy()
+            mon_exponents_derived[dim] -= 1
+            # "gradient exponential mapping"
+            new_coeff_idx = get_match_idx(exponents, mon_exponents_derived)
+            # multiply with exponent
+            coeffs_canonical_deriv[new_coeff_idx] = coeff * exponents[monomial_idx, dim]
+
+    return CanonicalPolynomial.from_poly(poly, coeffs_canonical_deriv)
+
 
 class CanonicalPolynomial(MultivariatePolynomialSingleABC):
     """
@@ -297,6 +316,9 @@ class CanonicalPolynomial(MultivariatePolynomialSingleABC):
     _div = staticmethod(dummy)
     _pow = staticmethod(dummy)
     _eval = canonical_eval
+
+    _partial_diff = staticmethod(_canonical_partial_diff)
+    _diff = staticmethod(dummy)
 
     generate_internal_domain = staticmethod(canonical_generate_internal_domain)
     generate_user_domain = staticmethod(canonical_generate_user_domain)

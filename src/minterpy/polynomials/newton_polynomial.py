@@ -6,10 +6,11 @@ Module of the NewtonPolyomial class
 """
 
 from minterpy.global_settings import DEBUG
-from minterpy.utils import newt_eval
+from minterpy.utils import newt_eval, deriv_newt_eval
 
 from ..core.ABC.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC
 from ..core.verification import verify_domain
+from .lagrange_polynomial import LagrangePolynomial
 
 __all__ = ["NewtonPolynomial"]
 
@@ -50,6 +51,34 @@ def newton_eval(newton_poly, x):
         verify_input=DEBUG,
     )
 
+def _newton_partial_diff(poly, dim):
+    """ Partial differentiation in Newton basis.
+
+    Notes
+    -----
+    Returns a Lagrange polynomial.
+    """
+    spatial_dim = poly.multi_index.spatial_dimension
+    deriv_order_along = [0]*spatial_dim
+    deriv_order_along[dim] = 1
+    return _newton_diff(poly, deriv_order_along)
+
+def _newton_diff(poly, deriv_order_along):
+    """ Partial differentiation in Newton basis.
+
+    Notes
+    -----
+    Returns a Lagrange polynomial.
+    """
+
+    # When you evaluate the derivatives on the unisolvent nodes, you get the coefficients for
+    # the derivative polynomial in Lagrange basis.
+    lag_coeffs = deriv_newt_eval(poly.grid.unisolvent_nodes, poly.coeffs,
+                                 poly.grid.multi_index.exponents,
+                                 poly.grid.generating_points, deriv_order_along)
+
+    return LagrangePolynomial(coeffs=lag_coeffs, multi_index=poly.multi_index,
+                              grid=poly.grid)
 
 # TODO redundant
 newton_generate_internal_domain = verify_domain
@@ -57,7 +86,7 @@ newton_generate_user_domain = verify_domain
 
 
 class NewtonPolynomial(MultivariatePolynomialSingleABC):
-    """Datatype to discribe polynomials in Newton base.
+    """Datatype to describe polynomials in Newton base.
 
     For a definition of the Newton base, see the mathematical introduction.
 
@@ -81,6 +110,9 @@ class NewtonPolynomial(MultivariatePolynomialSingleABC):
     _div = staticmethod(dummy)
     _pow = staticmethod(dummy)
     _eval = newton_eval
+
+    _partial_diff = staticmethod(_newton_partial_diff)
+    _diff = staticmethod(_newton_diff)
 
     generate_internal_domain = staticmethod(newton_generate_internal_domain)
     generate_user_domain = staticmethod(newton_generate_user_domain)
