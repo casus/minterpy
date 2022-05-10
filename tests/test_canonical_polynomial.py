@@ -3,7 +3,6 @@ testing module for canonical_polynomial.py
 
 The subclassing is not tested here, see tesing module `test_polynomial.py`
 """
-from audioop import mul
 import operator as op
 
 import numpy as np
