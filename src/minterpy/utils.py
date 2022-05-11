@@ -364,8 +364,10 @@ def deriv_newt_eval(x, coefficients, exponents, generating_points, derivative_or
     results = np.empty(nr_points, dtype=FLOAT_DTYPE)
     # Array to store individial basis monomial evaluations
     monomial_vals= np.empty(N, dtype=FLOAT_DTYPE)
+
+    num_prods = np.max(max_exponents) + 1
     # Array to store products in basis monomial along each dimension
-    products = np.empty((np.max(max_exponents) + 1, m), dtype=FLOAT_DTYPE)
+    products = np.empty((num_prods, m), dtype=FLOAT_DTYPE)
 
     # Newton monomials have to be evaluated at each input point separately
     for point_nr in range(nr_points):
@@ -387,8 +389,11 @@ def deriv_newt_eval(x, coefficients, exponents, generating_points, derivative_or
             else: # take partial derivative of 'order' along this dimension
 
                 # derivative of first 'order' newt monomials will be 0 as their degree < order
-                for r in range(order):
-                    products[r, i] = 0.0
+                products[:order, i] = 0.0
+
+                # if order of derivative larger than the degree
+                if order >= num_prods:
+                    continue
 
                 # derivative of newt monomial 'order' will be just factorial of order
                 fact = np.math.factorial(order)

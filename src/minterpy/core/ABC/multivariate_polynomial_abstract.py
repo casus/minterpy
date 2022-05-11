@@ -10,7 +10,7 @@ from typing import Any, Optional, Union
 
 import numpy as np
 
-from minterpy.global_settings import ARRAY
+from minterpy.global_settings import ARRAY, INT_DTYPE
 
 from ..grid import Grid
 from ..multi_index import MultiIndexSet
@@ -779,9 +779,13 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         a new polynomial instance that represents the partial derivative
         """
 
+        # Guard rails for dim
+        if dim < 0 or dim >= self.spatial_dimension:
+            raise ValueError(f"dim <{dim}> should be between 0 and {self.spatial_dimension-1}")
+
         return self._partial_diff(self, dim)
 
-    def derivative(self, order: ARRAY):
+    def derivative(self, order: ARRAY) -> "MultivariatePolynomialSingleABC":
         """Compute the polynomial that is the partial derivative of a particular order along each dimension.
 
         Parameters
@@ -792,4 +796,13 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         -------
         a new polynomial instance that represents the partial derivative
         """
+
+        # Guard rails for order
+        order = np.array(order)
+        if not issubclass(order.dtype.type, INT_DTYPE):
+            raise ValueError(f"order of derivative <{order}> can only be non-negative integers")
+
+        if np.any(order < 0):
+            raise ValueError(f"order of derivative <{order}> cannot have negative values")
+
         return self._diff(self, order)
