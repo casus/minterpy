@@ -1,7 +1,6 @@
 """
 Test suite for multi_index.py
 """
-from ast import Mult
 import numpy as np
 import pytest
 from conftest import (
