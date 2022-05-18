@@ -4,6 +4,7 @@ Module of the NewtonPolyomial class
 .. todo::
     - implement staticmethods for Newton polynomials (or at least trasform them to another base).
 """
+import numpy as np
 
 from minterpy.global_settings import DEBUG
 from minterpy.utils import newt_eval, deriv_newt_eval
@@ -51,7 +52,8 @@ def newton_eval(newton_poly, x):
         verify_input=DEBUG,
     )
 
-def _newton_partial_diff(poly, dim):
+
+def _newton_partial_diff(poly: "NewtonPolynomial", dim: int, order: int) -> "LagrangePolynomial":
     """ Partial differentiation in Newton basis.
 
     Notes
@@ -60,10 +62,10 @@ def _newton_partial_diff(poly, dim):
     """
     spatial_dim = poly.multi_index.spatial_dimension
     deriv_order_along = [0]*spatial_dim
-    deriv_order_along[dim] = 1
+    deriv_order_along[dim] = order
     return _newton_diff(poly, deriv_order_along)
 
-def _newton_diff(poly, deriv_order_along):
+def _newton_diff(poly: "NewtonPolynomial", order: np.ndarray) -> "LagrangePolynomial":
     """ Partial differentiation in Newton basis.
 
     Notes
@@ -75,7 +77,7 @@ def _newton_diff(poly, deriv_order_along):
     # the derivative polynomial in Lagrange basis.
     lag_coeffs = deriv_newt_eval(poly.grid.unisolvent_nodes, poly.coeffs,
                                  poly.grid.multi_index.exponents,
-                                 poly.grid.generating_points, deriv_order_along)
+                                 poly.grid.generating_points, order)
 
     return LagrangePolynomial(coeffs=lag_coeffs, multi_index=poly.multi_index,
                               grid=poly.grid)

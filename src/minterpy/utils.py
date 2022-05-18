@@ -324,15 +324,14 @@ def newt_eval(
     )
     return convert_eval_output(results_placeholder)
 
-def deriv_newt_eval(x, coefficients, exponents, generating_points, derivative_order_along):
-    """ Generalized implementation of polynomial derivative evaluation in Newton form.
+def deriv_newt_eval(x: np.ndarray, coefficients: np.ndarray, exponents: np.ndarray,
+                    generating_points: np.ndarray, derivative_order_along: np.ndarray) -> np.ndarray:
+    """ Evaluate the derivative of a polynomial in the Newton form.
 
+     m = spatial dimension
      n = polynomial degree
-     N = amount of coefficients
-     k = amount of points
-
-    advantage:
-        - can compute derivative polynomials without transforming to canonical basis
+     N = number of coefficients
+     k = number of points
 
     Parameters
     ----------
@@ -341,8 +340,9 @@ def deriv_newt_eval(x, coefficients, exponents, generating_points, derivative_or
     exponents: (m, N) a multi index "alpha" for every Newton polynomial
         corresponding to the exponents of this "monomial"
     generating_points: (m, n+1) grid values for every dimension (e.g. Leja ordered Chebychev values).
-    derivative_order_along: (m) specifying the order along each dimension to compute the derivative eg. [2,3,1] will
-        compute 2nd order derivative along x, 3rd order along y, and 1st order along z
+    derivative_order_along: (m) specifying the order along each dimension to compute the derivative
+    eg. [2,3,1] will compute respectively 2nd order, 3rd order, and 1st order along spatial dimensions
+    0, 1, and 2.
 
     Returns
     -------
@@ -350,9 +350,9 @@ def deriv_newt_eval(x, coefficients, exponents, generating_points, derivative_or
 
     Notes
     -----
-    This derivative evaluation is done by taking derivatives of the basis Newton monomials. Therefore this
-    function looks very similar to `newt_eval`. JIT compilation using Numba was not used here as
-    itertools.combinations() does not work with Numba.
+    - Can compute derivative polynomials without transforming to canonical basis.
+    - This derivative evaluation is done by taking derivatives of the Newton monomials.
+    - JIT compilation using Numba was not used here as itertools.combinations() does not work with Numba.
 
     """
 
@@ -401,7 +401,7 @@ def deriv_newt_eval(x, coefficients, exponents, generating_points, derivative_or
 
                 # for all bigger monomials, use chain rule of differentiation to compute derivative of products
                 for q in range(order + 1, max_exp_in_dim + 1):
-                    combs = itertools.combinations(list(range(q)), q-order)
+                    combs = itertools.combinations(range(q), q-order)
                     res = 0.0
                     for comb in combs: # combs is a generator for combinations
                         prod = np.prod(x_i - generating_points[list(comb), i])

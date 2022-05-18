@@ -146,17 +146,19 @@ def test_partial_derivative():
     groundtruth_coeffs_dy = np.array([2.0, 0.0, 4.0, 0.0, 0.0])
     groundtruth_coeffs_dz = np.array([3.0, 4.0, 10.0, 0.0, 0.0])
 
-    can_poly_dx = can_poly.partial_derivative(0)
+    can_poly_dx = can_poly.partial_diff(0)
     coeffs_dx = can_poly_dx.coeffs
     assert np.allclose(coeffs_dx, groundtruth_coeffs_dx)
 
-    can_poly_dy = can_poly.partial_derivative(1)
+    can_poly_dy = can_poly.partial_diff(1)
     coeffs_dy = can_poly_dy.coeffs
     assert np.allclose(coeffs_dy, groundtruth_coeffs_dy)
 
-    can_poly_dz = can_poly.partial_derivative(2)
+    can_poly_dz = can_poly.partial_diff(2)
     coeffs_dz = can_poly_dz.coeffs
     assert np.allclose(coeffs_dz, groundtruth_coeffs_dz)
+
+
 
 def test_derivative():
 
@@ -174,7 +176,7 @@ def test_derivative():
     can_poly = CanonicalPolynomial(mi, coeffs)
 
     # Testing zeroth order derivatives
-    can_poly_zero_deriv = can_poly.derivative([0,0,0])
+    can_poly_zero_deriv = can_poly.diff([0,0,0])
     coeffs_zero_deriv = can_poly_zero_deriv.coeffs
     assert np.allclose(coeffs_zero_deriv, coeffs)
 
@@ -182,14 +184,14 @@ def test_derivative():
     groundtruth_coeffs_dz2 = np.array([10.0, 0.0, 0.0, 0.0, 0.0])
     groundtruth_coeffs_dyz2 = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
 
-    can_poly_dyz = can_poly.derivative([0,1,1])
+    can_poly_dyz = can_poly.diff([0,1,1])
     coeffs_dyz = can_poly_dyz.coeffs
     assert np.allclose(coeffs_dyz, groundtruth_coeffs_dyz)
 
-    can_poly_dz2 = can_poly.derivative([0,0,2])
+    can_poly_dz2 = can_poly.diff([0,0,2])
     coeffs_dz2 = can_poly_dz2.coeffs
     assert np.allclose(coeffs_dz2, groundtruth_coeffs_dz2)
 
-    can_poly_dyz2 = can_poly.derivative([0,1,2])
+    can_poly_dyz2 = can_poly.diff([0,1,2])
     coeffs_dyz2 = can_poly_dyz2.coeffs
     assert np.allclose(coeffs_dyz2, groundtruth_coeffs_dyz2)

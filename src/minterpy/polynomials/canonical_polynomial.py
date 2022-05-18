@@ -7,7 +7,7 @@ from copy import deepcopy
 import numpy as np
 from scipy.special import factorial
 
-from minterpy.global_settings import DEBUG, FLOAT_DTYPE
+from minterpy.global_settings import DEBUG, FLOAT_DTYPE, INT_DTYPE
 from minterpy.jit_compiled_utils import can_eval_mult, get_match_idx
 
 from ..core import MultiIndexSet
@@ -280,44 +280,36 @@ def canonical_eval(canonical_poly, x: np.ndarray):
 canonical_generate_internal_domain = verify_domain
 canonical_generate_user_domain = verify_domain
 
-def _canonical_partial_diff(poly, dim):
+
+def _canonical_partial_diff(poly: "CanonicalPolynomial", dim: int, order: int) -> "CanonicalPolynomial":
+    """ Partial differentiation in Canonical basis.
+    """
+    spatial_dim = poly.multi_index.spatial_dimension
+    deriv_order_along = np.zeros(spatial_dim, dtype=INT_DTYPE)
+    deriv_order_along[dim] = order
+    return _canonical_diff(poly, deriv_order_along)
+
+
+def _canonical_diff(poly: "CanonicalPolynomial", order: np.ndarray) -> "CanonicalPolynomial":
     """ Partial differentiation in Canonical basis.
     """
     coeffs_canonical = poly.coeffs
     exponents = poly.multi_index.exponents
 
-    coeffs_canonical_deriv = np.zeros(coeffs_canonical.shape)
-    for monomial_idx, coeff in enumerate(coeffs_canonical):
-        monomial_exponents = exponents[monomial_idx, :]
-        if monomial_exponents[dim] > 0:
-            mon_exponents_derived = monomial_exponents.copy()
-            mon_exponents_derived[dim] -= 1
-            new_coeff_idx = get_match_idx(exponents, mon_exponents_derived)
-            # multiply with exponent
-            coeffs_canonical_deriv[new_coeff_idx] = coeff * exponents[monomial_idx, dim]
-
-    return CanonicalPolynomial.from_poly(poly, coeffs_canonical_deriv)
-
-def _canonical_diff(poly, order):
-    """ Partial differentiation in Canonical basis.
-    """
-    coeffs_canonical = poly.coeffs
-    exponents = poly.multi_index.exponents
-
-    coeffs_canonical_deriv = np.zeros(coeffs_canonical.shape)
+    coeffs_canonical_diff = np.zeros(coeffs_canonical.shape)
     for monomial_idx, coeff in enumerate(coeffs_canonical):
         monomial_exponents = exponents[monomial_idx, :]
 
         if np.all(monomial_exponents >= order):
-            mon_exponents_derived = monomial_exponents.copy()
-            mon_exponents_derived -= order
-            new_coeff_idx = get_match_idx(exponents, mon_exponents_derived)
+            mon_exponents_diff = monomial_exponents.copy()
+            mon_exponents_diff -= order
+            new_coeff_idx = get_match_idx(exponents, mon_exponents_diff)
             # multiplication factor for the term
-            factor = np.prod(factorial(monomial_exponents)/factorial(mon_exponents_derived))
+            factor = np.prod(factorial(monomial_exponents)/factorial(mon_exponents_diff))
             # multiply with factor
-            coeffs_canonical_deriv[new_coeff_idx] = coeff * factor
+            coeffs_canonical_diff[new_coeff_idx] = coeff * factor
 
-    return CanonicalPolynomial.from_poly(poly, coeffs_canonical_deriv)
+    return CanonicalPolynomial.from_poly(poly, coeffs_canonical_diff)
 
 class CanonicalPolynomial(MultivariatePolynomialSingleABC):
     """
