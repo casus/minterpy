@@ -1,6 +1,7 @@
 """
 Test suite for multi_index.py
 """
+from ast import Mult
 import numpy as np
 import pytest
 from conftest import (
@@ -48,6 +49,30 @@ def test_init_from_degree(SpatialDimension, PolyDegree, LpDegree):
 def test_init_fail_from_degree():
     assert_raises(TypeError, MultiIndexSet.from_degree, 1.0, 1)
     assert_raises(TypeError, MultiIndexSet.from_degree, 1, 1.0)
+
+# Test methods
+
+def test_add_exponents(SpatialDimension, PolyDegree, LpDegree):
+    """Test the add_exponents method of a MultiIndex instance."""
+    
+    # Create 2 exponents, one twice the polynomial degree of the other
+    exponents_1 = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+    exponents_2 = get_exponent_matrix(SpatialDimension, 2*PolyDegree, LpDegree)
+
+    # Compute the set difference between the larger set and the smaller set
+    exponents_diff = np.array(
+        list(set(map(tuple, exponents_2)) - set(map(tuple, exponents_1)))
+    )
+
+    # Create the multi-index sets
+    mi_1 = MultiIndexSet(exponents_1, lp_degree=LpDegree)
+    mi_2 = MultiIndexSet(exponents_2, lp_degree=LpDegree)
+
+    # Act: Add the exponents difference to the smaller multi-index set
+    mi_added = mi_1.add_exponents(exponents_diff)
+
+    # Assert: The added multi-index must be the same as the big one
+    assert_multi_index_equal(mi_added, mi_2)
 
 
 # test attributes
