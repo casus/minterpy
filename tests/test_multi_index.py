@@ -53,7 +53,12 @@ def test_init_fail_from_degree():
 # Test methods
 
 def test_add_exponents(SpatialDimension, PolyDegree, LpDegree):
-    """Test the add_exponents method of a MultiIndex instance."""
+    """Test the add_exponents method of a MultiIndex instance.
+    
+    Notes
+    -----
+    - This is related to the fix for Issue #75.
+    """
     
     # Create 2 exponents, one twice the polynomial degree of the other
     exponents_1 = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
@@ -73,7 +78,6 @@ def test_add_exponents(SpatialDimension, PolyDegree, LpDegree):
 
     # Assert: The added multi-index must be the same as the big one
     assert_multi_index_equal(mi_added, mi_2)
-
 
 # test attributes
 
