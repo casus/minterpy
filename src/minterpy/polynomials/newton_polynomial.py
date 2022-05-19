@@ -1,14 +1,15 @@
 """
-Module of the NewtonPolyomial class
+Module of the NewtonPolynomial class
 
 .. todo::
-    - implement staticmethods for Newton polynomials (or at least trasform them to another base).
+    - implement staticmethods for Newton polynomials (or at least transform them to another base).
 """
 import numpy as np
 
 from minterpy.global_settings import DEBUG
-from minterpy.utils import newt_eval, deriv_newt_eval
+from minterpy.utils import newt_eval
 from minterpy.dds import dds
+from .utils import deriv_newt_eval
 
 from ..core.ABC.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC
 from ..core.verification import verify_domain
