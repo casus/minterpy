@@ -127,7 +127,7 @@ def test_sub_different_poly():
     assert_polynomial_almost_equal(res, groundtruth)
 
 
-def test_partial_derivative():
+def test_partial_diff():
 
     # ATTENTION: the exponent vectors of all derivatives have to be included already!
     exponents = np.array([[0, 0, 0],
@@ -160,7 +160,7 @@ def test_partial_derivative():
 
 
 
-def test_derivative():
+def test_diff():
 
     # ATTENTION: the exponent vectors of all derivatives have to be included already!
     exponents = np.array([[0, 0, 0],

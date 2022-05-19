@@ -8,10 +8,10 @@ import numpy as np
 
 from minterpy.global_settings import DEBUG
 from minterpy.utils import newt_eval, deriv_newt_eval
+from minterpy.dds import dds
 
 from ..core.ABC.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC
 from ..core.verification import verify_domain
-from .lagrange_polynomial import LagrangePolynomial
 
 __all__ = ["NewtonPolynomial"]
 
@@ -53,24 +53,24 @@ def newton_eval(newton_poly, x):
     )
 
 
-def _newton_partial_diff(poly: "NewtonPolynomial", dim: int, order: int) -> "LagrangePolynomial":
+def _newton_partial_diff(poly: "NewtonPolynomial", dim: int, order: int) -> "NewtonPolynomial":
     """ Partial differentiation in Newton basis.
 
     Notes
     -----
-    Returns a Lagrange polynomial.
+    Performs a transformation from Lagrange to Newton using DDS.
     """
     spatial_dim = poly.multi_index.spatial_dimension
     deriv_order_along = [0]*spatial_dim
     deriv_order_along[dim] = order
     return _newton_diff(poly, deriv_order_along)
 
-def _newton_diff(poly: "NewtonPolynomial", order: np.ndarray) -> "LagrangePolynomial":
+def _newton_diff(poly: "NewtonPolynomial", order: np.ndarray) -> "NewtonPolynomial":
     """ Partial differentiation in Newton basis.
 
     Notes
     -----
-    Returns a Lagrange polynomial.
+    Performs a transformation from Lagrange to Newton using DDS.
     """
 
     # When you evaluate the derivatives on the unisolvent nodes, you get the coefficients for
@@ -79,7 +79,10 @@ def _newton_diff(poly: "NewtonPolynomial", order: np.ndarray) -> "LagrangePolyno
                                  poly.grid.multi_index.exponents,
                                  poly.grid.generating_points, order)
 
-    return LagrangePolynomial(coeffs=lag_coeffs, multi_index=poly.multi_index,
+    # DDS returns a 2D array, converting it to 1d
+    newt_coeffs = dds(lag_coeffs, poly.grid.tree).reshape(-1)
+
+    return NewtonPolynomial(coeffs=newt_coeffs, multi_index=poly.multi_index,
                               grid=poly.grid)
 
 # TODO redundant
