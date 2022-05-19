@@ -13,6 +13,7 @@ from minterpy.jit_compiled_utils import can_eval_mult, get_match_idx
 from ..core import MultiIndexSet
 from ..core.ABC import MultivariatePolynomialSingleABC
 from ..core.verification import convert_eval_output, rectify_eval_input, verify_domain
+from ..core.utils import find_match_between
 
 __all__ = ["CanonicalPolynomial"]
 
@@ -293,23 +294,30 @@ def _canonical_partial_diff(poly: "CanonicalPolynomial", dim: int, order: int) -
 def _canonical_diff(poly: "CanonicalPolynomial", order: np.ndarray) -> "CanonicalPolynomial":
     """ Partial differentiation in Canonical basis.
     """
-    coeffs_canonical = poly.coeffs
+
+    coeffs = poly.coeffs
     exponents = poly.multi_index.exponents
 
-    coeffs_canonical_diff = np.zeros(coeffs_canonical.shape)
-    for monomial_idx, coeff in enumerate(coeffs_canonical):
-        monomial_exponents = exponents[monomial_idx, :]
+    # Guard rails in ABC ensures that the len(order) == poly.spatial_dimension
+    subtracted_exponents = exponents - order
 
-        if np.all(monomial_exponents >= order):
-            mon_exponents_diff = monomial_exponents.copy()
-            mon_exponents_diff -= order
-            new_coeff_idx = get_match_idx(exponents, mon_exponents_diff)
-            # multiplication factor for the term
-            factor = np.prod(factorial(monomial_exponents)/factorial(mon_exponents_diff))
-            # multiply with factor
-            coeffs_canonical_diff[new_coeff_idx] = coeff * factor
+    # compute mask for non-negative multi index entries
+    diff_exp_mask = np.argwhere((subtracted_exponents >= np.zeros(len(order))).all(axis=1)).reshape(-1)
 
-    return CanonicalPolynomial.from_poly(poly, coeffs_canonical_diff)
+    # multi index entries in the differentiated polynomial
+    diff_exponents = subtracted_exponents[diff_exp_mask]
+
+    # coefficients of the differentiated polynomial
+    diff_coeffs = coeffs[diff_exp_mask] * np.prod(factorial(exponents[diff_exp_mask]) / factorial(diff_exponents),
+                                                  axis=1)
+
+    # The differentiated polynomial being expressed wrt multi indices of the given poly
+    map_pos = find_match_between(diff_exponents, exponents)
+    new_coeffs = np.zeros_like(coeffs)
+    new_coeffs[map_pos] = diff_coeffs
+
+    return CanonicalPolynomial.from_poly(poly, new_coeffs)
+
 
 class CanonicalPolynomial(MultivariatePolynomialSingleABC):
     """
