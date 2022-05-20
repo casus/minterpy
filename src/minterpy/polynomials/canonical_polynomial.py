@@ -8,7 +8,7 @@ import numpy as np
 from scipy.special import factorial
 
 from minterpy.global_settings import DEBUG, FLOAT_DTYPE, INT_DTYPE
-from minterpy.jit_compiled_utils import can_eval_mult, get_match_idx
+from minterpy.jit_compiled_utils import can_eval_mult, all_indices_are_contained
 
 from ..core import MultiIndexSet
 from ..core.ABC import MultivariatePolynomialSingleABC
@@ -307,11 +307,17 @@ def _canonical_diff(poly: "CanonicalPolynomial", order: np.ndarray) -> "Canonica
     # multi index entries in the differentiated polynomial
     diff_exponents = subtracted_exponents[diff_exp_mask]
 
+    # Checking if the necessary multi index entries are present
+    # Zero size check is needed here as all_indices_are_contained throws error otherwise
+    if diff_exponents.size != 0 and not all_indices_are_contained(diff_exponents, exponents):
+        raise ValueError(f"Cannot differentiate as some of the required multi indices are not present.")
+
     # coefficients of the differentiated polynomial
     diff_coeffs = coeffs[diff_exp_mask] * np.prod(factorial(exponents[diff_exp_mask]) / factorial(diff_exponents),
                                                   axis=1)
 
     # The differentiated polynomial being expressed wrt multi indices of the given poly
+    # NOTE: 'find_match_between' assumes 'exponents' is lexicographically ordered
     map_pos = find_match_between(diff_exponents, exponents)
     new_coeffs = np.zeros_like(coeffs)
     new_coeffs[map_pos] = diff_coeffs
