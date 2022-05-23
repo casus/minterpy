@@ -302,7 +302,7 @@ def _canonical_diff(poly: "CanonicalPolynomial", order: np.ndarray) -> "Canonica
     subtracted_exponents = exponents - order
 
     # compute mask for non-negative multi index entries
-    diff_exp_mask = np.argwhere(np.all(exponents >= order, axis = 1)).reshape(-1)
+    diff_exp_mask = np.all(exponents >= order, axis = 1)
 
     # multi index entries in the differentiated polynomial
     diff_exponents = subtracted_exponents[diff_exp_mask]
