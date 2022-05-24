@@ -185,7 +185,7 @@ def SpatialDimension(request):
 
 # fixture for polynomial degree
 
-polynomial_degree = [1, 4]
+polynomial_degree = [0, 1, 4]
 
 
 @pytest.fixture(params=polynomial_degree)

@@ -67,6 +67,11 @@ def get_exponent_matrix(
                 f"poly_degree needs to be a whole number! <{poly_degree} given."
             )
 
+    if poly_degree == 0:
+        right_choices = np.zeros((1, spatial_dimension), dtype=INT_DTYPE)
+
+        return right_choices
+
     if lp_degree == np.inf:
         right_choices = cartesian_product(
             *[np.arange(poly_degree + 1, dtype=INT_DTYPE)] * spatial_dimension

@@ -120,14 +120,21 @@ def test_is_lexicographically_complete(SpatialDimension, PolyDegree, LpDegree):
     exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
     assert_(is_lexicographically_complete(exponents))
 
-    # deleting the smallest vector destroys completeness
-    assert_(not is_lexicographically_complete(np.delete(exponents, 0, axis=0)))
+    # NOTE: Only applies for PolyDegree > 0 (== 0 has nothing to remove)
+    if PolyDegree > 0:
+        # deleting the smallest vector destroys completeness
+        assert_(not is_lexicographically_complete(np.delete(exponents, 0, axis=0)))
 
-    if PolyDegree != 1:
-        assert_(not is_lexicographically_complete(np.delete(exponents, 1, axis=0)))
+        # deleting the first row of exponents of PolyDegree > 1
+        if PolyDegree > 1:
+            assert_(
+                not is_lexicographically_complete(
+                    np.delete(exponents, 1, axis=0)
+                )
+            )
 
-    # deleting the biggest vector maintains completeness
-    assert_(is_lexicographically_complete(np.delete(exponents, -1, axis=0)))
+        # deleting the biggest vector maintains completeness
+        assert_(is_lexicographically_complete(np.delete(exponents, -1, axis=0)))
 
     # TODO: shall not use functions which are not tested!
     # bigger_exponent_vector = expomemts[-1,:].copy()  # independent copy!
@@ -166,20 +173,26 @@ def test_make_complete(SpatialDimension, PolyDegree, LpDegree):
     exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
     assert_(is_lexicographically_complete(exponents))
 
-    exp_vect = exponents[0]
-    incomplete_exponents = np.delete(exponents, 0, axis=0)
-    # completion should be identical to "make derivable"
-    # after just deleting a single exponent vector
-    completed_exponents1 = make_derivable(incomplete_exponents)
-    completed_exponents2 = make_complete(incomplete_exponents, LpDegree)
+    # Remove the first row and then make the exponents complete
+    # NOTE: Only applies for PolyDegree > 0
+    if PolyDegree > 0:
+        exp_vect = exponents[0]
+        incomplete_exponents = np.delete(exponents, 0, axis=0)
+        # completion should be identical to "make derivable"
+        # after just deleting a single exponent vector
+        completed_exponents1 = make_derivable(incomplete_exponents)
+        completed_exponents2 = make_complete(incomplete_exponents, LpDegree)
 
-    assert is_lexicographically_complete(completed_exponents1)
-    assert is_lexicographically_complete(completed_exponents2)
+        assert is_lexicographically_complete(completed_exponents1)
+        assert is_lexicographically_complete(completed_exponents2)
 
-    assert_equal(exp_vect, completed_exponents1[0, :])
-    assert_equal(exp_vect, completed_exponents2[0, :])
+        assert_equal(exp_vect, completed_exponents1[0, :])
+        assert_equal(exp_vect, completed_exponents2[0, :])
 
-    if PolyDegree != 1:
+    # Remove the second row and the make the exponents complete
+    # NOTE: Only applies for PolyDegree > 1
+    #       (otherwise, the exponents are still complete)
+    if PolyDegree > 1:
         exp_vect = exponents[1]
         incomplete_exponents = np.delete(exponents, 1, axis=0)
         # completion should be identical to "make derivable"
@@ -211,16 +224,24 @@ def test_make_complete(SpatialDimension, PolyDegree, LpDegree):
 def test_all_indices_are_contained(SpatialDimension, PolyDegree, LpDegree):
     exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
 
+    # NOTE: Only applies for PolyDegree > 0 (== 0 has nothing to remove)
     # TODO: is it necessary to do this for every element?
-    for idx in range(exponents.shape[0]):
-        incomplete_exponents = np.delete(exponents, idx, axis=0)
-        assert_(not all_indices_are_contained(exponents, incomplete_exponents))
-        assert_(all_indices_are_contained(incomplete_exponents, exponents))
+    if PolyDegree > 0:
+        for idx in range(exponents.shape[0]):
+            incomplete_exponents = np.delete(exponents, idx, axis=0)
+            assert_(
+                not all_indices_are_contained(
+                    exponents, incomplete_exponents
+                )
+            )
+            assert_(all_indices_are_contained(incomplete_exponents, exponents))
 
     # when adding indices, not all indices are contained <-- ???
     largest_exponent_vector = exponents[-1, :]  # last / biggest exponent vector
     bigger_exponent_vector = get_lex_bigger(largest_exponent_vector)
-    enlarged_exponents = insert_lexicographically(exponents, bigger_exponent_vector)
+    enlarged_exponents = insert_lexicographically(
+        exponents, bigger_exponent_vector
+    )
     assert_(not all_indices_are_contained(enlarged_exponents, exponents))
     # but the other way round should hold:
     assert_(all_indices_are_contained(exponents, enlarged_exponents))
