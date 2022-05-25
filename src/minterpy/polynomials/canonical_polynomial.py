@@ -5,14 +5,15 @@ Base class for polynomials in the canonical base.
 from copy import deepcopy
 
 import numpy as np
-from minterpy.core import multi_index
+from scipy.special import factorial
 
-from minterpy.global_settings import DEBUG, FLOAT_DTYPE
-from minterpy.jit_compiled_utils import can_eval_mult
+from minterpy.global_settings import DEBUG, FLOAT_DTYPE, INT_DTYPE
+from minterpy.jit_compiled_utils import can_eval_mult, all_indices_are_contained
 
 from ..core import MultiIndexSet
 from ..core.ABC import MultivariatePolynomialSingleABC
 from ..core.verification import convert_eval_output, rectify_eval_input, verify_domain
+from ..core.utils import find_match_between
 
 __all__ = ["CanonicalPolynomial"]
 
@@ -277,6 +278,49 @@ canonical_generate_internal_domain = verify_domain
 canonical_generate_user_domain = verify_domain
 
 
+def _canonical_partial_diff(poly: "CanonicalPolynomial", dim: int, order: int) -> "CanonicalPolynomial":
+    """ Partial differentiation in Canonical basis.
+    """
+    spatial_dim = poly.multi_index.spatial_dimension
+    deriv_order_along = np.zeros(spatial_dim, dtype=INT_DTYPE)
+    deriv_order_along[dim] = order
+    return _canonical_diff(poly, deriv_order_along)
+
+
+def _canonical_diff(poly: "CanonicalPolynomial", order: np.ndarray) -> "CanonicalPolynomial":
+    """ Partial differentiation in Canonical basis.
+    """
+
+    coeffs = poly.coeffs
+    exponents = poly.multi_index.exponents
+
+    # Guard rails in ABC ensures that the len(order) == poly.spatial_dimension
+    subtracted_exponents = exponents - order
+
+    # compute mask for non-negative multi index entries
+    diff_exp_mask = np.all(exponents >= order, axis = 1)
+
+    # multi index entries in the differentiated polynomial
+    diff_exponents = subtracted_exponents[diff_exp_mask]
+
+    # Checking if the necessary multi index entries are present
+    # Zero size check is needed here as all_indices_are_contained throws error otherwise
+    if diff_exponents.size != 0 and not all_indices_are_contained(diff_exponents, exponents):
+        raise ValueError(f"Cannot differentiate as some of the required multi indices are not present.")
+
+    # coefficients of the differentiated polynomial
+    diff_coeffs = coeffs[diff_exp_mask] * np.prod(factorial(exponents[diff_exp_mask]) / factorial(diff_exponents),
+                                                  axis=1)
+
+    # The differentiated polynomial being expressed wrt multi indices of the given poly
+    # NOTE: 'find_match_between' assumes 'exponents' is lexicographically ordered
+    map_pos = find_match_between(diff_exponents, exponents)
+    new_coeffs = np.zeros_like(coeffs)
+    new_coeffs[map_pos] = diff_coeffs
+
+    return CanonicalPolynomial.from_poly(poly, new_coeffs)
+
+
 class CanonicalPolynomial(MultivariatePolynomialSingleABC):
     """
     Polynomial type in the canonical base.
@@ -294,6 +338,9 @@ class CanonicalPolynomial(MultivariatePolynomialSingleABC):
     _div = staticmethod(dummy)
     _pow = staticmethod(dummy)
     _eval = canonical_eval
+
+    _partial_diff = staticmethod(_canonical_partial_diff)
+    _diff = staticmethod(_canonical_diff)
 
     generate_internal_domain = staticmethod(canonical_generate_internal_domain)
     generate_user_domain = staticmethod(canonical_generate_user_domain)

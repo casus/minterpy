@@ -39,8 +39,7 @@ def _get_poly_degree(exponents: np.ndarray, lp_degree: float) -> int:
     """
     norms = lp_norm(exponents, lp_degree, axis=1)
     # NOTE: math.ceil() returns int, np.ceil() returns float
-    return ceil(norms.max())
-
+    return ceil(np.max(norms))
 
 def get_exponent_matrix(
     spatial_dimension: int, poly_degree: int, lp_degree: float | int
