@@ -301,7 +301,7 @@ class MultiIndexSet:
         old_exponents = self._exponents
         if new_exponents is old_exponents:
             return self
-        new_instance = self.__class__(new_exponents)
+        new_instance = self.__class__(new_exponents, self.lp_degree)
         # TODO add to the completed exponents and re-complete again
         if self._exponents_completed is not None:
             _exponents_completed = insert_lexicographically(

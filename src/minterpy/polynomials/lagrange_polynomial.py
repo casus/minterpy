@@ -223,5 +223,8 @@ class LagrangePolynomial(MultivariatePolynomialSingleABC):
     _pow = staticmethod(dummy)  # type: ignore
     _eval = staticmethod(dummy)  # type: ignore
 
+    _partial_diff = staticmethod(dummy)
+    _diff = staticmethod(dummy)
+
     generate_internal_domain = staticmethod(lagrange_generate_internal_domain)
     generate_user_domain = staticmethod(lagrange_generate_user_domain)
