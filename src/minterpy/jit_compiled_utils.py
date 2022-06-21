@@ -13,6 +13,7 @@ from minterpy.global_settings import (
     I_1D,
     I_2D,
     INT,
+    FLOAT_DTYPE,
     NOT_FOUND,
 )
 
@@ -58,35 +59,14 @@ def can_eval_mult(x_multiple, coeffs, exponents, result_placeholder):
 # NOTE: the most "fine grained" functions must be defined first
 # in order for Numba to properly infer the function types
 
-
-@njit(FLOAT(F_1D, F_1D), cache=True)  # O(N)
-def single_eval(coefficients, monomial_vals):
-    """Evaluation of one polynomial at a single point given the coefficients and monomial evaluations.
-
-    - ``N`` number of monomials
-
-    :param coefficients: numpy array of polynomial coefficients. The shape has to be ``N``.
-    :param monomial_vals: numpy array of evaluated monomial values at the point. The shape has to be ``N``.
-    :return: the value of polynomial evaluated at the point
-
-    Notes
-    -----
-    The value of a polynomial in Newton form is the sum over all coefficients multiplied with the value of the
-    corresponding Newton basis polynomial.
-    """
-
-    assert len(coefficients) == len(monomial_vals)
-    return np.sum(coefficients * monomial_vals)
-
-
 @njit(void(F_1D, I_2D, F_2D, I_1D, F_2D, F_1D), cache=True)  # O(Nm)
-def eval_newton_polynomials(
-    x,
+def eval_newton_monomials_single(
+    x_single,
     exponents,
     generating_points,
     max_exponents,
-    prod_placeholder,
-    monomial_vals_placeholder,
+    products_placeholder,
+    monomials_placeholder,
 ):
     """Precomputes the value of all given Newton basis polynomials at a point.
 
@@ -95,12 +75,12 @@ def eval_newton_polynomials(
     - ``N`` number of monomials
     - ``n`` maximum exponent in each dimension
 
-    :param x: coordinates of the point. The shape has to be ``m``.
+    :param x_single: coordinates of the point. The shape has to be ``m``.
     :param exponents: numpy array with exponents for the polynomial. The shape has to be ``(N x m)``.
     :param generating_points: generating points used to generate the grid. The shape is ``(n x m)``.
     :param max_exponents: array with maximum exponent in each dimension. The shape has to be ``m``.
-    :param prod_placeholder: a numpy array for storing the (chained) products.
-    :param monomial_vals_placeholder: a numpy array of length N for storing the values of all Newton basis polynomials.
+    :param products_placeholder: a numpy array for storing the (chained) products.
+    :param monomials_placeholder: a numpy array of length N for storing the values of all Newton basis polynomials.
 
     Notes
     -----
@@ -115,10 +95,11 @@ def eval_newton_polynomials(
     #    by just adding one empty row in front. ATTENTION: these values must not be accessed!
     #    -> the exponents of each monomial ("alpha") then match the indices of the required products
 
-    m = len(x)
+    # Create the products matrix
+    m = exponents.shape[1]
     for i in range(m):
         max_exp_in_dim = max_exponents[i]
-        x_i = x[i]
+        x_i = x_single[i]
         prod = 1.0
         for j in range(max_exp_in_dim):  # O(n)
             # TODO there are n+1 1D grid values, the last one will never be used!?
@@ -126,7 +107,7 @@ def eval_newton_polynomials(
             prod *= x_i - p_ij
             # NOTE: shift index by one
             exponent = j + 1  # NOTE: otherwise the result type is float
-            prod_placeholder[exponent, i] = prod
+            products_placeholder[exponent, i] = prod
 
     # evaluate all Newton polynomials. O(Nm)
     N = exponents.shape[0]
@@ -139,36 +120,39 @@ def eval_newton_polynomials(
             # NOTE: an exponent of 0 should not cause a multiplication
             # (inefficient, numerical instabilities)
             if exp > 0:
-                newt_mon_val *= prod_placeholder[exp, i]
-        monomial_vals_placeholder[j] = newt_mon_val
-    # NOTE: results have been stored in the numpy arrays. no need to return anything.
+                newt_mon_val *= products_placeholder[exp, i]
+        monomials_placeholder[j] = newt_mon_val
+    #NOTE: results have been stored in the numpy arrays. no need to return anything.
 
 
-# @njit(void(F_2D, I_2D, F_2D, I_1D, F_2D, F_2D, B_TYPE), cache=True)
-def eval_all_newt_polys(
-    x,
-    exponents,
-    generating_points,
-    max_exponents,
-    prod_placeholder,
-    matrix_placeholder,
-    triangular=False,
+@njit(void(F_2D, I_2D, F_2D, I_1D, F_2D, F_2D, B_TYPE), cache=True)
+def eval_newton_monomials_multiple(
+    xx: np.ndarray,
+    exponents: np.ndarray,
+    generating_points: np.ndarray,
+    max_exponents: np.ndarray,
+    products_placeholder: np.ndarray,
+    monomials_placeholder: np.ndarray,
+    triangular: bool
 ):
-    """Evaluates all Newton basis polynomials (monomials) on all given points.
+    """Evaluate the Newton monomials at multiple query points.
 
-    - ``m`` spatial dimension
-    - ``k`` number of points
-    - ``N`` number of monomials
-    - ``p`` number of polynomials
-    - ``n`` maximum exponent in each dimension
+    The following notations are used below:
 
-    :param x: numpy array with coordinates of points where polynomial is to be evaluated.
+    - :math:`m`: the spatial dimension of the polynomial
+    - :math:`p`: the (maximum) degree of the polynomial in any dimension
+    - :math:`n`: the number of elements in the multi-index set (i.e., monomials)
+    - :math:`\mathrm{nr_{points}}`: the number of query (evaluation) points
+    - :math:`\mathrm{nr_polynomials}`: the number of polynomials with different
+      coefficient sets of the same multi-index set
+
+    :param xx: numpy array with coordinates of points where polynomial is to be evaluated.
               The shape has to be ``(k x m)``.
     :param exponents: numpy array with exponents for the polynomial. The shape has to be ``(N x m)``.
     :param generating_points: generating points used to generate the grid. The shape is ``(n x m)``.
     :param max_exponents: array with maximum exponent in each dimension. The shape has to be ``m``.
-    :param prod_placeholder: a numpy array for storing the (chained) products.
-    :param matrix_placeholder: placeholder numpy array where the results of evaluation are stored.
+    :param products_placeholder: a numpy array for storing the (chained) products.
+    :param monomials_placeholder: placeholder numpy array where the results of evaluation are stored.
                                The shape has to be ``(k x p)``.
     :param triangular: whether the output will be of lower triangular form or not.
                        -> will skip the evaluation of some values
@@ -176,86 +160,49 @@ def eval_all_newt_polys(
 
     Notes
     -----
-    ``exponents`` are allowed to be incomplete! Results are stored in the placeholder arrays. Nothing is returned.
-
+    - The memory footprint for evaluating the Newton monomials iteratively
+      single query point at a time is smaller than evaluationg all the Newton
+      monomials on all query points before multiplying it with the coefficients.
     """
-    nr_points, dimensionality = x.shape
-    active_exponents = exponents  # all per default
-    for point_nr in range(nr_points):  # evaluate on all given points points
-        x_single = x[point_nr, :]
-        monomial_vals_placeholder = matrix_placeholder[point_nr]  # row of the matrix
-        if triangular:
-            # only evaluate some polynomials to create a triangular output array
-            nr_active_polys = point_nr + 1
-            # IMPORTANT: initialised empty. set all others to 0!
-            monomial_vals_placeholder[nr_active_polys:] = 0.0
-            monomial_vals_placeholder = monomial_vals_placeholder[:nr_active_polys]
-            active_exponents = exponents[:nr_active_polys, :]
 
-        eval_newton_polynomials(
+    n_points = xx.shape[0]
+
+    # By default, all exponents are "active" unless xx are unisolvent nodes
+    active_exponents = exponents
+    # Iterate each query points and evaluate the Newton monomials
+    for idx in range(n_points):
+
+        x_single = xx[idx, :]
+
+        # Get the row view of the monomials placeholder;
+        # this would be the evaluation results of a single query point
+        monomials_placeholder_single = monomials_placeholder[idx]
+
+        if triangular:
+            # TODO: Refactor this, this is triangular because
+            #       the monomials are evaluated at the unisolvent nodes
+            # When evaluated on unisolvent nodes,
+            # some values will be a priori 0
+            n_active_polys = idx + 1
+            # Only some exponents are active
+            active_exponents = exponents[:n_active_polys, :]
+            # IMPORTANT: initialised empty. set all others to 0!
+            monomials_placeholder_single[n_active_polys:] = 0.0
+            # Only modify the non-zero entries
+            monomials_placeholder_single = \
+                monomials_placeholder_single[:n_active_polys]
+
+        # Evaluate the Newton monomials on a single query point
+        # NOTE: Due to "view" access, the whole 'monomials_placeholder' will
+        # be modified
+        eval_newton_monomials_single(
             x_single,
             active_exponents,
             generating_points,
             max_exponents,
-            prod_placeholder,
-            monomial_vals_placeholder,
+            products_placeholder,
+            monomials_placeholder_single
         )
-
-
-@njit(void(F_2D, F_2D, I_2D, F_2D, I_1D, F_2D, F_1D, F_2D), cache=True)
-def evaluate_multiple(
-    x,
-    coefficients,
-    exponents,
-    generating_points,
-    max_exponents,
-    prod_placeholder,
-    monomial_vals_placeholder,
-    results_placeholder,
-):
-    """Newton polynomial evaluation on several points.
-
-    - ``m`` spatial dimension
-    - ``k`` number of points
-    - ``N`` number of monomials
-    - ``p`` number of polynomials
-    - ``n`` maximum exponent in each dimension
-
-    :param x: numpy array with coordinates of points where polynomial is to be evaluated.
-              The shape has to be ``(k x m)``.
-    :param exponents: numpy array with exponents for the polynomial. The shape has to be ``(N x m)``.
-    :param generating_points: generating points used to generate the grid. The shape is ``(n x m)``.
-    :param max_exponents: array with maximum exponent in each dimension. The shape has to be ``m``.
-    :param prod_placeholder: a numpy array for storing the (chained) products.
-    :param monomial_vals_placeholder: a numpy array of length N for storing the values of all Newton basis polynomials.
-    :param results_placeholder: placeholder numpy array where the results of evaluation are stored.
-                                The shape has to be ``(k x p)``.
-
-    Notes
-    -----
-    Results are stored in the placeholder arrays. Nothing is returned.
-
-    """
-    nr_points = x.shape[0]
-    nr_polynomials = coefficients.shape[1]
-    for point_nr in range(nr_points):
-        x_single = x[point_nr, :]
-        # NOTE: with a fixed single point x to evaluate the polynomial on,
-        # the values of the Newton polynomials become fixed (coefficient agnostic)
-        # -> precompute all intermediary results (=compute the value of all Newton polynomials)
-        eval_newton_polynomials(
-            x_single,
-            exponents,
-            generating_points,
-            max_exponents,
-            prod_placeholder,
-            monomial_vals_placeholder,
-        )
-        for poly_nr in range(nr_polynomials):
-            coeffs_single = coefficients[:, poly_nr]
-            results_placeholder[point_nr, poly_nr] = single_eval(
-                coeffs_single, monomial_vals_placeholder
-            )
 
 
 @njit(void(F_2D, F_2D, I_2D), cache=True)

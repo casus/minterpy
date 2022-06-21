@@ -11,6 +11,7 @@ from conftest import (
     LpDegree,
     MultiIndices,
     NrPoints,
+    NrPolynomials,
     NrSimilarPolynomials,
     PolyDegree,
     SpatialDimension,
@@ -25,16 +26,21 @@ from minterpy.global_settings import INT_DTYPE
 from minterpy import NewtonPolynomial, NewtonToCanonical, CanonicalToNewton
 
 
-def test_eval(MultiIndices, NrPoints):
-    coeffs = build_rnd_coeffs(MultiIndices)
+def test_eval(MultiIndices, NrPoints, NrPolynomials):
+    """Test the evaluation of Newton polynomials."""
+
+    coeffs = build_rnd_coeffs(MultiIndices, NrPolynomials)
     poly = NewtonPolynomial(MultiIndices, coeffs)
     pts = build_rnd_points(NrPoints, MultiIndices.spatial_dimension)
+
+    # Evaluate
     res = poly(pts)
 
     trafo_n2c = NewtonToCanonical(poly)
     canon_poly = trafo_n2c()
     groundtruth = canon_poly(pts)
     assert_almost_equal(res, groundtruth)
+
 
 def test_partial_diff(SpatialDimension, PolyDegree, LpDegree):
     newton_poly = build_random_newton_polynom(SpatialDimension, PolyDegree, LpDegree)

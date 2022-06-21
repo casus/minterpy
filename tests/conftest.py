@@ -231,6 +231,14 @@ def NrPoints(request):
     return request.param
 
 
+# Fixture for the number
+nr_polynomials = [1, 10, 100]
+
+
+@pytest.fixture(params=nr_polynomials)
+def NrPolynomials(request):
+    return request.param
+
 # some random builder
 
 
