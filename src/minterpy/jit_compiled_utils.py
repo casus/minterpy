@@ -67,7 +67,7 @@ def eval_newton_monomials_single(
     max_exponents,
     products_placeholder,
     monomials_placeholder,
-):
+) -> None:
     """Precomputes the value of all given Newton basis polynomials at a point.
 
     Core of the fast polynomial evaluation algorithm.
@@ -84,9 +84,11 @@ def eval_newton_monomials_single(
 
     Notes
     -----
-    Precompute all the (chained) products required during newton evaluation. Complexity is ``O(mN)``.
-    This precomputation is coefficient agnostic.
-    Results are only stored in the placeholder arrays. Nothing is returned.
+    - This is a Numba-accelerated function.
+    - The function precompute all the (chained) products required during Newton evaluation for a single query point
+      with complexity of ``O(mN)``.
+    - The (pre-)computation of Newton monomials is coefficient agnostic.
+    - Results are stored in the placeholder arrays. The function returns None.
     """
 
     # NOTE: the maximal exponent might be different in every dimension,
@@ -134,7 +136,7 @@ def eval_newton_monomials_multiple(
     products_placeholder: np.ndarray,
     monomials_placeholder: np.ndarray,
     triangular: bool
-):
+) -> None:
     """Evaluate the Newton monomials at multiple query points.
 
     The following notations are used below:
@@ -160,9 +162,13 @@ def eval_newton_monomials_multiple(
 
     Notes
     -----
+    - This is a Numba-accelerated function.
     - The memory footprint for evaluating the Newton monomials iteratively
-      single query point at a time is smaller than evaluationg all the Newton
-      monomials on all query points before multiplying it with the coefficients.
+       with a single query point at a time is smaller than evaluating all
+       the Newton monomials on all query points.
+       However, when multiplied with multiple coefficient sets,
+       this approach will be faster.
+    - Results are stored in the placeholder arrays. The function returns None.
     """
 
     n_points = xx.shape[0]
@@ -179,10 +185,10 @@ def eval_newton_monomials_multiple(
         monomials_placeholder_single = monomials_placeholder[idx]
 
         if triangular:
-            # TODO: Refactor this, this is triangular because
-            #       the monomials are evaluated at the unisolvent nodes
-            # When evaluated on unisolvent nodes,
-            # some values will be a priori 0
+            # TODO: Refactor this, this is triangular because the monomials
+            #       are evaluated at the unisolvent nodes, otherwise it won't
+            #       be and the results would be misleading.
+            # When evaluated on unisolvent nodes, some values will be a priori 0
             n_active_polys = idx + 1
             # Only some exponents are active
             active_exponents = exponents[:n_active_polys, :]
@@ -193,8 +199,8 @@ def eval_newton_monomials_multiple(
                 monomials_placeholder_single[:n_active_polys]
 
         # Evaluate the Newton monomials on a single query point
-        # NOTE: Due to "view" access, the whole 'monomials_placeholder' will
-        # be modified
+        # NOTE: Due to "view" access,
+        # the whole 'monomials_placeholder' will be modified
         eval_newton_monomials_single(
             x_single,
             active_exponents,

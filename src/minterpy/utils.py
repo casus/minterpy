@@ -203,12 +203,14 @@ def newt_monomials_eval(
         - rename ``generation_points`` according to :class:`Grid`.
         - use instances of :class:`MultiIndex` and/or :class:`Grid` instead of the array representations of them.
         - ship this to the submodule ``newton_polynomials``.
+        - Refactor the "triangular" parameter, the Newton monomials
+          only becomes triangular if evaluated at the unisolvent nodes.
+          So it needs a special function instead of parametrizing this function
+          that can give a misleading result.
 
     See Also
     --------
     eval_all_newt_polys : concrete ``numba`` accelerated implementation of polynomial evaluation in Newton base.
-
-
     """
     N, m = exponents.shape
     nr_points, x = rectify_query_points(
@@ -227,6 +229,8 @@ def newt_monomials_eval(
     prod_placeholder = np.empty(
         (np.max(max_exponents) + 1, m), dtype=FLOAT_DTYPE
     )
+
+    # Compute the Newton monomials on all the query points
     eval_newton_monomials_multiple(
         x,
         exponents,
@@ -236,6 +240,7 @@ def newt_monomials_eval(
         result_placeholder,
         triangular,
     )
+
     return result_placeholder
 
 
@@ -283,6 +288,8 @@ def newt_polynomials_eval(
     :type generating_points: np.ndarray, shape = (m, n+1)
     :param verify_input: weather the data types of the input should be checked. turned off by default for speed.
     :type verify_input: bool, optional
+    :param batch_size: batch size of query points
+    :type batch_size: int, optional
 
     :raise TypeError: If the input ``generating_points`` do not have ``dtype = float``.
 
@@ -343,20 +350,19 @@ def eval_newton_batch(
     generating_points: np.ndarray,
     batch_size: int
 ):
-    """Evaluate the polynomial in Newton form in batches.
+    """Evaluate the polynomial in Newton form in batches of query points.
 
     Notes
     -----
     - It is assumed that the inputs have all been verified and rectified.
-    - It would be more expensive to evaluate smaller batch sizes although
-      it would have less smaller memory footprint in any given iteration.
-      If memory does not permit whole evaluation of query points,
-      consider using smaller but not the smallest batch size (i.e., 1).
+    - It would be more expensive to evaluate smaller batch sizes
+      but with a less smaller memory footprint in any given iteration.
+    - If memory does not permit whole evaluation of query points,
+      consider using smaller but not the smallest batch size (i.e., not 1).
     """
 
     # Get some important numbers
     n_points = xx.shape[0]
-    n_exponents, n_dims = exponents.shape
     n_polynomials = coefficients.shape[1]
 
     # Create a placeholder for the results
@@ -377,6 +383,7 @@ def eval_newton_batch(
         # Get the current batch of query points
         xx_batch = xx[start_idx:end_idx, :]
 
+        # Compute the Newton monomials for the batch
         newton_monomials = newt_monomials_eval(
             xx_batch,
             exponents,
@@ -385,6 +392,7 @@ def eval_newton_batch(
             False
         )
 
+        # Compute the polynomial values for the batch
         results_placeholder[start_idx:end_idx, :] = \
             newton_monomials @ coefficients
 
