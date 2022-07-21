@@ -239,6 +239,15 @@ nr_polynomials = [1, 10, 100]
 def NrPolynomials(request):
     return request.param
 
+
+# Fixture for the number
+batch_sizes = [1, 10, 100, 1000]
+
+
+@pytest.fixture(params=batch_sizes)
+def BatchSizes(request):
+    return request.param
+
 # some random builder
 
 

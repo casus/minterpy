@@ -174,7 +174,7 @@ def gen_chebychev_2nd_order_leja_ordered(n: int):
     return leja_points
 
 
-def newt_monomials_eval(
+def eval_newton_monomials(
     x: np.ndarray,
     exponents: np.ndarray,
     generating_points: np.ndarray,
@@ -244,7 +244,7 @@ def newt_monomials_eval(
     return result_placeholder
 
 
-def newt_polynomials_eval(
+def eval_newton_polynomials(
     xx: np.ndarray,
     coefficients: np.ndarray,
     exponents: np.ndarray,
@@ -321,8 +321,8 @@ def newt_polynomials_eval(
 
     # Get batch size
     # TODO: Verify the batch size
-    if batch_size is None or batch_size == n_points:
-        newton_monomials = newt_monomials_eval(
+    if batch_size is None or batch_size >= n_points:
+        newton_monomials = eval_newton_monomials(
             xx,
             exponents,
             generating_points,
@@ -332,7 +332,7 @@ def newt_polynomials_eval(
         results = newton_monomials @ coefficients
     else:
         # Evaluate the Newton polynomials in batches
-        results = eval_newton_batch(
+        results = eval_newton_polynomials_batch(
             xx,
             coefficients,
             exponents,
@@ -343,7 +343,7 @@ def newt_polynomials_eval(
     return convert_eval_output(results)
 
 
-def eval_newton_batch(
+def eval_newton_polynomials_batch(
     xx: np.ndarray,
     coefficients: np.ndarray,
     exponents: np.ndarray,
@@ -384,7 +384,7 @@ def eval_newton_batch(
         xx_batch = xx[start_idx:end_idx, :]
 
         # Compute the Newton monomials for the batch
-        newton_monomials = newt_monomials_eval(
+        newton_monomials = eval_newton_monomials(
             xx_batch,
             exponents,
             generating_points,
