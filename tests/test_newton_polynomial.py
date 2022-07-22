@@ -3,7 +3,6 @@ testing module for canonical_polynomial.py
 
 The subclassing is not tested here, see tesing module `test_polynomial.py`
 """
-import mpl_toolkits.axes_grid1
 import numpy as np
 import pytest
 from conftest import (
