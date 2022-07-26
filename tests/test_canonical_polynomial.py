@@ -40,10 +40,19 @@ def test_eval(MultiIndices, NrPoints):
     poly = CanonicalPolynomial(MultiIndices, coeffs)
     pts = build_rnd_points(NrPoints, MultiIndices.spatial_dimension)
     res = poly(pts)
-    groundtruth = np.dot(
-        np.prod(np.power(pts[:, None, :], MultiIndices.exponents[None, :, :]), axis=-1),
-        coeffs,
-    )
+
+    # navie impementation of canonical eval
+    # related to issue #32
+    groundtruth = np.zeros(NrPoints)
+    for k,pt in enumerate(pts):
+        single_groundtruth = 0.0
+        for i,exponents in enumerate(MultiIndices.exponents):
+            term = 1.0
+            for j, expo in enumerate(exponents):
+                term *= pt[j]**expo
+            single_groundtruth+=coeffs[i]*term
+        groundtruth[k] = single_groundtruth
+
     assert_almost_equal(res, groundtruth)
 
 

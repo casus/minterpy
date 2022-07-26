@@ -228,53 +228,49 @@ def _canonical_sub(poly1, poly2):
     return _canonical_add(poly1, -poly2)
 
 
-def can_eval(x, coefficients, exponents, verify_input: bool = False):
-    """naive evaluation of the canonical polynomial
-
-    version able to handle both:
-     - list of input points x (2D input)
-     - list of input coefficients (2D input)
-
-    TODO Use Horner scheme for evaluation:
-     https://github.com/MrMinimal64/multivar_horner
-     package also supports naive evaluation, but not of multiple coefficient sets
-
-    NOTE: assuming equal input array shapes as the Newton evaluation
-
-    N = amount of coeffs
-    k = amount of points
-    p = amount of polynomials
-
-
-    Parameters
-    ----------
-    x: (k, m) the k points to evaluate on with dimensionality m.
-    coefficients: (N, p) the coeffs of each polynomial in canonical form (basis).
-    exponents: (N, m) a multi index "alpha" corresponding to the exponents of each monomial
-    verify_input: weather the data types of the input should be checked. turned off by default for speed.
-
-    Returns
-    -------
-    (k, p) the value of each input polynomial at each point. TODO squeezed into the expected shape (1D if possible)
+def _canonical_eval(pts: np.ndarray,exponents: np.ndarray, coeffs: np.ndarray):
     """
-    verify_input = verify_input or DEBUG
-    N, coefficients, m, nr_points, nr_polynomials, x = rectify_eval_input(
-        x, coefficients, exponents, verify_input
-    )
-    results_placeholder = np.zeros(
-        (nr_points, nr_polynomials), dtype=FLOAT_DTYPE
-    )  # IMPORTANT: initialise to 0!
-    can_eval_mult(x, coefficients, exponents, results_placeholder)
-    return convert_eval_output(results_placeholder)
+    Unsafe version of naive canonical evaluation
 
+    :param pts: List of points, the polynomial must be evaluated on. Assumed shape: `(number_of_points,spatial_dimension)`.
+    :type pts: np.ndarray
 
-def canonical_eval(canonical_poly, x: np.ndarray):
+    :param exponents: Exponents from a multi-index set. Assumed shape:` (number_of_monomials, spatial_dimension)`.
+    :type exponents: np.ndarray
+
+    :param coeffs: List of coefficients. Assumed shape: `(number_of_monomials,)`
+    :type coeffs: np.ndarray
+
+    :return: result of the canonical evaluation.
+    :rtype: np.ndarray
+    
     """
-    This is the doc from the canonical evaluation.
+    return np.dot(np.prod(np.power(pts[:, None, :], exponents[None, :, :]), axis=-1),coeffs)
+
+def _verify_eval_input(pts, spatial_dimension):
     """
-    coefficients = canonical_poly.coeffs
-    exponents = canonical_poly.multi_index.exponents
-    return can_eval(x, coefficients, exponents)
+    verification of the input of the canonical evaluation. 
+    """
+    assert(isinstance(pts,np.ndarray))
+    assert(pts.ndim==2)
+    assert(pts.shape[-1]==spatial_dimension)
+
+def canonical_eval(canonical_poly, pts: np.ndarray):
+    """
+    Navie canonical evaluation
+
+    :param canonical_poly: Polynomial in canonical form to be evaluated.
+    :type canonical_poly: CanonicalPolynomial
+
+    :param pts: List of points, the polynomial must be evaluated on. Assumed shape: `(number_of_points,spatial_dimension)`.
+    :type pts: np.ndarray
+
+    :return: result of the canonical evaluation. 
+    :rtype: np.ndarray
+
+    """
+    _verify_eval_input(pts,canonical_poly.spatial_dimension)
+    return _canonical_eval(pts,canonical_poly.multi_index.exponents,canonical_poly.coeffs)
 
 
 # TODO redundant
