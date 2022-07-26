@@ -230,7 +230,7 @@ def _canonical_sub(poly1, poly2):
 
 def _canonical_eval(pts: np.ndarray,exponents: np.ndarray, coeffs: np.ndarray):
     """
-    Unsave version of navie canonical evaluation
+    Unsafe version of navie canonical evaluation
 
     :param pts: List of points, the polynomial must be evaluated on. Assumed shape: `(number_of_points,spatial_dimension)`.
     :type pts: np.ndarray
