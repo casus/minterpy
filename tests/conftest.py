@@ -232,7 +232,7 @@ def NrPoints(request):
 
 
 # Fixture for the number
-nr_polynomials = [1, 10, 100]
+nr_polynomials = [1, 10]
 
 
 @pytest.fixture(params=nr_polynomials)
@@ -241,7 +241,7 @@ def NrPolynomials(request):
 
 
 # Fixture for the number
-batch_sizes = [1, 10, 100, 1000]
+batch_sizes = [1, 100, 1000]
 
 
 @pytest.fixture(params=batch_sizes)
