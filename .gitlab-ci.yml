@@ -61,6 +61,7 @@ coverage:
     - pytest --junitxml=report.xml tests --cov-report xml --cov=src -vvv
   coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
   only:
+    - main
     - dev
   artifacts:
     when: always
