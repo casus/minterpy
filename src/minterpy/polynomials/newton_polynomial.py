@@ -7,7 +7,7 @@ Module of the NewtonPolynomial class
 import numpy as np
 
 from minterpy.global_settings import DEBUG
-from minterpy.utils import newt_eval
+from minterpy.utils import eval_newton_polynomials
 from minterpy.dds import dds
 from .utils import deriv_newt_eval
 
@@ -45,7 +45,7 @@ def newton_eval(newton_poly, x):
     newt_eval : comcrete implementation of the evaluation in Newton base.
 
     """
-    return newt_eval(
+    return eval_newton_polynomials(
         x,
         newton_poly.coeffs,
         newton_poly.multi_index.exponents,

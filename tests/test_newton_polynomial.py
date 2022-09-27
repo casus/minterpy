@@ -3,7 +3,6 @@ testing module for canonical_polynomial.py
 
 The subclassing is not tested here, see tesing module `test_polynomial.py`
 """
-
 import numpy as np
 import pytest
 from conftest import (
@@ -11,9 +10,11 @@ from conftest import (
     LpDegree,
     MultiIndices,
     NrPoints,
+    NrPolynomials,
     NrSimilarPolynomials,
     PolyDegree,
     SpatialDimension,
+    BatchSizes,
     assert_polynomial_almost_equal,
     build_rnd_coeffs,
     build_rnd_points,
@@ -21,20 +22,56 @@ from conftest import (
 )
 from numpy.testing import assert_, assert_almost_equal
 from minterpy.global_settings import INT_DTYPE
+from minterpy.utils import eval_newton_polynomials
+from minterpy import Grid
 
 from minterpy import NewtonPolynomial, NewtonToCanonical, CanonicalToNewton
 
 
-def test_eval(MultiIndices, NrPoints):
-    coeffs = build_rnd_coeffs(MultiIndices)
+def test_eval(MultiIndices, NrPoints, NrPolynomials):
+    """Test the evaluation of Newton polynomials."""
+
+    coeffs = build_rnd_coeffs(MultiIndices, NrPolynomials)
     poly = NewtonPolynomial(MultiIndices, coeffs)
     pts = build_rnd_points(NrPoints, MultiIndices.spatial_dimension)
+
+    # Evaluate
     res = poly(pts)
 
     trafo_n2c = NewtonToCanonical(poly)
     canon_poly = trafo_n2c()
     groundtruth = canon_poly(pts)
     assert_almost_equal(res, groundtruth)
+
+
+def test_eval_batch(MultiIndices, NrPolynomials, BatchSizes):
+    """Test the evaluation on Newton polynomials in batches of query points."""
+
+    #TODO: This is a temporary test as the 'batch_size' parameter is not
+    #      opened in the higher-level interface, i.e., 'newton_poly(xx)'
+
+    # Create a random coefficient values
+    newton_coeffs = build_rnd_coeffs(MultiIndices, NrPolynomials)
+    grid = Grid(MultiIndices)
+    generating_points = grid.generating_points
+    exponents = MultiIndices.exponents
+
+    # Create test query points
+    xx = build_rnd_points(421, MultiIndices.spatial_dimension)
+
+    # Evaluate the polynomial in batches
+    yy_newton = eval_newton_polynomials(
+        xx, newton_coeffs, exponents, generating_points, batch_size=BatchSizes
+    )
+
+    # Create a reference results from canonical polynomial evaluation
+    newton_poly = NewtonPolynomial(MultiIndices, newton_coeffs)
+    canonical_poly = NewtonToCanonical(newton_poly)()
+    yy_canonical = canonical_poly(xx)
+
+    # Assert
+    assert_almost_equal(yy_newton, yy_canonical)
+
 
 def test_partial_diff(SpatialDimension, PolyDegree, LpDegree):
     newton_poly = build_random_newton_polynom(SpatialDimension, PolyDegree, LpDegree)
