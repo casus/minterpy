@@ -245,7 +245,10 @@ def _canonical_eval(pts: np.ndarray,exponents: np.ndarray, coeffs: np.ndarray):
     :rtype: np.ndarray
     
     """
-    return np.dot(np.prod(np.power(pts[:, None, :], exponents[None, :, :]), axis=-1),coeffs)
+    yy = np.dot(np.prod(np.power(pts[:, None, :], exponents[None, :, :]), axis=-1), coeffs)
+
+    return convert_eval_output(yy)
+
 
 def _verify_eval_input(pts, spatial_dimension):
     """
@@ -254,6 +257,7 @@ def _verify_eval_input(pts, spatial_dimension):
     assert(isinstance(pts,np.ndarray))
     assert(pts.ndim==2)
     assert(pts.shape[-1]==spatial_dimension)
+
 
 def canonical_eval(canonical_poly, pts: np.ndarray):
     """
