@@ -43,12 +43,15 @@ class MultiIndexSet:
     spatial_dimension
     """
 
-    def __init__(self, exponents: ARRAY, lp_degree=None, poly_deg_dtype=None):
+    def __init__(self, exponents: ARRAY, lp_degree=None):
+
+        # Check and assign the exponents
         exponents = np.require(exponents, dtype=INT_DTYPE)
         check_shape(exponents, dimensionality=2)
         if not have_lexicographical_ordering(exponents):
             raise ValueError(
-                "the multi_indices must be ordered lexicographically from last to first column"
+                "The multi-index set must be lexicographically ordered from "
+                "the last to the first column."
             )
         self._exponents: ARRAY = exponents
 
@@ -56,19 +59,9 @@ class MultiIndexSet:
         # while _get_poly_degree(exponents, __lp_degree) > poly_degree: ...
         self._lp_degree = verify_lp_deg(lp_degree)
 
-        # TODO the polynomial degree can only be interpreted as integer?!
-        # if poly_deg_dtype is None:
-        #     self.poly_deg_dtype = float
-        # else:
-        #     self.poly_deg_dtype = poly_deg_dtype
-        self.poly_deg_dtype = INT_DTYPE
-
+        # Compute the polynomial degree given the exponents and lp-degree
         self.poly_degree = _get_poly_degree(exponents, self._lp_degree)
-        # if self.poly_degree == 0:
-        #     raise ValueError('the degree must be bigger than 0')
-        # if self.poly_degree % 1.0 == 0.0:
-        # self.poly_degree = int(self.poly_degree)
-    
+
         self._is_complete: Optional[bool] = None
         # for avoiding to complete the exponents multiple times
         self._exponents_completed: Optional[ARRAY] = None
@@ -81,7 +74,7 @@ class MultiIndexSet:
             raise TypeError("spatial dimension must be given as integer.")
         lp_degree = verify_lp_deg(lp_degree)
         exponents = get_exponent_matrix(spatial_dimension, poly_degree, lp_degree)
-        return cls(exponents, lp_degree=lp_degree, poly_deg_dtype=int)
+        return cls(exponents, lp_degree=lp_degree)
 
     def expand_dim(self, dim):
         # TODO avoid transpose
@@ -233,9 +226,10 @@ class MultiIndexSet:
         # TODO also copy tree if available
         # TODO maybe use always deepcopy since exponents will be always nested?!
         new_instance = self.__class__(
-            self._exponents, self._lp_degree, self.poly_deg_dtype
+            self._exponents, self._lp_degree
         )
         self.copy_private_attributes(new_instance)
+
         return new_instance
 
     def __deepcopy__(self, memo):
@@ -250,14 +244,13 @@ class MultiIndexSet:
         --------
         copy.deepcopy
             copy operator form the python standard library.
-
         """
         new_instance = self.__class__(
             deepcopy(self.exponents),
             deepcopy(self._lp_degree),
-            deepcopy(self.poly_deg_dtype),
         )
         self.copy_private_attributes(new_instance)
+
         return new_instance
 
     def contains_these_exponents(self, vectors: ARRAY) -> bool:
