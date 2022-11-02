@@ -99,3 +99,4 @@ pages:
   only:
     - main
     - dev
+    - dev-ci-docs
