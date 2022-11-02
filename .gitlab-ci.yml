@@ -84,3 +84,4 @@ pages:
     - public
   only:
     - dev
+    - dec-ci-docs
