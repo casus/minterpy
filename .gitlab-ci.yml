@@ -72,31 +72,15 @@ pages:
   stage: docs
   script:
     - apt-get install -y pandoc
-    - apt-get install -y git
-    - git fetch
-    - rm -rf public && mkdir public
-    - |
-        echo "<em>Read the docs:</em>" >> public/index.html
-        echo "<ul>" >> public/index.html
-
-        IFS=$'\n';for ref in $(git for-each-ref --format='%(refname:lstrip=3)' refs/remotes/origin/main refs/remotes/origin/dev); do
-          git checkout $ref
-          git reset --hard refs/remotes/origin/$ref
-          mkdir -p public/$ref
-          
-          pip install -e .[docs]
-          pip install jupyter
-          cd docs ; make html
-          cd ..
-          cp -r docs/build/html/* public/$ref/
-          echo "<li><a href='$ref/index.html'>$ref</a></li>" >> public/index.html
-        done
-
-        echo "</ul>" >> public/index.html
+    - rm -rf public
+    - mkdir public
+    - pip install -e .[docs]
+    - pip install jupyter
+    - cd docs ; make html
+    - cd ..
+    - cp -r docs/build/html/* public/
   artifacts:
     paths:
     - public
   only:
-    - main
     - dev
-    - dev-ci-docs
