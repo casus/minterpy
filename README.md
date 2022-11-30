@@ -8,7 +8,7 @@
   to minterpy *sth.* (transitive verb) -- to produce a multivariate polynomial representation of *sth.* .
   </blockquote>
   <figcaption>
-    &mdash; The minterpy developers in <cite>["Lifting the curse of dimensionality"](link-to-math-intro)</cite>
+    &mdash; The minterpy developers in <cite>["Lifting the curse of dimensionality"](https://interpol.pages.hzdr.de/minterpy/fundamentals/introduction.html)</cite>
   </figcaption>
 </figure>
 
