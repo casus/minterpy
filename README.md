@@ -1,3 +1,6 @@
+![](./docs/assets/Wordmark-color.png)
+
+
 # minterpy
 
 <figure class="quote">
