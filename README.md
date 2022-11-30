@@ -130,8 +130,9 @@ the `test_function` almost up to machine precision:
     plt.legend()
     plt.show()
 ```
+<img src="./docs/assets/images/test-function1D.png" alt="Compare test function with its interpolant" width="400"/>
 
-![Compare test function with its interpolant](docs/assets/images/test_function1D.png)
+
 For a more comprehensive examples, see the [getting started guides](https://interpol.pages.hzdr.de/minterpy/getting-started/index.html)
 section of the ``minterpy`` docs.
 
