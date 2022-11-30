@@ -1,6 +1,6 @@
 ![](./docs/assets/Wordmark-color.png)
 
-
+[![Code style: black][black-badge]][black-link]
 # minterpy
 
 <figure class="quote">
@@ -227,30 +227,8 @@ For that we want to send big thanks to:
 [MPI-CBG]: https://www.mpi-cbg.de
 [CSBD]: https://www.csbdresden.de
 
-## :construction: :construction:  Useful badges:
-
-[![Actions Status][actions-badge]][actions-link]
-[![Documentation Status][rtd-badge]][rtd-link]
-[![Code style: black][black-badge]][black-link]
-
-[![PyPI version][pypi-version]][pypi-link]
-[![Conda-Forge][conda-badge]][conda-link]
-[![PyPI platforms][pypi-platforms]][pypi-link]
 
 
 [black-badge]:              https://img.shields.io/badge/code%20style-black-000000.svg
 [black-link]:               https://github.com/psf/black
-[conda-badge]:              https://img.shields.io/conda/vn/conda-forge/minterpy
-[conda-link]:               https://github.com/conda-forge/minterpy-feedstock
-[pypi-link]:                https://pypi.org/project/minterpy/
-[pypi-platforms]:           https://img.shields.io/pypi/pyversions/minterpy
-[pypi-version]:             https://badge.fury.io/py/minterpy.svg
-[rtd-badge]:                https://readthedocs.org/projects/minterpy/badge/?version=latest
-[rtd-link]:                 https://minterpy.readthedocs.io/en/latest/?badge=latest
 
-## :construction: :construction: Todos
-- insert missing links
-- add sponsor logos (CASUS, HZDR, CSBD?, MPI-CBG?)
-- write shorter installation section
-- write more comprehensive quickstart (maybe higher dimensionality)
-- discuss the License we want to use
