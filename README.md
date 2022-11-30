@@ -172,6 +172,7 @@ namely
 - Uwe Hernandez Acosta ([HZDR]/[CASUS]) (u.hernandez@hzdr.de)
 - Sachin Krishnan Thekke Veettil ([HZDR]/[CASUS]) (s.thekke-veettil@hzdr.de)
 - Damar Wicaksono ([HZDR]/[CASUS]) (d.wicaksono@hzdr.de)
+- Janina Schreiber ([HZDR]/[CASUS]) (j.schreiber@hzdr.de)
 
 ### Mathematical foundation
 
