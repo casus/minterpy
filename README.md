@@ -131,8 +131,8 @@ the `test_function` almost up to machine precision:
     plt.show()
 ```
 
-![Compare test function with its interpolant](docs/assets/test_function1D.png)
-For a more comprehensive examples, see the [getting started guides](link-to-tutorials)
+![Compare test function with its interpolant](docs/assets/images/test_function1D.png)
+For a more comprehensive examples, see the [getting started guides](https://interpol.pages.hzdr.de/minterpy/getting-started/index.html)
 section of the ``minterpy`` docs.
 
 ## Testing
