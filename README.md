@@ -201,9 +201,6 @@ For that we want to send big thanks to:
 
   - the guy who will show me how to include a list of contributors on github/gitlab
 
-## Citing
-
-:construction: Add here the informations how to cite ``minterpy``.
 
 ## License
 
