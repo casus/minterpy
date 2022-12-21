@@ -133,7 +133,7 @@ the `test_function` almost up to machine precision:
 <img src="./docs/assets/images/test-function1D.png" alt="Compare test function with its interpolant" width="400"/>
 
 
-For a more comprehensive examples, see the [getting started guides](https://interpol.pages.hzdr.de/minterpy/getting-started/index.html)
+For more comprehensive examples, see the [getting started guides](https://interpol.pages.hzdr.de/minterpy/getting-started/index.html)
 section of the ``minterpy`` docs.
 
 ## Testing
