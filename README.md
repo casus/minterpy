@@ -41,7 +41,7 @@ to a broad field of computational challenges, including but not limited to:
 
 Since this implementation is a prototype,
 we currently only provide the installation by self-building from source.
-We recommend to use `git` to get the `minterpy` source:
+We recommend to using `git` to get the `minterpy` source:
 
 ```bash
 git clone https://gitlab.hzdr.de/interpol/minterpy.git
@@ -117,7 +117,7 @@ the number of dimensions (`spatial_dimension`),
 and the degree of the underlying polynomial (`poly_degree`).
 
 You may adjust this parameter in order to get higher accuracy.
-For the example above, a degree of 64 produces an interpolant which reproduces
+For the example above, a degree of 64 produces an interpolant that reproduces
 the `test_function` almost up to machine precision:
 
 ```python
@@ -152,7 +152,7 @@ from within the `minterpy` source directory.
 ## Contributing to `minterpy`
 
 Contributions to the `minterpy` packages are highly welcome.
-We recommend you to have a look at the [CONTRIBUTING.md](./CONTRIBUTING.md) first.
+We recommend you have a look at the [CONTRIBUTING.md](./CONTRIBUTING.md) first.
 For a more comprehensive contribution guide visit
 the [Contributors section](link-to-developer-section) of the documentation.
 
@@ -198,7 +198,7 @@ namely
 
 This package would not be possible without many contributions done
 from the community as well.
-For that we want to send big thanks to:
+For that, we want to send big thanks to:
 
   - the guy who will show me how to include a list of contributors on github/gitlab
 
