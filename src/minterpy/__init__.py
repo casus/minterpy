@@ -32,3 +32,9 @@ from . import interpolation  # noqa
 from .interpolation import *  # noqa
 
 __all__ += interpolation.__all__
+
+from . import extras
+from .extras import regression
+from .extras.regression import *
+
+__all__ += regression.__all__

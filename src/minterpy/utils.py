@@ -12,7 +12,7 @@ from minterpy.core.verification import (
     rectify_query_points,
 )
 from minterpy.global_settings import DEBUG, FLOAT_DTYPE, INT_DTYPE
-from minterpy.jit_compiled_utils import eval_all_newt_polys, evaluate_multiple
+from minterpy.jit_compiled_utils import eval_newton_monomials_multiple
 
 
 def lp_norm(arr, p, axis=None, keepdims: bool = False):
@@ -174,29 +174,7 @@ def gen_chebychev_2nd_order_leja_ordered(n: int):
     return leja_points
 
 
-def report_error(errors, description=None):
-    """
-
-    .. todo::
-        - if necessary, ship this to tests, since it is only used there.
-    """
-    if description is not None:
-        print("\n\n")  # noqa
-        print(description)  # noqa
-
-    print(f"mean: {np.mean(errors):.2e}")  # noqa
-    print(f"median: {np.median(errors):.2e}")  # noqa
-    print(f"variance: {np.var(errors):.2e}")  # noqa
-    print(f"l2-norm: {np.linalg.norm(errors):.2e}")  # noqa
-    # f"l_infty error (max): {np.linalg.norm(errors, ord=np.inf)}\n")
-    errors = np.abs(errors)
-    print(f"abs mean: {np.mean(errors):.2e}")  # noqa
-    print(f"abs median: {np.median(errors):.2e}")  # noqa
-    print(f"abs variance: {np.var(errors):.2e}")  # noqa
-    print(f"max abs {np.max(errors):.2e}")  # noqa
-
-
-def eval_newt_polys_on(
+def eval_newton_monomials(
     x: np.ndarray,
     exponents: np.ndarray,
     generating_points: np.ndarray,
@@ -225,12 +203,14 @@ def eval_newt_polys_on(
         - rename ``generation_points`` according to :class:`Grid`.
         - use instances of :class:`MultiIndex` and/or :class:`Grid` instead of the array representations of them.
         - ship this to the submodule ``newton_polynomials``.
+        - Refactor the "triangular" parameter, the Newton monomials
+          only becomes triangular if evaluated at the unisolvent nodes.
+          So it needs a special function instead of parametrizing this function
+          that can give a misleading result.
 
     See Also
     --------
     eval_all_newt_polys : concrete ``numba`` accelerated implementation of polynomial evaluation in Newton base.
-
-
     """
     N, m = exponents.shape
     nr_points, x = rectify_query_points(
@@ -240,10 +220,18 @@ def eval_newt_polys_on(
         check_dtype(x, FLOAT_DTYPE)
         check_dtype(exponents, INT_DTYPE)
 
-    result_placeholder = np.empty((nr_points, N), dtype=FLOAT_DTYPE)
+    # NOTE: the downstream numba-accelerated function does not support kwargs,
+    # so the maximum exponent per dimension must be computed here
     max_exponents = np.max(exponents, axis=0)
-    prod_placeholder = np.empty((np.max(max_exponents) + 1, m), dtype=FLOAT_DTYPE)
-    eval_all_newt_polys(
+
+    # Create placeholders for the final and intermediate results
+    result_placeholder = np.empty((nr_points, N), dtype=FLOAT_DTYPE)
+    prod_placeholder = np.empty(
+        (np.max(max_exponents) + 1, m), dtype=FLOAT_DTYPE
+    )
+
+    # Compute the Newton monomials on all the query points
+    eval_newton_monomials_multiple(
         x,
         exponents,
         generating_points,
@@ -252,13 +240,21 @@ def eval_newt_polys_on(
         result_placeholder,
         triangular,
     )
+
     return result_placeholder
 
 
-def newt_eval(
-    x, coefficients, exponents, generating_points, verify_input: bool = False
+def eval_newton_polynomials(
+    xx: np.ndarray,
+    coefficients: np.ndarray,
+    exponents: np.ndarray,
+    generating_points: np.ndarray,
+    verify_input: bool = False,
+    batch_size: int = None,
 ):
-    """Iterative implementation of polynomial evaluation in Newton form
+    """Evaluate the polynomial(s) in Newton form at multiple query points.
+
+    Iterative implementation of polynomial evaluation in Newton form
 
     This version able to handle both:
         - list of input points x (2D input)
@@ -277,8 +273,8 @@ def newt_eval(
         - use instances of :class:`MultiIndex` and/or :class:`Grid` instead of the array representations of them.
         - ship this to the submodule ``newton_polynomials``.
 
-    :param x: Arguemnt array with shape ``(m, k)`` the ``k`` points to evaluate on with dimensionality ``m``.
-    :type x: np.ndarray
+    :param xx: Arguemnt array with shape ``(m, k)`` the ``k`` points to evaluate on with dimensionality ``m``.
+    :type xx: np.ndarray
     :param coefficients: The coefficients of the Newton polynomials.
         NOTE: format fixed such that 'lagrange2newton' conversion matrices can be passed
         as the Newton coefficients of all Lagrange monomials of a polynomial without prior transponation
@@ -292,6 +288,8 @@ def newt_eval(
     :type generating_points: np.ndarray, shape = (m, n+1)
     :param verify_input: weather the data types of the input should be checked. turned off by default for speed.
     :type verify_input: bool, optional
+    :param batch_size: batch size of query points
+    :type batch_size: int, optional
 
     :raise TypeError: If the input ``generating_points`` do not have ``dtype = float``.
 
@@ -313,34 +311,89 @@ def newt_eval(
     --------
     evaluate_multiple : ``numba`` accelerated implementation which is called internally by this function.
     convert_eval_output: ``numba`` accelerated implementation of the output converter.
-
     """
+
+    # Rectify the inputs
+    # TODO: Refactor this rectify function
     verify_input = verify_input or DEBUG
-    N, coefficients, m, nr_points, nr_polynomials, x = rectify_eval_input(
-        x, coefficients, exponents, verify_input
-    )
-    # m_grid, nr_grid_values = generating_points.shape
+    _, coefficients, _, n_points, _, xx = \
+        rectify_eval_input(xx, coefficients, exponents, verify_input)
 
-    if verify_input:
-        if generating_points.dtype != FLOAT_DTYPE:
-            raise TypeError(
-                f"grid values: expected dtype {FLOAT_DTYPE} got {generating_points.dtype}"
-            )
+    # Get batch size
+    # TODO: Verify the batch size
+    if batch_size is None or batch_size >= n_points:
+        newton_monomials = eval_newton_monomials(
+            xx,
+            exponents,
+            generating_points,
+            verify_input,
+            False
+        )
+        results = newton_monomials @ coefficients
+    else:
+        # Evaluate the Newton polynomials in batches
+        results = eval_newton_polynomials_batch(
+            xx,
+            coefficients,
+            exponents,
+            generating_points,
+            batch_size
+        )
 
-    max_exponents = np.max(exponents, axis=0)
-    # initialise arrays required for computing and storing the intermediary results:
-    # will be reused in the different runs -> memory efficiency
-    prod_placeholder = np.empty((np.max(max_exponents) + 1, m), dtype=FLOAT_DTYPE)
-    monomial_vals_placeholder = np.empty(N, dtype=FLOAT_DTYPE)
-    results_placeholder = np.empty((nr_points, nr_polynomials), dtype=FLOAT_DTYPE)
-    evaluate_multiple(
-        x,
-        coefficients,
-        exponents,
-        generating_points,
-        max_exponents,
-        prod_placeholder,
-        monomial_vals_placeholder,
-        results_placeholder,
+    return convert_eval_output(results)
+
+
+def eval_newton_polynomials_batch(
+    xx: np.ndarray,
+    coefficients: np.ndarray,
+    exponents: np.ndarray,
+    generating_points: np.ndarray,
+    batch_size: int
+):
+    """Evaluate the polynomial in Newton form in batches of query points.
+
+    Notes
+    -----
+    - It is assumed that the inputs have all been verified and rectified.
+    - It would be more expensive to evaluate smaller batch sizes
+      but with a less smaller memory footprint in any given iteration.
+    - If memory does not permit whole evaluation of query points,
+      consider using smaller but not the smallest batch size (i.e., not 1).
+    """
+
+    # Get some important numbers
+    n_points = xx.shape[0]
+    n_polynomials = coefficients.shape[1]
+
+    # Create a placeholder for the results
+    results_placeholder = np.empty(
+        (n_points, n_polynomials), dtype=FLOAT_DTYPE
     )
-    return convert_eval_output(results_placeholder)
+
+    # Batch processing: evaluate the polynomials at a batch of query points
+    n_batches = n_points // batch_size + 1
+    for idx in range(n_batches):
+        start_idx = idx * batch_size
+
+        if idx == n_batches - 1:
+            end_idx = idx * batch_size + n_points % batch_size
+        else:
+            end_idx = (idx + 1) * batch_size
+
+        # Get the current batch of query points
+        xx_batch = xx[start_idx:end_idx, :]
+
+        # Compute the Newton monomials for the batch
+        newton_monomials = eval_newton_monomials(
+            xx_batch,
+            exponents,
+            generating_points,
+            False,
+            False
+        )
+
+        # Compute the polynomial values for the batch
+        results_placeholder[start_idx:end_idx, :] = \
+            newton_monomials @ coefficients
+
+    return results_placeholder

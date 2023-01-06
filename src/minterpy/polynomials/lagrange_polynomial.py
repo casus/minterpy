@@ -10,7 +10,6 @@ from minterpy.global_settings import ARRAY
 
 from ..core import Grid, MultiIndexSet
 from ..core.ABC import MultivariatePolynomialSingleABC
-from ..core.utils import insert_lexicographically
 from ..core.verification import verify_domain
 from .canonical_polynomial import _match_dims, _matching_internal_domain
 
@@ -24,48 +23,6 @@ def dummy(x: Optional[Any] = None) -> None:
       This feature is not implemented yet!
     """
     raise NotImplementedError("This feature is not implemented yet.")
-
-
-# TODO: part of polynomial utils?
-# TODO: optimize with numba
-def _union_of_exponents(exp1, exp2):
-    """Return union of exponents.
-
-    :param exp1: First set of exponents.
-    :type exp1: np.ndarray
-    :param exp2: Second set of exponents.
-    :type exp2: np.ndarray
-
-
-    :return: Return the union of two ``multi_indices`` along with a mapping of indices from the
-    resultant set to the exp1 and exp2.
-    :rtype: (np.ndarray, callable)
-
-    .. todo::
-        - implement this as a member function on :class:`MultiIndexSet`.
-        - improve performance by using similar functions from ``numpy``.
-    """
-    res_exp = insert_lexicographically(exp1.copy(), exp2.copy())
-    nr_monomials, _ = res_exp.shape
-    num_exp1, _ = exp1.shape
-    num_exp2, _ = exp2.shape
-
-    res_map = np.zeros((nr_monomials, 2)).astype(np.int)
-
-    # Assuming all exponents are lexicographically sorted
-    pos_exp1 = 0
-    pos_exp2 = 0
-    for i in range(nr_monomials):
-        if pos_exp1 < num_exp1:
-            if np.array_equal(res_exp[i, :], exp1[pos_exp1, :]):
-                res_map[i, 0] = pos_exp1
-                pos_exp1 += 1
-        if pos_exp2 < num_exp2:
-            if np.array_equal(res_exp[i, :], exp2[pos_exp2, :]):
-                res_map[i, 1] = pos_exp2
-                pos_exp2 += 1
-
-    return res_exp, res_map
 
 
 # TODO : poly2 can be of a different basis?
@@ -265,6 +222,9 @@ class LagrangePolynomial(MultivariatePolynomialSingleABC):
     _div = staticmethod(dummy)  # type: ignore
     _pow = staticmethod(dummy)  # type: ignore
     _eval = staticmethod(dummy)  # type: ignore
+
+    _partial_diff = staticmethod(dummy)
+    _diff = staticmethod(dummy)
 
     generate_internal_domain = staticmethod(lagrange_generate_internal_domain)
     generate_user_domain = staticmethod(lagrange_generate_user_domain)

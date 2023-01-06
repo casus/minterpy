@@ -31,7 +31,7 @@ from minterpy.global_settings import (
     TRAFO_DICT,
     TYPED_LIST,
 )
-from minterpy.utils import eval_newt_polys_on
+from minterpy.utils import eval_newton_monomials
 
 from .operators import BarycentricFactorisedOperator, BarycentricOperator
 
@@ -631,7 +631,7 @@ def compute_n2l_factorised(
     leaf_points = unisolvent_nodes[:max_problem_size, :]
     leaf_exponents = exponents[:max_problem_size, :]
     # NOTE: the first solution piece is always quadratic ("same nodes as polys")
-    first_n2l_piece = eval_newt_polys_on(
+    first_n2l_piece = eval_newton_monomials(
         leaf_points,
         leaf_exponents,
         generating_points,
@@ -645,7 +645,7 @@ def compute_n2l_factorised(
     leaf_points = unisolvent_nodes[leaf_positions, :]
     # NOTE: this matrix will be triangular (1/2 of the values are 0)
     # TODO  find more memory efficient format?!
-    leaf_factors = eval_newt_polys_on(
+    leaf_factors = eval_newton_monomials(
         leaf_points,
         leaf_exponents,
         generating_points,

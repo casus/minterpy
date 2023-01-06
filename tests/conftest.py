@@ -184,8 +184,8 @@ def SpatialDimension(request):
 
 
 # fixture for polynomial degree
-
-polynomial_degree = [1, 4]
+# NOTE: Include test for poly_degree 0 (Issue #27)
+polynomial_degree = [0, 1, 4]
 
 
 @pytest.fixture(params=polynomial_degree)
@@ -195,7 +195,7 @@ def PolyDegree(request):
 
 # fixture for lp degree
 
-lp_degree = [1, 2, np.inf]
+lp_degree = [0.5, 1, 2, np.inf]
 
 
 @pytest.fixture(params=lp_degree)
@@ -230,6 +230,23 @@ nr_pts = [1, 2]
 def NrPoints(request):
     return request.param
 
+
+# Fixture for the number
+nr_polynomials = [1, 10]
+
+
+@pytest.fixture(params=nr_polynomials)
+def NrPolynomials(request):
+    return request.param
+
+
+# Fixture for the number
+batch_sizes = [1, 100, 1000]
+
+
+@pytest.fixture(params=batch_sizes)
+def BatchSizes(request):
+    return request.param
 
 # some random builder
 

@@ -1,0 +1,86 @@
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/ee/development/cicd/templates.html
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Python.gitlab-ci.yml
+
+# Official language image. Look for the different tagged releases at:
+# https://hub.docker.com/r/library/python/tags/
+image: python:3.8
+
+# Change pip's cache directory to be inside the project directory since we can
+# only cache local items.
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+# Pip's cache doesn't store the python packages
+# https://pip.pypa.io/en/stable/reference/pip_install/#caching
+#
+# If you want to also cache the installed packages, you have to install
+# them in a virtualenv and cache it as well.
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+
+stages:
+  - test
+  - docs
+
+before_script:
+  - uname -a
+  - python --version  # For debugging
+  - cat setup.cfg
+  - apt-get update -y && apt-get upgrade -y
+  - pip install --upgrade pip
+  - pip install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
+
+unittest:
+  stage: test
+  script:
+    - pip install pytest pytest-cov
+    - pip install -e .
+    - pytest --junitxml=report.xml -vvv
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'dev'
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'main'
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+
+coverage:
+  stage: test
+  script:
+    - pip install pytest pytest-cov
+    - pip install -e .
+    - export NUMBA_DISABLE_JIT=1
+    - pytest --junitxml=report.xml tests --cov-report xml --cov=src -vvv
+  coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
+  only:
+    - main
+    - dev
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+
+pages:
+  stage: docs
+  script:
+    - apt-get install -y pandoc
+    - rm -rf public
+    - mkdir public
+    - pip install -e .[docs]
+    - pip install jupyter
+    - cd docs ; make html
+    - cd ..
+    - cp -r docs/build/html/* public/
+  artifacts:
+    paths:
+    - public
+  only:
+    - dev

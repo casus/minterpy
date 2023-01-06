@@ -57,7 +57,7 @@ For treating the generating nodes in a compactified way they are implemented as 
 
 Crucial is the choice of the ordering of the node sets :math:`P_i`.
 By default we assume that the generating nodes :math:`\mathrm{GP}`
-are **Leja-ordered** :footcite:`leja`, i.e, there holds:
+are **Leja-ordered**\ :footcite:`Leja1957`, i.e, there holds:
 
 .. math::
   |p_0| = \max_{p \in P}|p|\,, \quad \prod_{i=0}^{j-1}|p_j-p_i| = \max_{j\leq k\leq m} \prod_{i=0}^{j-1}|p_k-p_i|\,,\quad 1 \leq j \leq n\,.

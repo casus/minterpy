@@ -5,13 +5,15 @@ Base class for polynomials in the canonical base.
 from copy import deepcopy
 
 import numpy as np
+from scipy.special import factorial
 
-from minterpy.global_settings import DEBUG, FLOAT_DTYPE
-from minterpy.jit_compiled_utils import can_eval_mult
+from minterpy.global_settings import DEBUG, FLOAT_DTYPE, INT_DTYPE
+from minterpy.jit_compiled_utils import can_eval_mult, all_indices_are_contained
 
 from ..core import MultiIndexSet
 from ..core.ABC import MultivariatePolynomialSingleABC
 from ..core.verification import convert_eval_output, rectify_eval_input, verify_domain
+from ..core.utils import find_match_between
 
 __all__ = ["CanonicalPolynomial"]
 
@@ -226,58 +228,101 @@ def _canonical_sub(poly1, poly2):
     return _canonical_add(poly1, -poly2)
 
 
-def can_eval(x, coefficients, exponents, verify_input: bool = False):
-    """naive evaluation of the canonical polynomial
-
-    version able to handle both:
-     - list of input points x (2D input)
-     - list of input coefficients (2D input)
-
-    TODO Use Horner scheme for evaluation:
-     https://github.com/MrMinimal64/multivar_horner
-     package also supports naive evaluation, but not of multiple coefficient sets
-
-    NOTE: assuming equal input array shapes as the Newton evaluation
-
-    N = amount of coeffs
-    k = amount of points
-    p = amount of polynomials
-
-
-    Parameters
-    ----------
-    x: (k, m) the k points to evaluate on with dimensionality m.
-    coefficients: (N, p) the coeffs of each polynomial in canonical form (basis).
-    exponents: (N, m) a multi index "alpha" corresponding to the exponents of each monomial
-    verify_input: weather the data types of the input should be checked. turned off by default for speed.
-
-    Returns
-    -------
-    (k, p) the value of each input polynomial at each point. TODO squeezed into the expected shape (1D if possible)
+def _canonical_eval(pts: np.ndarray,exponents: np.ndarray, coeffs: np.ndarray):
     """
-    verify_input = verify_input or DEBUG
-    N, coefficients, m, nr_points, nr_polynomials, x = rectify_eval_input(
-        x, coefficients, exponents, verify_input
-    )
-    results_placeholder = np.zeros(
-        (nr_points, nr_polynomials), dtype=FLOAT_DTYPE
-    )  # IMPORTANT: initialise to 0!
-    can_eval_mult(x, coefficients, exponents, results_placeholder)
-    return convert_eval_output(results_placeholder)
+    Unsafe version of naive canonical evaluation
+
+    :param pts: List of points, the polynomial must be evaluated on. Assumed shape: `(number_of_points,spatial_dimension)`.
+    :type pts: np.ndarray
+
+    :param exponents: Exponents from a multi-index set. Assumed shape:` (number_of_monomials, spatial_dimension)`.
+    :type exponents: np.ndarray
+
+    :param coeffs: List of coefficients. Assumed shape: `(number_of_monomials,)`
+    :type coeffs: np.ndarray
+
+    :return: result of the canonical evaluation.
+    :rtype: np.ndarray
+    
+    """
+    yy = np.dot(np.prod(np.power(pts[:, None, :], exponents[None, :, :]), axis=-1), coeffs)
+
+    return convert_eval_output(yy)
 
 
-def canonical_eval(canonical_poly, x: np.ndarray):
+def _verify_eval_input(pts, spatial_dimension):
     """
-    This is the doc from the canonical evaluation.
+    verification of the input of the canonical evaluation. 
     """
-    coefficients = canonical_poly.coeffs
-    exponents = canonical_poly.multi_index.exponents
-    return can_eval(x, coefficients, exponents)
+    assert(isinstance(pts,np.ndarray))
+    assert(pts.ndim==2)
+    assert(pts.shape[-1]==spatial_dimension)
+
+
+def canonical_eval(canonical_poly, pts: np.ndarray):
+    """
+    Navie canonical evaluation
+
+    :param canonical_poly: Polynomial in canonical form to be evaluated.
+    :type canonical_poly: CanonicalPolynomial
+
+    :param pts: List of points, the polynomial must be evaluated on. Assumed shape: `(number_of_points,spatial_dimension)`.
+    :type pts: np.ndarray
+
+    :return: result of the canonical evaluation. 
+    :rtype: np.ndarray
+
+    """
+    _verify_eval_input(pts,canonical_poly.spatial_dimension)
+    return _canonical_eval(pts,canonical_poly.multi_index.exponents,canonical_poly.coeffs)
 
 
 # TODO redundant
 canonical_generate_internal_domain = verify_domain
 canonical_generate_user_domain = verify_domain
+
+
+def _canonical_partial_diff(poly: "CanonicalPolynomial", dim: int, order: int) -> "CanonicalPolynomial":
+    """ Partial differentiation in Canonical basis.
+    """
+    spatial_dim = poly.multi_index.spatial_dimension
+    deriv_order_along = np.zeros(spatial_dim, dtype=INT_DTYPE)
+    deriv_order_along[dim] = order
+    return _canonical_diff(poly, deriv_order_along)
+
+
+def _canonical_diff(poly: "CanonicalPolynomial", order: np.ndarray) -> "CanonicalPolynomial":
+    """ Partial differentiation in Canonical basis.
+    """
+
+    coeffs = poly.coeffs
+    exponents = poly.multi_index.exponents
+
+    # Guard rails in ABC ensures that the len(order) == poly.spatial_dimension
+    subtracted_exponents = exponents - order
+
+    # compute mask for non-negative multi index entries
+    diff_exp_mask = np.all(exponents >= order, axis = 1)
+
+    # multi index entries in the differentiated polynomial
+    diff_exponents = subtracted_exponents[diff_exp_mask]
+
+    # Checking if the necessary multi index entries are present
+    # Zero size check is needed here as all_indices_are_contained throws error otherwise
+    if diff_exponents.size != 0 and not all_indices_are_contained(diff_exponents, exponents):
+        raise ValueError(f"Cannot differentiate as some of the required multi indices are not present.")
+
+    # coefficients of the differentiated polynomial
+    diff_coeffs = coeffs[diff_exp_mask] * np.prod(factorial(exponents[diff_exp_mask]) / factorial(diff_exponents),
+                                                  axis=1)
+
+    # The differentiated polynomial being expressed wrt multi indices of the given poly
+    # NOTE: 'find_match_between' assumes 'exponents' is lexicographically ordered
+    map_pos = find_match_between(diff_exponents, exponents)
+    new_coeffs = np.zeros_like(coeffs)
+    new_coeffs[map_pos] = diff_coeffs
+
+    return CanonicalPolynomial.from_poly(poly, new_coeffs)
 
 
 class CanonicalPolynomial(MultivariatePolynomialSingleABC):
@@ -297,6 +342,9 @@ class CanonicalPolynomial(MultivariatePolynomialSingleABC):
     _div = staticmethod(dummy)
     _pow = staticmethod(dummy)
     _eval = canonical_eval
+
+    _partial_diff = staticmethod(_canonical_partial_diff)
+    _diff = staticmethod(_canonical_diff)
 
     generate_internal_domain = staticmethod(canonical_generate_internal_domain)
     generate_user_domain = staticmethod(canonical_generate_user_domain)

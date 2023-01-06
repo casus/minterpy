@@ -15,7 +15,7 @@ from minterpy.schemes.barycentric.precomp import (
     _build_newton_to_lagrange_bary,
 )
 from minterpy.schemes.matrix_operator import MatrixOperator
-from minterpy.utils import eval_newt_polys_on
+from minterpy.utils import eval_newton_monomials
 
 # NOTE: avoid looping over a numpy array! e.g. for j in np.arange(num_monomials):
 # see: # https://stackoverflow.com/questions/10698858/built-in-range-or-numpy-arange-which-is-more-efficient
@@ -45,7 +45,7 @@ def _build_n2l_array(grid, multi_index=None, require_invertible: bool = False) -
     unisolvent_nodes = grid.unisolvent_nodes
     generating_points = grid.generating_points
     # NOTE: the shape of unisolvent_nodes and exponents might be different! -> non square transformation matrix
-    transformation_matrix = eval_newt_polys_on(
+    transformation_matrix = eval_newton_monomials(
         unisolvent_nodes,
         exponents,
         generating_points,

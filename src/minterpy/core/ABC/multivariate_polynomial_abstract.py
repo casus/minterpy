@@ -766,3 +766,61 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         )
         extra_user_domain = verify_domain(extra_user_domain, expand_dim)
         self.user_domain = np.concatenate((self.user_domain, extra_user_domain))
+
+    def partial_diff(self, dim: int, order: int = 1) -> "MultivariatePolynomialSingleABC":
+        """Compute the polynomial that is the partial derivative along a dimension of specified order.
+
+        Parameters
+        ----------
+        dim: spatial dimension along which to take the derivative
+        order: order of partial derivative
+
+        Returns
+        -------
+        a new polynomial instance that represents the partial derivative
+        """
+
+        # Guard rails for dim
+        if not np.issubdtype(type(dim), np.integer):
+            raise TypeError(f"dim <{dim}> must be an integer")
+
+        if dim < 0 or dim >= self.spatial_dimension:
+            raise ValueError(f"dim <{dim}> for spatial dimension <{self.spatial_dimension}>"
+                             f" should be between 0 and {self.spatial_dimension-1}")
+
+        # Guard rails for order
+        if not np.issubdtype(type(dim), np.integer):
+            raise TypeError(f"order <{order}> must be a non-negative integer")
+
+        if order < 0:
+            raise ValueError(f"order <{order}> must be a non-negative integer")
+
+        return self._partial_diff(self, dim, order)
+
+    def diff(self, order: np.ndarray) -> "MultivariatePolynomialSingleABC":
+        """Compute the polynomial that is the partial derivative of a particular order along each dimension.
+
+        Parameters
+        ----------
+        order: integer array specifying the order of derivative along each dimension
+
+        Returns
+        -------
+        a new polynomial instance that represents the partial derivative
+        """
+
+        # convert 'order' to numpy 1d array if it isn't already. This allows type checking below.
+        order = np.ravel(order)
+
+        # Guard rails for order
+        if not np.issubdtype(order.dtype.type, np.integer):
+            raise TypeError(f"order of derivative <{order}> can only be non-negative integers")
+
+        if np.any(order < 0):
+            raise ValueError(f"order of derivative <{order}> cannot have negative values")
+
+        if len(order) != self.spatial_dimension:
+            raise ValueError(f"inconsistent number of elements in 'order' <{len(order)}>,"
+                             f"expected <{self.spatial_dimension}> corresponding to each spatial dimension")
+
+        return self._diff(self, order)

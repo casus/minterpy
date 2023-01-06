@@ -14,7 +14,7 @@ from pkg_resources import get_distribution
 # -- Project information -----------------------------------------------------
 
 project = "minterpy"
-copyright = "2021, Minterpy development team"
+copyright = "2022, Minterpy development team"
 author = "Uwe Hernandez Acosta"
 
 version = get_distribution(project).version

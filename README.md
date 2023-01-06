@@ -1,3 +1,6 @@
+![](./docs/assets/Wordmark-color.png)
+
+[![Code style: black][black-badge]][black-link]
 # minterpy
 
 <figure class="quote">
@@ -5,7 +8,7 @@
   to minterpy *sth.* (transitive verb) -- to produce a multivariate polynomial representation of *sth.* .
   </blockquote>
   <figcaption>
-    &mdash; The minterpy developers in <cite>["Lifting the curse of dimensionality"](link-to-math-intro)</cite>
+    &mdash; The minterpy developers in <cite>["Lifting the curse of dimensionality"](https://interpol.pages.hzdr.de/minterpy/fundamentals/introduction.html)</cite>
   </figcaption>
 </figure>
 
@@ -38,7 +41,7 @@ to a broad field of computational challenges, including but not limited to:
 
 Since this implementation is a prototype,
 we currently only provide the installation by self-building from source.
-We recommend to use `git` to get the `minterpy` source:
+We recommend to using `git` to get the `minterpy` source:
 
 ```bash
 git clone https://gitlab.hzdr.de/interpol/minterpy.git
@@ -114,7 +117,7 @@ the number of dimensions (`spatial_dimension`),
 and the degree of the underlying polynomial (`poly_degree`).
 
 You may adjust this parameter in order to get higher accuracy.
-For the example above, a degree of 64 produces an interpolant which reproduces
+For the example above, a degree of 64 produces an interpolant that reproduces
 the `test_function` almost up to machine precision:
 
 ```python
@@ -127,9 +130,10 @@ the `test_function` almost up to machine precision:
     plt.legend()
     plt.show()
 ```
+<img src="./docs/assets/images/test-function1D.png" alt="Compare test function with its interpolant" width="400"/>
 
-![Compare test function with its interpolant](docs/assets/test_function1D.png)
-For a more comprehensive examples, see the [getting started guides](link-to-tutorials)
+
+For more comprehensive examples, see the [getting started guides](https://interpol.pages.hzdr.de/minterpy/getting-started/index.html)
 section of the ``minterpy`` docs.
 
 ## Testing
@@ -148,7 +152,7 @@ from within the `minterpy` source directory.
 ## Contributing to `minterpy`
 
 Contributions to the `minterpy` packages are highly welcome.
-We recommend you to have a look at the [CONTRIBUTING.md](./CONTRIBUTING.md) first.
+We recommend you have a look at the [CONTRIBUTING.md](./CONTRIBUTING.md) first.
 For a more comprehensive contribution guide visit
 the [Contributors section](link-to-developer-section) of the documentation.
 
@@ -168,6 +172,7 @@ namely
 - Uwe Hernandez Acosta ([HZDR]/[CASUS]) (u.hernandez@hzdr.de)
 - Sachin Krishnan Thekke Veettil ([HZDR]/[CASUS]) (s.thekke-veettil@hzdr.de)
 - Damar Wicaksono ([HZDR]/[CASUS]) (d.wicaksono@hzdr.de)
+- Janina Schreiber ([HZDR]/[CASUS]) (j.schreiber@hzdr.de)
 
 ### Mathematical foundation
 
@@ -193,13 +198,10 @@ namely
 
 This package would not be possible without many contributions done
 from the community as well.
-For that we want to send big thanks to:
+For that, we want to send big thanks to:
 
   - the guy who will show me how to include a list of contributors on github/gitlab
 
-## Citing
-
-:construction: Add here the informations how to cite ``minterpy``.
 
 ## License
 
@@ -223,30 +225,8 @@ For that we want to send big thanks to:
 [MPI-CBG]: https://www.mpi-cbg.de
 [CSBD]: https://www.csbdresden.de
 
-## :construction: :construction:  Useful badges:
-
-[![Actions Status][actions-badge]][actions-link]
-[![Documentation Status][rtd-badge]][rtd-link]
-[![Code style: black][black-badge]][black-link]
-
-[![PyPI version][pypi-version]][pypi-link]
-[![Conda-Forge][conda-badge]][conda-link]
-[![PyPI platforms][pypi-platforms]][pypi-link]
 
 
 [black-badge]:              https://img.shields.io/badge/code%20style-black-000000.svg
 [black-link]:               https://github.com/psf/black
-[conda-badge]:              https://img.shields.io/conda/vn/conda-forge/minterpy
-[conda-link]:               https://github.com/conda-forge/minterpy-feedstock
-[pypi-link]:                https://pypi.org/project/minterpy/
-[pypi-platforms]:           https://img.shields.io/pypi/pyversions/minterpy
-[pypi-version]:             https://badge.fury.io/py/minterpy.svg
-[rtd-badge]:                https://readthedocs.org/projects/minterpy/badge/?version=latest
-[rtd-link]:                 https://minterpy.readthedocs.io/en/latest/?badge=latest
 
-## :construction: :construction: Todos
-- insert missing links
-- add sponsor logos (CASUS, HZDR, CSBD?, MPI-CBG?)
-- write shorter installation section
-- write more comprehensive quickstart (maybe higher dimensionality)
-- discuss the License we want to use

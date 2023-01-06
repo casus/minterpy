@@ -72,7 +72,8 @@ class Interpolator:
         """
         try:
             fct_values = fct(self.grid.unisolvent_nodes)
-            interpol_coeffs = np.squeeze(dds(fct_values, self.grid.tree))
+            # NOTE: Don't use np.squeeze as DDS results may be of shape (1,1)
+            interpol_coeffs = dds(fct_values, self.grid.tree).reshape(-1)
         except Exception as e:
             raise InterpolationError(e) from e
 

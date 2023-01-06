@@ -126,7 +126,7 @@ scales sub-expomemtially with space dimension :math:`m` and
 
 converges uniformly and fast (exponentially) on :math:`\Omega = [-1,1]^m`.
 Figure 2 shows the approximation rates of the classic Runge function\ :footcite:`runge1901` in dimension :math:`m=4`,
-which is known to cause Runge's pehenomenon (over-fitting) when interpolated naïvely.
+which is known to cause Runge's phenomenon (over-fitting) when interpolated naïvely.
 There is an optimal (upper bound) approximation rate
 
 .. math::
@@ -151,7 +151,7 @@ The notion of unisolvence
 #########################
 
 
-The pioneering works of\ :footcite:`kuntz, Guenther, Chung` gave constructions of nodes :math:`P_A` that turn out o be unisolvent
+The pioneering works of\ :footcite:`kuntz, Guenther, Chung` gave constructions of nodes :math:`P_A` that turn out to be unisolvent
 for downward closed :ref:`multi-index sets <fundamentals/polynomial-bases:Multi-index sets and polynomial degree>`  :math:`A= A_{m,n,1}` or :math:`A =A_{m,n,\infty}`
 given by :math:`l_1`- or :math:`l_\infty`-degree.
 
@@ -165,13 +165,13 @@ the *multivariate Vandermonde matrix* is given by
 .. math::
   V(P_A) = \big (q_{\beta}(p_{\alpha})\big)_{\alpha,\beta \in A} \in \mathbb{R}^{|A|\times|A|}\,.
 
-For :math:`q_{\alpha}(x) = x^\alpha`, this results in the classic :math:`V(P_A) = \big (p_{\alpha}^\beta\big)_{\alpha,\beta \in A}`\ :footcite:`gautschi`.
+For :math:`q_{\alpha}(x) = x^\alpha`, this results in the classic :math:`V(P_A) = \big (p_{\alpha}^\beta\big)_{\alpha,\beta \in A}`\ :footcite:`Gautschi2012`.
 If :math:`V(P_A)` is (numerically) invertible, then one can interpolate `f` by solving the linear system of equations
 
 .. math::
   V(P_A)C =F \,,  \quad C= (c_{\alpha})_{\alpha \in A} \,, \,\, \quad F= (f(p_{\alpha}))_{\alpha \in A} \in \mathbb{R}^{|A|}.
 
-This requires :math:`\mathcal{O}(|A|^r)` operations with :math:`r>2`\ :footcite:`strassen,COPPER`,
+This requires :math:`\mathcal{O}(|A|^r)` operations with :math:`r>2`\ :footcite:`Strassen1969,Coppersmith1990`,
 whereas the present **DDS** achieves quadratic runtime :math:`\mathcal{O}(|A|^2)`.
 Indeed,
 
