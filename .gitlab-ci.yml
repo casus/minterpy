@@ -67,3 +67,20 @@ coverage:
     when: always
     reports:
       junit: report.xml
+
+pages:
+  stage: docs
+  script:
+    - apt-get install -y pandoc
+    - rm -rf public
+    - mkdir public
+    - pip install -e .[docs]
+    - pip install jupyter
+    - cd docs ; make html
+    - cd ..
+    - cp -r docs/build/html/* public/
+  artifacts:
+    paths:
+    - public
+  only:
+    - dev
