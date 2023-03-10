@@ -476,6 +476,38 @@ def test_unsupported_polynomial_basis():
         my_ordinary_regression.fit(xx_train, yy_train)
 
 
+def test_compute_errors():
+    """Test the flag for LOO CV error computations."""
+    spatial_dimension = 3
+    poly_degree = 3
+    lp_degree = 2.0
+    # Create a multi-index set
+    multi_index = mp.MultiIndexSet.from_degree(
+        spatial_dimension, poly_degree, lp_degree
+    )
+
+    # Create a test training set
+    xx_train = -1 + 2 * np.random.rand(100, 3)
+    yy_train = 2 * xx_train[:,0]
+
+    # Create and fit an OrdinaryRegression instance
+    my_ordinary_regression = OrdinaryRegression(multi_index=multi_index)
+
+    # Fit and compute LOO-CV error
+    my_ordinary_regression.fit(xx_train, yy_train, compute_loocv=True)
+    assert my_ordinary_regression.loocv_error is not None
+    assert_call(my_ordinary_regression.show)
+
+    # Fit but don't compute LOO-CV error
+    my_ordinary_regression.fit(xx_train, yy_train, compute_loocv=False)
+    assert my_ordinary_regression.loocv_error is None
+    assert_call(my_ordinary_regression.show)
+
+    # Fit with invalid value for the compute_loocv flag
+    with pytest.raises(ValueError):
+        my_ordinary_regression.fit(xx_train, yy_train, compute_loocv=100)
+
+
 class _EmptyClass:
     def __init__(self, multi_index, grid):
         self.multi_index = multi_index

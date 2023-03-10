@@ -139,6 +139,11 @@ class OrdinaryRegression(RegressionABC):
             The default is ``None``.
         lstsq_solver : str, optional
             Least-square solver. The default is ``lstsq`` from SciPy.
+        compute_loocv: bool, optional
+            Flag to compute the leave-one-out cross-validation (LOO-CV) error.
+            For a problem of certain size, the LOO-CV computation
+            may be costly.
+            The default is set to True.
 
         Returns
         -------
@@ -153,6 +158,16 @@ class OrdinaryRegression(RegressionABC):
           to the selected least-square solver. Refer to the documentation
           of the solver for the list of supported keyword arguments.
         """
+
+        # Parse 'kwargs'
+        # NOTE: Use "pop", don't propagate this argument further downstream
+        compute_loocv = kwargs.pop("compute_loocv", True)
+        if not isinstance(compute_loocv, bool):
+            raise ValueError(
+                "'compute_loocv' argument value must be of 'bool' type! "
+                f"Got instead {type(compute_loocv)!r} ."
+            )
+
         # Get the regression matrix on the evaluation points
         self._regression_matrix = self.get_regression_matrix(xx)
 
@@ -168,9 +183,13 @@ class OrdinaryRegression(RegressionABC):
         self._regfit_l2_error = compute_regfit_l2_error(
             self._regression_matrix, self._coeffs, yy
         )
-        self._loocv_error = compute_loocv_error(
-            self._regression_matrix, self._coeffs, yy, weights
-        )
+        if compute_loocv:
+            self._loocv_error = compute_loocv_error(
+                self._regression_matrix, self._coeffs, yy, weights
+            )
+        else:
+            # Reset the property to None
+            self._loocv_error = None
 
         # Create a polynomial that can be evaluated
         if isinstance(self.origin_poly, LagrangePolynomial):
@@ -200,13 +219,18 @@ class OrdinaryRegression(RegressionABC):
                  f"Lp-degree        : {self.multi_index.lp_degree}\n" \
                  f"Origin poly.     : {type(self.origin_poly)}\n"
         if self.regfit_l1_error is not None:
-            output += f"{'Error':<19s}  {'Absolute':>10s}  {'Relative':>10s}\n"\
-                      f"L1 Regression Fit   {self.regfit_l1_error[0]:10.5e} " \
-                      f"{self.regfit_l1_error[1]:10.5e}\n" \
-                      f"L2 Regression Fit   {self.regfit_l2_error[0]:10.5e} " \
-                      f"{self.regfit_l2_error[1]:10.5e}\n" \
-                      f"LOO CV              {self.loocv_error[0]:10.5e} " \
-                      f"{self.loocv_error[1]:10.5e}"
+            output += (
+                f"{'Error':<19s}  {'Absolute':>10s}  {'Relative':>10s}\n"
+                f"L1 Regression Fit   {self.regfit_l1_error[0]:10.5e} "
+                f"{self.regfit_l1_error[1]:10.5e}\n"
+                f"L2 Regression Fit   {self.regfit_l2_error[0]:10.5e} "
+                f"{self.regfit_l2_error[1]:10.5e}"
+            )
+            if self.loocv_error is not None:
+                output += (
+                    f"\nLOO CV              {self.loocv_error[0]:10.5e} "
+                    f"{self.loocv_error[1]:10.5e}"
+                )
 
         print(output)
 
