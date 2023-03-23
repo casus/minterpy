@@ -397,3 +397,25 @@ def eval_newton_polynomials_batch(
             newton_monomials @ coefficients
 
     return results_placeholder
+
+def make_coeffs_2d(coefficients: np.ndarray) -> np.ndarray:
+    """Make coefficients array 2d.
+
+    Parameters
+    ----------
+    coefficients: np.ndarray with coefficients
+
+    Returns
+    -------
+    Returns a 2d array in the case of both single and multiple polynomials
+
+    Notes
+    -----
+    This function is similar to np.atleast_2d, but adds the extra dimension differently.
+    """
+
+    coeff_shape = coefficients.shape
+    if len(coeff_shape) == 1:  # 1D: a single polynomial
+        coefficients = np.expand_dims(coefficients,-1)  # reshape to 2D
+
+    return coefficients
