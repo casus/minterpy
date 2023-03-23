@@ -329,7 +329,7 @@ def build_rnd_points(nr_points, spatial_dimension, nr_poly=None, seed=None):
 
 
 def build_random_newton_polynom(
-    dim: int, deg: int, lp: int, seed=None
+    dim: int, deg: int, lp: int,  n_poly=1, seed=None
 ) -> NewtonPolynomial:
     """Build a random Newton polynomial.
 
@@ -350,5 +350,11 @@ def build_random_newton_polynom(
     if seed is None:
         seed = SEED
 
-    rnd_coeffs = np.random.uniform(-1, 1, size=len(mi))
+    np.random.seed(seed)
+
+    if n_poly == 1:
+        rnd_coeffs = np.random.uniform(-1, 1, size=len(mi))
+    else:
+        rnd_coeffs = np.random.uniform(-1, 1, size=(len(mi), n_poly))
+
     return NewtonPolynomial(mi, rnd_coeffs)

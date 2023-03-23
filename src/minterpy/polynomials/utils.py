@@ -4,6 +4,7 @@ set of utility functions to be used in polynomials submodule
 import itertools
 import numpy as np
 from minterpy.global_settings import FLOAT_DTYPE
+from minterpy.utils import rectify_eval_input
 
 def deriv_newt_eval(x: np.ndarray, coefficients: np.ndarray, exponents: np.ndarray,
                     generating_points: np.ndarray, derivative_order_along: np.ndarray) -> np.ndarray:
@@ -12,12 +13,13 @@ def deriv_newt_eval(x: np.ndarray, coefficients: np.ndarray, exponents: np.ndarr
      m = spatial dimension
      n = polynomial degree
      N = number of coefficients
+     p = number of polynomials
      k = number of evaluation points
 
     Parameters
     ----------
     x: (k, m) the k points to evaluate on with dimensionality m.
-    coefficients: (N) the coefficients of the Newton polynomial.
+    coefficients: (N, p) the coefficients of the Newton polynomial(s).
     exponents: (m, N) a multi index "alpha" for every Newton polynomial
         corresponding to the exponents of this "monomial"
     generating_points: (m, n+1) grid values for every dimension (e.g. Leja ordered Chebychev values).
@@ -37,13 +39,15 @@ def deriv_newt_eval(x: np.ndarray, coefficients: np.ndarray, exponents: np.ndarr
 
     """
 
-    N, m = exponents.shape
-    nr_points = x.shape[0]
+    N, coefficients, m, nr_points, nr_polynomials, x = \
+        rectify_eval_input(x, coefficients, exponents, False)
+
     max_exponents = np.max(exponents, axis=0)
 
     # Result of the derivative evaluation
-    results = np.empty(nr_points, dtype=FLOAT_DTYPE)
-    # Array to store individial basis monomial evaluations
+    results = np.empty((nr_points, nr_polynomials), dtype=FLOAT_DTYPE)
+
+    # Array to store individual basis monomial evaluations
     monomial_vals= np.empty(N, dtype=FLOAT_DTYPE)
 
     num_prods = np.max(max_exponents) + 1
@@ -107,6 +111,6 @@ def deriv_newt_eval(x: np.ndarray, coefficients: np.ndarray, exponents: np.ndarr
                         newt_mon_val = 0.0
             monomial_vals[j] = newt_mon_val
 
-        results[point_nr] = np.dot(coefficients, monomial_vals)
+        results[point_nr] = np.sum(monomial_vals[:,None] * coefficients, axis=0)
 
     return results
