@@ -14,6 +14,7 @@ from ..core import MultiIndexSet
 from ..core.ABC import MultivariatePolynomialSingleABC
 from ..core.verification import convert_eval_output, rectify_eval_input, verify_domain
 from ..core.utils import find_match_between
+from ..utils import make_coeffs_2d
 
 __all__ = ["CanonicalPolynomial"]
 
@@ -295,7 +296,7 @@ def _canonical_diff(poly: "CanonicalPolynomial", order: np.ndarray) -> "Canonica
     """ Partial differentiation in Canonical basis.
     """
 
-    coeffs = poly.coeffs
+    coeffs = make_coeffs_2d(poly.coeffs)
     exponents = poly.multi_index.exponents
 
     # Guard rails in ABC ensures that the len(order) == poly.spatial_dimension
@@ -314,7 +315,7 @@ def _canonical_diff(poly: "CanonicalPolynomial", order: np.ndarray) -> "Canonica
 
     # coefficients of the differentiated polynomial
     diff_coeffs = coeffs[diff_exp_mask] * np.prod(factorial(exponents[diff_exp_mask]) / factorial(diff_exponents),
-                                                  axis=1)
+                                                  axis=1)[:,None]
 
     # The differentiated polynomial being expressed wrt multi indices of the given poly
     # NOTE: 'find_match_between' assumes 'exponents' is lexicographically ordered
@@ -322,7 +323,8 @@ def _canonical_diff(poly: "CanonicalPolynomial", order: np.ndarray) -> "Canonica
     new_coeffs = np.zeros_like(coeffs)
     new_coeffs[map_pos] = diff_coeffs
 
-    return CanonicalPolynomial.from_poly(poly, new_coeffs)
+    # Squeezing the last dimension to handle single polynomial
+    return CanonicalPolynomial.from_poly(poly, new_coeffs.reshape(poly.coeffs.shape))
 
 
 class CanonicalPolynomial(MultivariatePolynomialSingleABC):

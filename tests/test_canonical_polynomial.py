@@ -168,7 +168,6 @@ def test_partial_diff():
     assert np.allclose(coeffs_dz, groundtruth_coeffs_dz)
 
 
-
 def test_diff():
 
     # ATTENTION: the exponent vectors of all derivatives have to be included already!
@@ -204,3 +203,40 @@ def test_diff():
     can_poly_dyz2 = can_poly.diff([0,1,2])
     coeffs_dyz2 = can_poly_dyz2.coeffs
     assert np.allclose(coeffs_dyz2, groundtruth_coeffs_dyz2)
+
+
+def test_partial_diff_multiple_poly():
+
+    # ATTENTION: the exponent vectors of all derivatives have to be included already!
+    exponents = np.array([[0, 0, 0],
+                          [0, 1, 0],
+                          [0, 0, 1],
+                          [0, 1, 1],
+                          [0, 0, 2]])
+    coeffs = np.array([[3.0, 3.0, 3.0, 3.0, 3.0],
+                       [5.0, 4.0, 3.0, 2.0, 1.0]]).T
+
+    assert exponents.shape == (5, 3)
+    assert coeffs.shape == (5,2)
+
+    mi = MultiIndexSet(exponents)
+    can_poly = CanonicalPolynomial(mi, coeffs)
+
+    groundtruth_coeffs_dx = np.array([[0.0, 0.0, 0.0, 0.0, 0.0],
+                                      [0.0, 0.0, 0.0, 0.0, 0.0]]).T
+    groundtruth_coeffs_dy = np.array([[3.0, 0.0, 3.0, 0.0, 0.0],
+                                      [4.0, 0.0, 2.0, 0.0, 0.0]]).T
+    groundtruth_coeffs_dz = np.array([[3.0, 3.0, 6.0, 0.0, 0.0],
+                                      [3.0, 2.0, 2.0, 0.0, 0.0]]).T
+
+    can_poly_dx = can_poly.partial_diff(0)
+    coeffs_dx = can_poly_dx.coeffs
+    assert np.allclose(coeffs_dx, groundtruth_coeffs_dx)
+
+    can_poly_dy = can_poly.partial_diff(1)
+    coeffs_dy = can_poly_dy.coeffs
+    assert np.allclose(coeffs_dy, groundtruth_coeffs_dy)
+
+    can_poly_dz = can_poly.partial_diff(2)
+    coeffs_dz = can_poly_dz.coeffs
+    assert np.allclose(coeffs_dz, groundtruth_coeffs_dz)

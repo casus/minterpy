@@ -80,8 +80,8 @@ def _newton_diff(poly: "NewtonPolynomial", order: np.ndarray) -> "NewtonPolynomi
                                  poly.grid.multi_index.exponents,
                                  poly.grid.generating_points, order)
 
-    # DDS returns a 2D array, converting it to 1d
-    newt_coeffs = dds(lag_coeffs, poly.grid.tree).reshape(-1)
+    # DDS returns a 2D array, reshaping it according to input coefficient array
+    newt_coeffs = dds(lag_coeffs, poly.grid.tree).reshape(poly.coeffs.shape)
 
     return NewtonPolynomial(coeffs=newt_coeffs, multi_index=poly.multi_index,
                               grid=poly.grid)

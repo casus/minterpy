@@ -9,16 +9,6 @@ from _warnings import warn
 
 from minterpy.global_settings import DEBUG, DEFAULT_DOMAIN, FLOAT_DTYPE, INT_DTYPE
 
-__author__ = "Jannik Michelfeit"
-__copyright__ = "Copyright 2021, minterpy"
-__credits__ = ["Jannik Michelfeit"]
-# __license__ =
-# __version__ =
-# __maintainer__ =
-__email__ = "jannik@michelfe.it"
-__status__ = "Development"
-
-
 def verify_domain(domain, spatial_dimension):
     """Building and verification of domains.
 
@@ -83,7 +73,6 @@ def rectify_query_points(x, m):
                 f"does not match the polynomial dimensionality {m}"
             )
     return nr_points, x
-
 
 def rectify_eval_input(x, coefficients, exponents, verify_input):
     """Rectify input for evaluation.

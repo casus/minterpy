@@ -88,8 +88,8 @@ def test_partial_diff(SpatialDimension, PolyDegree, LpDegree):
 
         assert_polynomial_almost_equal(newt_can_diff_poly, newt_diff_poly)
 
-def test_diff(SpatialDimension, PolyDegree, LpDegree):
-    newton_poly = build_random_newton_polynom(SpatialDimension, PolyDegree, LpDegree)
+def test_diff(SpatialDimension, PolyDegree, LpDegree, NrPolynomials):
+    newton_poly = build_random_newton_polynom(SpatialDimension, PolyDegree, LpDegree, NrPolynomials)
 
     # A derivative of order zero along all dimensions should be equivalent to the same polynomial
     zero_order_diff_newt = newton_poly.diff(np.zeros(SpatialDimension, dtype=INT_DTYPE))
