@@ -20,7 +20,7 @@ from minterpy.utils import cartesian_product, lp_norm, lp_sum
 #    from .tree import MultiIndexTree
 
 
-def _get_poly_degree(exponents: np.ndarray, lp_degree: float) -> int:
+def get_poly_degree(exponents: np.ndarray, lp_degree: float) -> int:
     """Get the polynomial degree from a multi-index set for a given lp-degree.
     
     Parameters
@@ -38,8 +38,18 @@ def _get_poly_degree(exponents: np.ndarray, lp_degree: float) -> int:
         for the given lp-degree.
     """
     norms = lp_norm(exponents, lp_degree, axis=1)
-    # NOTE: math.ceil() returns int, np.ceil() returns float
-    return ceil(np.max(norms))
+    max_norm = np.max(norms)
+    max_norm_int = round(max_norm)
+    if np.isclose(max_norm, max_norm_int):
+        # The nearest integer is equivalent to the maximum norm
+        # Difference are insignificant, take the integer
+        return max_norm_int
+    else:
+        # Take the ceiling to include all index set elements
+        # with smaller lp-norm
+        # NOTE: math.ceil() returns int, np.ceil() returns float
+        return ceil(max_norm)
+
 
 def get_exponent_matrix(
     spatial_dimension: int, poly_degree: int, lp_degree: float | int
@@ -379,7 +389,7 @@ def make_complete(indices: np.ndarray, lp_degree: float = None) -> np.ndarray:
     """
     if lp_degree is None:
         lp_degree = DEFAULT_LP_DEG
-    poly_degree = _get_poly_degree(indices, lp_degree)
+    poly_degree = get_poly_degree(indices, lp_degree)
     spatial_dimension = indices.shape[-1]
     return get_exponent_matrix(spatial_dimension, poly_degree, lp_degree)
 
