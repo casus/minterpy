@@ -7,6 +7,7 @@ from typing import Iterable, no_type_check
 
 import numpy as np
 from math import ceil
+from decimal import Decimal, ROUND_HALF_UP
 
 from minterpy.global_settings import DEFAULT_LP_DEG, INT_DTYPE
 from minterpy.jit_compiled_utils import (
@@ -39,7 +40,8 @@ def get_poly_degree(exponents: np.ndarray, lp_degree: float) -> int:
     """
     norms = lp_norm(exponents, lp_degree, axis=1)
     max_norm = np.max(norms)
-    max_norm_int = round(max_norm)
+    # NOTE: Don't do round half to even (default from round())
+    max_norm_int = int(Decimal(max_norm).quantize(0, ROUND_HALF_UP))
     if np.isclose(max_norm, max_norm_int):
         # The nearest integer is equivalent to the maximum norm
         # Difference are insignificant, take the integer
