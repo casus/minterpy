@@ -42,7 +42,7 @@ class MultiIndexSet:
     spatial_dimension
     """
 
-    def __init__(self, exponents: ARRAY, lp_degree: float = DEFAULT_LP_DEG):
+    def __init__(self, exponents: ARRAY, lp_degree: float):
 
         # Check and assign the exponents
         exponents = np.require(exponents, dtype=INT_DTYPE)

@@ -23,14 +23,14 @@ from minterpy.core.utils import (
 # test initialization
 def test_init_from_exponents(SpatialDimension, PolyDegree, LpDegree):
     exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    assert_call(MultiIndexSet, exponents)
     assert_call(MultiIndexSet, exponents, lp_degree=LpDegree)
 
 
 def test_init_fail_from_exponents():
-    exponents = get_exponent_matrix(2, 1, 1)
+    spatial_dimension, poly_degree, lp_degree = (2, 1, 1)
+    exponents = get_exponent_matrix(spatial_dimension, poly_degree, lp_degree)
     exponents[0] = 1
-    assert_raises(ValueError, MultiIndexSet, exponents)
+    assert_raises(ValueError, MultiIndexSet, exponents, lp_degree)
 
 
 def test_init_from_degree(SpatialDimension, PolyDegree, LpDegree):
