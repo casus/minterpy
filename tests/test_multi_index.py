@@ -124,3 +124,16 @@ def test_attributes_incomplete_exponents(SpatialDimension, PolyDegree, LpDegree)
     num_of_monomials_incomplete, dim_incomplete = exponents_incomplete.shape
     assert_(len(multi_index_incomplete) == num_of_monomials_incomplete)
     assert_(multi_index_incomplete.spatial_dimension == dim_incomplete)
+
+
+def test_invalid_lp_degree():
+    """Check if invalid values of lp-degree indeed raises error."""
+
+    # With the default constructor
+    exponents = get_exponent_matrix(3, 2, 2)  # arbitrary exponents
+    assert_raises(ValueError, MultiIndexSet, exponents, 0.0)
+    assert_raises(ValueError, MultiIndexSet, exponents, -1.0)
+
+    # With the from_degree() constructor
+    assert_raises(ValueError, MultiIndexSet.from_degree, 3, 2, 0.0)
+    assert_raises(ValueError, MultiIndexSet.from_degree, 3, 2, -1.0)

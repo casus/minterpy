@@ -2,7 +2,7 @@
 """ functions for input verification
 """
 
-from typing import Optional, Sized
+from typing import Optional, Sized, Union
 
 import numpy as np
 from _warnings import warn
@@ -313,3 +313,30 @@ def check_domain_fit(points: np.ndarray):
                 f"the smallest encountered value in the given points is {min_grid_val} (expected -1.0). "
                 + DOMAIN_WARN_MSG
             )
+
+
+def verify_lp_deg(lp_degree: float) -> float:
+    """Verify that the value of a given lp-degree is valid.
+
+    Parameters
+    ----------
+    lp_degree : float
+        A given lp-degree.
+
+    Returns
+    -------
+    float
+        A verified lp-degree value.
+
+    Raises
+    ------
+    ValueError
+        If lp_degree is a non strictly positive value.
+    """
+    if lp_degree <= 0.0:
+        raise ValueError(
+            "lp-degree must be strictly positive! "
+            f"Instead, {lp_degree} is given."
+        )
+
+    return lp_degree
