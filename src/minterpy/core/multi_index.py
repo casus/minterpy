@@ -60,7 +60,7 @@ class MultiIndexSet:
         self._lp_degree = verify_lp_deg(lp_degree)
 
         # Compute the polynomial degree given the exponents and lp-degree
-        self.poly_degree = _get_poly_degree(exponents, self._lp_degree)
+        self._poly_degree = _get_poly_degree(exponents, self._lp_degree)
 
         self._is_complete: Optional[bool] = None
         # for avoiding to complete the exponents multiple times
@@ -76,12 +76,17 @@ class MultiIndexSet:
         exponents = get_exponent_matrix(spatial_dimension, poly_degree, lp_degree)
         return cls(exponents, lp_degree=lp_degree)
 
-    def expand_dim(self, dim):
-        # TODO avoid transpose
-        # print("self.__exponents",self.__exponents)
-        # print("self.__exponents.T",self.__exponents.T)
-        # print("_expand_dim(self.__exponents.T,dim)",_expand_dim(self.__exponents.T,dim))
-        self._exponents = _expand_dim(self._exponents, dim)
+    @property
+    def poly_degree(self) -> int:
+        """The polynomial degree of the multi-index set.
+
+        Returns
+        -------
+        int
+            The polynomial degree of the multi-index set. This property is
+            read-only and inferred from a given multi-index set and lp-degree.
+        """
+        return self._poly_degree
 
     @property
     def exponents(
@@ -172,6 +177,14 @@ class MultiIndexSet:
         # returns the number of multi_indices
         return self._exponents.shape[0]
 
+    def __add__(self):
+        """This function is not implemented yet.
+
+        :raise NotImplementedError: If this function is called.
+
+        """
+        raise NotImplementedError("MultiIndexSet.__add__() is not implemented yet.")
+
     def union(self):
         """This function is not implemented yet.
 
@@ -180,13 +193,12 @@ class MultiIndexSet:
         """
         raise NotImplementedError("MultiIndexSet.union() is not implemented yet.")
 
-    def __add__(self):
-        """This function is not implemented yet.
-
-        :raise NotImplementedError: If this function is called.
-
-        """
-        raise NotImplementedError("MultiIndexSet.__add__() is not implemented yet.")
+    def expand_dim(self, dim):
+        # TODO avoid transpose
+        # print("self.__exponents",self.__exponents)
+        # print("self.__exponents.T",self.__exponents.T)
+        # print("_expand_dim(self.__exponents.T,dim)",_expand_dim(self.__exponents.T,dim))
+        self._exponents = _expand_dim(self._exponents, dim)
 
     def ordering(self, order):
         """This function is not implemented yet.
