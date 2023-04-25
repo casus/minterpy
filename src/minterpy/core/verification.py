@@ -2,7 +2,7 @@
 """ functions for input verification
 """
 
-from typing import Optional, Sized, Union
+from typing import Optional, Sized
 
 import numpy as np
 from _warnings import warn
@@ -315,7 +315,7 @@ def check_domain_fit(points: np.ndarray):
             )
 
 
-def verify_lp_deg(lp_degree: float) -> float:
+def verify_lp_degree(lp_degree: float) -> float:
     """Verify that the value of a given lp-degree is valid.
 
     Parameters

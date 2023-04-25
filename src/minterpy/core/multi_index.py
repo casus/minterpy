@@ -20,7 +20,7 @@ from .utils import (
     is_lexicographically_complete,
     make_complete,
 )
-from .verification import check_shape, check_values, verify_lp_deg
+from .verification import check_shape, check_values, verify_lp_degree
 
 __all__ = ["MultiIndexSet"]
 
@@ -56,7 +56,7 @@ class MultiIndexSet:
 
         # TODO compute properly, max norm of the exponents?
         # while _get_poly_degree(exponents, __lp_degree) > poly_degree: ...
-        self._lp_degree = verify_lp_deg(lp_degree)
+        self._lp_degree = verify_lp_degree(lp_degree)
 
         # Compute the polynomial degree given the exponents and lp-degree
         self.poly_degree = _get_poly_degree(exponents, self._lp_degree)
@@ -77,7 +77,7 @@ class MultiIndexSet:
             raise TypeError("only integer polynomial degrees are supported.")
         if type(spatial_dimension) is not int:
             raise TypeError("spatial dimension must be given as integer.")
-        lp_degree = verify_lp_deg(lp_degree)
+        lp_degree = verify_lp_degree(lp_degree)
         exponents = get_exponent_matrix(
             spatial_dimension, poly_degree, lp_degree
         )
