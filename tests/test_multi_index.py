@@ -16,7 +16,7 @@ from minterpy import MultiIndexSet
 from minterpy.core.utils import (
     find_match_between,
     get_exponent_matrix,
-    _get_poly_degree,
+    get_poly_degree,
     is_lexicographically_complete,
 )
 
@@ -114,7 +114,7 @@ def test_attributes_incomplete_exponents(SpatialDimension, PolyDegree, LpDegree)
     assert_(not is_lexicographically_complete(exponents_incomplete))
 
     # Compute the reference polynomial degree given the multi-index set    
-    poly_degree = _get_poly_degree(exponents_incomplete, LpDegree)
+    poly_degree = get_poly_degree(exponents_incomplete, LpDegree)
 
     # Assertion of attributes
     assert_equal(exponents_incomplete, multi_index_incomplete.exponents)
@@ -127,7 +127,7 @@ def test_attributes_incomplete_exponents(SpatialDimension, PolyDegree, LpDegree)
 
 
 def test_invalid_lp_degree():
-    """Check if invalid values of lp-degree indeed raises error."""
+    """Check if invalid values of lp-degree indeed raise an error."""
 
     # With the default constructor
     exponents = get_exponent_matrix(3, 2, 2)  # arbitrary exponents
@@ -137,3 +137,29 @@ def test_invalid_lp_degree():
     # With the from_degree() constructor
     assert_raises(ValueError, MultiIndexSet.from_degree, 3, 2, 0.0)
     assert_raises(ValueError, MultiIndexSet.from_degree, 3, 2, -1.0)
+
+
+@pytest.mark.parametrize("spatial_dimension", [1, 2, 3, 7])
+@pytest.mark.parametrize("poly_degree", [1, 2, 3, 5])
+def test_attributes_from_degree(spatial_dimension, poly_degree, LpDegree):
+    """Test the resulting instances from from_degree() constructor.
+
+    Notes
+    -----
+    - This test is included due to Issue #97. The known breaking cases:
+      the spatial dimension 7 and polynomial degree 5
+      are explicitly tested and only for this test.
+      Otherwise, the test suite would be too time-consuming to run.
+    """
+    multi_index = MultiIndexSet.from_degree(
+        spatial_dimension, poly_degree, LpDegree
+    )
+
+    # Assertions
+    assert_(isinstance(multi_index, MultiIndexSet))
+    assert_(multi_index.lp_degree == LpDegree)
+    assert_(multi_index.poly_degree == poly_degree)
+
+    dim = multi_index.exponents.shape[1]
+    assert_(multi_index.spatial_dimension == spatial_dimension)
+    assert_(dim == spatial_dimension)

@@ -14,7 +14,7 @@ from minterpy.jit_compiled_utils import (
 
 from .utils import (
     _expand_dim,
-    _get_poly_degree,
+    get_poly_degree,
     get_exponent_matrix,
     insert_lexicographically,
     is_lexicographically_complete,
@@ -59,7 +59,7 @@ class MultiIndexSet:
         self._lp_degree = verify_lp_degree(lp_degree)
 
         # Compute the polynomial degree given the exponents and lp-degree
-        self.poly_degree = _get_poly_degree(exponents, self._lp_degree)
+        self.poly_degree = get_poly_degree(exponents, self._lp_degree)
 
         self._is_complete: Optional[bool] = None
         # for avoiding to complete the exponents multiple times
