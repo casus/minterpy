@@ -93,6 +93,11 @@ def test_attributes(SpatialDimension, PolyDegree, LpDegree):
     assert_(len(multi_index) == number_of_monomials)
     assert_(multi_index.spatial_dimension == dim)
 
+    # Assigning to read-only property
+    with pytest.raises(AttributeError):
+        # This is related to Issue #98
+        multi_index.lp_degree = LpDegree
+
 
 def test_attributes_incomplete_exponents(SpatialDimension, PolyDegree, LpDegree):
     """Test the attributes with an incomplete exponents for MultiIndexSet.

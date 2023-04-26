@@ -55,8 +55,7 @@ class MultiIndexSet:
             )
         self._exponents: ARRAY = exponents
 
-        # TODO compute properly, max norm of the exponents?
-        # while _get_poly_degree(exponents, __lp_degree) > poly_degree: ...
+        # Verify the given lp_degree
         self._lp_degree = verify_lp_deg(lp_degree)
 
         # Compute the polynomial degree given the exponents and lp-degree
@@ -131,25 +130,18 @@ class MultiIndexSet:
         return self._is_complete
 
     @property
-    def lp_degree(self):
-        """The degree for the :math:`l_p`-norm used to define the polynomial degree.
+    def lp_degree(self) -> float:
+        """:math:`l_p` of :math:`l_p`-norm used to define the multi-index set.
 
-        :return: The lp-degree of the :math:`l_p`-norm, which is used to define the polynomial degree.
-        :rtype: int
-
-        :raise ValueError: If a given lp_degree has ``lp_degree<=0``.
+        Returns
+        -------
+        float
+            The :math:`l_p` of the :math:`l_p`-norm
+            (i.e., the :math:`l_p`-degree) that is used to define
+            the multi-index set. This property is read-only
+            and defined at construction.
         """
         return self._lp_degree
-
-    @lp_degree.setter
-    def lp_degree(self, lp_degree):
-        # TODO is a setter really meaningful for this attribute?
-        #  should rather be computed from the exponents and be fixed afterwards
-        if lp_degree <= 0.0:
-            raise ValueError(
-                f"The lp_degree needs to be a positive value! <{lp_degree}> given."
-            )
-        self._lp_degree = lp_degree
 
     @property
     def spatial_dimension(self):
