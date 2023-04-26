@@ -27,10 +27,17 @@ def test_init_from_exponents(SpatialDimension, PolyDegree, LpDegree):
 
 
 def test_init_fail_from_exponents():
+    """Test if invalid parameter values raise the expected errors."""
+    # --- Non-downward closed multi-index set exponents
     spatial_dimension, poly_degree, lp_degree = (2, 1, 1)
     exponents = get_exponent_matrix(spatial_dimension, poly_degree, lp_degree)
     exponents[0] = 1
     assert_raises(ValueError, MultiIndexSet, exponents, lp_degree)
+
+    # --- Invalid lp-degree
+    exponents = get_exponent_matrix(3, 2, 2)  # arbitrary exponents
+    assert_raises(ValueError, MultiIndexSet, exponents, 0.0)
+    assert_raises(ValueError, MultiIndexSet, exponents, -1.0)
 
 
 def test_init_from_degree(SpatialDimension, PolyDegree, LpDegree):
@@ -48,6 +55,13 @@ def test_init_from_degree(SpatialDimension, PolyDegree, LpDegree):
 def test_init_fail_from_degree():
     assert_raises(TypeError, MultiIndexSet.from_degree, 1.0, 1)
     assert_raises(TypeError, MultiIndexSet.from_degree, 1, 1.0)
+
+    # --- Invalid lp-degree
+    # Zero
+    assert_raises(ValueError, MultiIndexSet.from_degree, 3, 2, 0.0)
+    # Negative
+    assert_raises(ValueError, MultiIndexSet.from_degree, 3, 2, -1.0)
+
 
 # Test methods
 
@@ -124,19 +138,6 @@ def test_attributes_incomplete_exponents(SpatialDimension, PolyDegree, LpDegree)
     num_of_monomials_incomplete, dim_incomplete = exponents_incomplete.shape
     assert_(len(multi_index_incomplete) == num_of_monomials_incomplete)
     assert_(multi_index_incomplete.spatial_dimension == dim_incomplete)
-
-
-def test_invalid_lp_degree():
-    """Check if invalid values of lp-degree indeed raise an error."""
-
-    # With the default constructor
-    exponents = get_exponent_matrix(3, 2, 2)  # arbitrary exponents
-    assert_raises(ValueError, MultiIndexSet, exponents, 0.0)
-    assert_raises(ValueError, MultiIndexSet, exponents, -1.0)
-
-    # With the from_degree() constructor
-    assert_raises(ValueError, MultiIndexSet.from_degree, 3, 2, 0.0)
-    assert_raises(ValueError, MultiIndexSet.from_degree, 3, 2, -1.0)
 
 
 @pytest.mark.parametrize("spatial_dimension", [1, 2, 3, 7])

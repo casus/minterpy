@@ -321,7 +321,7 @@ def verify_lp_degree(lp_degree: float) -> float:
     Parameters
     ----------
     lp_degree : float
-        A given lp-degree.
+        A given :math:`l_p` of the :math:`l_p`-norm (i.e., lp-degree).
 
     Returns
     -------
@@ -331,12 +331,12 @@ def verify_lp_degree(lp_degree: float) -> float:
     Raises
     ------
     ValueError
-        If lp_degree is a non strictly positive value.
+        If the given lp_degree is a non strictly positive value.
     """
     if lp_degree <= 0.0:
         raise ValueError(
-            "lp-degree must be strictly positive! "
+            "The lp-degree must be strictly positive! "
             f"Instead, {lp_degree} is given."
         )
 
-    return lp_degree
+    return float(lp_degree)
