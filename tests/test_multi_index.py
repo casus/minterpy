@@ -28,7 +28,7 @@ def test_init_from_exponents(SpatialDimension, PolyDegree, LpDegree):
 
 def test_init_fail_from_exponents():
     """Test if invalid parameter values raise the expected errors."""
-    # --- Non-downward closed multi-index set exponents
+    # --- Non-downward-closed multi-index set exponents
     spatial_dimension, poly_degree, lp_degree = (2, 1, 1)
     exponents = get_exponent_matrix(spatial_dimension, poly_degree, lp_degree)
     exponents[0] = 1
@@ -36,8 +36,12 @@ def test_init_fail_from_exponents():
 
     # --- Invalid lp-degree
     exponents = get_exponent_matrix(3, 2, 2)  # arbitrary exponents
+    # Zero
     assert_raises(ValueError, MultiIndexSet, exponents, 0.0)
+    # Negative value
     assert_raises(ValueError, MultiIndexSet, exponents, -1.0)
+    # Invalid type (e.g., string)
+    assert_raises(TypeError, MultiIndexSet, exponents, "1.0")
 
 
 def test_init_from_degree(SpatialDimension, PolyDegree, LpDegree):

@@ -2,7 +2,7 @@
 """ functions for input verification
 """
 
-from typing import Optional, Sized
+from typing import Optional, Sized, Tuple
 
 import numpy as np
 from _warnings import warn
@@ -331,12 +331,49 @@ def verify_lp_degree(lp_degree: float) -> float:
     Raises
     ------
     ValueError
-        If the given lp_degree is a non strictly positive value.
+        If the given lp-degree is a non strictly positive value.
+    TypeError
+        If the given lp-degree is not a valid number type
+        such that its strictly positiveness cannot be verified.
     """
-    if lp_degree <= 0.0:
-        raise ValueError(
-            "The lp-degree must be strictly positive! "
-            f"Instead, {lp_degree} is given."
-        )
+    try:
+        if lp_degree <= 0.0:
+            raise ValueError(
+                "lp-degree must be strictly positive! "
+                f"Instead, {lp_degree} is given."
+            )
+        lp_degree = float(lp_degree)
 
-    return float(lp_degree)
+    except TypeError as err:
+        custom_message = "Invalid type for lp-degree!"
+        err.args = _add_custom_exception_message(err.args, custom_message)
+        raise err
+
+    return lp_degree
+
+
+def _add_custom_exception_message(
+    exception_args: Tuple[str, ...],
+    custom_message: str
+) -> Tuple[str, ...]:
+    """Prepend a custom message to an exception message.
+
+    Parameters
+    ----------
+    exception_args : Tuple[str, ...]
+        The arguments of the raised exception.
+    custom_message : str
+        The custom message to be prepended.
+
+    Returns
+    -------
+    Tuple[str, ...]
+        Modified exception arguments.
+    """
+    if not exception_args:
+        arg = custom_message
+    else:
+        arg = f"{custom_message} {exception_args[0]}."
+    exception_args = (arg,) + exception_args[1:]
+
+    return exception_args
