@@ -6,7 +6,7 @@ from typing import Optional
 
 import numpy as np
 
-from minterpy.global_settings import ARRAY, INT_DTYPE
+from minterpy.global_settings import ARRAY, INT_DTYPE, DEFAULT_LP_DEG
 from minterpy.jit_compiled_utils import (
     all_indices_are_contained,
     have_lexicographical_ordering,
@@ -19,9 +19,8 @@ from .utils import (
     insert_lexicographically,
     is_lexicographically_complete,
     make_complete,
-    verify_lp_deg,
 )
-from .verification import check_shape, check_values
+from .verification import check_shape, check_values, verify_lp_degree
 
 __all__ = ["MultiIndexSet"]
 
@@ -43,7 +42,7 @@ class MultiIndexSet:
     spatial_dimension
     """
 
-    def __init__(self, exponents: ARRAY, lp_degree=None):
+    def __init__(self, exponents: ARRAY, lp_degree: float):
 
         # Check and assign the exponents
         exponents = np.require(exponents, dtype=INT_DTYPE)
@@ -57,7 +56,7 @@ class MultiIndexSet:
 
         # TODO compute properly, max norm of the exponents?
         # while _get_poly_degree(exponents, __lp_degree) > poly_degree: ...
-        self._lp_degree = verify_lp_deg(lp_degree)
+        self._lp_degree = verify_lp_degree(lp_degree)
 
         # Compute the polynomial degree given the exponents and lp-degree
         self.poly_degree = get_poly_degree(exponents, self._lp_degree)
@@ -67,13 +66,22 @@ class MultiIndexSet:
         self._exponents_completed: Optional[ARRAY] = None
 
     @classmethod
-    def from_degree(cls, spatial_dimension: int, poly_degree: int, lp_degree=None):
+    def from_degree(
+        cls,
+        spatial_dimension: int,
+        poly_degree: int,
+        lp_degree: float = DEFAULT_LP_DEG,
+    ):
+        """Create from given spatial dimension, poly. degree, and lp-degree."""
         if type(poly_degree) is not int:
             raise TypeError("only integer polynomial degrees are supported.")
         if type(spatial_dimension) is not int:
             raise TypeError("spatial dimension must be given as integer.")
-        lp_degree = verify_lp_deg(lp_degree)
-        exponents = get_exponent_matrix(spatial_dimension, poly_degree, lp_degree)
+        lp_degree = verify_lp_degree(lp_degree)
+        exponents = get_exponent_matrix(
+            spatial_dimension, poly_degree, lp_degree
+        )
+
         return cls(exponents, lp_degree=lp_degree)
 
     def expand_dim(self, dim):
