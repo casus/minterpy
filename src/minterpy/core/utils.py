@@ -411,12 +411,3 @@ def find_match_between(
     return positions
 
 
-def verify_lp_deg(lp_degree):
-    if lp_degree is None:
-        lp_degree = DEFAULT_LP_DEG
-    # TODO remove
-    # elif lp_degree != DEFAULT_LP_DEG:
-    #     if lp_degree % 1.0 != 0.0:
-    #         raise ValueError('the given l_p-degree cannot be interpreted as integer')
-    #     lp_degree = int(lp_degree)
-    return lp_degree
