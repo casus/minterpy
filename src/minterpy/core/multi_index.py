@@ -6,7 +6,7 @@ from typing import Optional
 
 import numpy as np
 
-from minterpy.global_settings import ARRAY, INT_DTYPE
+from minterpy.global_settings import ARRAY, INT_DTYPE, DEFAULT_LP_DEG
 from minterpy.jit_compiled_utils import (
     all_indices_are_contained,
     have_lexicographical_ordering,
@@ -19,9 +19,8 @@ from .utils import (
     insert_lexicographically,
     is_lexicographically_complete,
     make_complete,
-    verify_lp_deg,
 )
-from .verification import check_shape, check_values
+from .verification import check_shape, check_values, verify_lp_degree
 
 __all__ = ["MultiIndexSet"]
 
@@ -43,7 +42,7 @@ class MultiIndexSet:
     spatial_dimension
     """
 
-    def __init__(self, exponents: ARRAY, lp_degree=None):
+    def __init__(self, exponents: ARRAY, lp_degree: float):
 
         # Check and assign the exponents
         exponents = np.require(exponents, dtype=INT_DTYPE)
@@ -55,9 +54,8 @@ class MultiIndexSet:
             )
         self._exponents: ARRAY = exponents
 
-        # TODO compute properly, max norm of the exponents?
-        # while _get_poly_degree(exponents, __lp_degree) > poly_degree: ...
-        self._lp_degree = verify_lp_deg(lp_degree)
+        # Verify the given lp_degree
+        self._lp_degree = verify_lp_degree(lp_degree)
 
         # Compute the polynomial degree given the exponents and lp-degree
         self._poly_degree = get_poly_degree(exponents, self._lp_degree)
@@ -67,26 +65,23 @@ class MultiIndexSet:
         self._exponents_completed: Optional[ARRAY] = None
 
     @classmethod
-    def from_degree(cls, spatial_dimension: int, poly_degree: int, lp_degree=None):
+    def from_degree(
+        cls,
+        spatial_dimension: int,
+        poly_degree: int,
+        lp_degree: float = DEFAULT_LP_DEG,
+    ):
+        """Create from given spatial dimension, poly. degree, and lp-degree."""
         if type(poly_degree) is not int:
             raise TypeError("only integer polynomial degrees are supported.")
         if type(spatial_dimension) is not int:
             raise TypeError("spatial dimension must be given as integer.")
-        lp_degree = verify_lp_deg(lp_degree)
-        exponents = get_exponent_matrix(spatial_dimension, poly_degree, lp_degree)
+        lp_degree = verify_lp_degree(lp_degree)
+        exponents = get_exponent_matrix(
+            spatial_dimension, poly_degree, lp_degree
+        )
+
         return cls(exponents, lp_degree=lp_degree)
-
-    @property
-    def poly_degree(self) -> int:
-        """The polynomial degree of the multi-index set.
-
-        Returns
-        -------
-        int
-            The polynomial degree of the multi-index set. This property is
-            read-only and inferred from a given multi-index set and lp-degree.
-        """
-        return self._poly_degree
 
     @property
     def exponents(
@@ -136,25 +131,30 @@ class MultiIndexSet:
         return self._is_complete
 
     @property
-    def lp_degree(self):
-        """The degree for the :math:`l_p`-norm used to define the polynomial degree.
+    def lp_degree(self) -> float:
+        """:math:`l_p` of :math:`l_p`-norm used to define the multi-index set.
 
-        :return: The lp-degree of the :math:`l_p`-norm, which is used to define the polynomial degree.
-        :rtype: int
-
-        :raise ValueError: If a given lp_degree has ``lp_degree<=0``.
+        Returns
+        -------
+        float
+            The :math:`l_p` of the :math:`l_p`-norm
+            (i.e., the :math:`l_p`-degree) that is used to define
+            the multi-index set. This property is read-only
+            and defined at construction.
         """
         return self._lp_degree
 
-    @lp_degree.setter
-    def lp_degree(self, lp_degree):
-        # TODO is a setter really meaningful for this attribute?
-        #  should rather be computed from the exponents and be fixed afterwards
-        if lp_degree <= 0.0:
-            raise ValueError(
-                f"The lp_degree needs to be a positive value! <{lp_degree}> given."
-            )
-        self._lp_degree = lp_degree
+    @property
+    def poly_degree(self) -> int:
+        """The polynomial degree of the multi-index set.
+
+        Returns
+        -------
+        int
+            The polynomial degree of the multi-index set. This property is
+            read-only and inferred from a given multi-index set and lp-degree.
+        """
+        return self._poly_degree
 
     @property
     def spatial_dimension(self):

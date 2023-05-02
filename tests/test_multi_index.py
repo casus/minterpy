@@ -20,17 +20,29 @@ from minterpy.core.utils import (
     is_lexicographically_complete,
 )
 
+
 # test initialization
 def test_init_from_exponents(SpatialDimension, PolyDegree, LpDegree):
     exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    assert_call(MultiIndexSet, exponents)
     assert_call(MultiIndexSet, exponents, lp_degree=LpDegree)
 
 
 def test_init_fail_from_exponents():
-    exponents = get_exponent_matrix(2, 1, 1)
+    """Test if invalid parameter values raise the expected errors."""
+    # --- Non-downward-closed multi-index set exponents
+    spatial_dimension, poly_degree, lp_degree = (2, 1, 1)
+    exponents = get_exponent_matrix(spatial_dimension, poly_degree, lp_degree)
     exponents[0] = 1
-    assert_raises(ValueError, MultiIndexSet, exponents)
+    assert_raises(ValueError, MultiIndexSet, exponents, lp_degree)
+
+    # --- Invalid lp-degree
+    exponents = get_exponent_matrix(3, 2, 2)  # arbitrary exponents
+    # Zero
+    assert_raises(ValueError, MultiIndexSet, exponents, 0.0)
+    # Negative value
+    assert_raises(ValueError, MultiIndexSet, exponents, -1.0)
+    # Invalid type (e.g., string)
+    assert_raises(TypeError, MultiIndexSet, exponents, "1.0")
 
 
 def test_init_from_degree(SpatialDimension, PolyDegree, LpDegree):
@@ -48,6 +60,13 @@ def test_init_from_degree(SpatialDimension, PolyDegree, LpDegree):
 def test_init_fail_from_degree():
     assert_raises(TypeError, MultiIndexSet.from_degree, 1.0, 1)
     assert_raises(TypeError, MultiIndexSet.from_degree, 1, 1.0)
+
+    # --- Invalid lp-degree
+    # Zero
+    assert_raises(ValueError, MultiIndexSet.from_degree, 3, 2, 0.0)
+    # Negative
+    assert_raises(ValueError, MultiIndexSet.from_degree, 3, 2, -1.0)
+
 
 # Test methods
 
@@ -82,8 +101,13 @@ def test_add_exponents(SpatialDimension, PolyDegree, LpDegree):
 
 
 def test_attributes(SpatialDimension, PolyDegree, LpDegree):
+    """Test the attributes of MultiIndexSet instances."""
+
+    # Create a MultiIndexSet from a set of exponents
     exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
     multi_index = MultiIndexSet(exponents, lp_degree=LpDegree)
+
+    # Assertions
     assert_(isinstance(multi_index, MultiIndexSet))
     assert_equal(exponents, multi_index.exponents)
     assert_(multi_index.lp_degree == LpDegree)
@@ -93,8 +117,11 @@ def test_attributes(SpatialDimension, PolyDegree, LpDegree):
     assert_(len(multi_index) == number_of_monomials)
     assert_(multi_index.spatial_dimension == dim)
 
-    # Assigning to read-only property
+    # Assigning to read-only properties
     with pytest.raises(AttributeError):
+        # This is related to Issue #98
+        multi_index.lp_degree = LpDegree
+        # This is related to Issue #100
         multi_index.poly_degree = PolyDegree
 
 
