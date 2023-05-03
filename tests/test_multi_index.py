@@ -20,6 +20,7 @@ from minterpy.core.utils import (
     is_lexicographically_complete,
 )
 
+
 # test initialization
 def test_init_from_exponents(SpatialDimension, PolyDegree, LpDegree):
     exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
@@ -100,8 +101,13 @@ def test_add_exponents(SpatialDimension, PolyDegree, LpDegree):
 
 
 def test_attributes(SpatialDimension, PolyDegree, LpDegree):
+    """Test the attributes of MultiIndexSet instances."""
+
+    # Create a MultiIndexSet from a set of exponents
     exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
     multi_index = MultiIndexSet(exponents, lp_degree=LpDegree)
+
+    # Assertions
     assert_(isinstance(multi_index, MultiIndexSet))
     assert_equal(exponents, multi_index.exponents)
     assert_(multi_index.lp_degree == LpDegree)
@@ -111,10 +117,12 @@ def test_attributes(SpatialDimension, PolyDegree, LpDegree):
     assert_(len(multi_index) == number_of_monomials)
     assert_(multi_index.spatial_dimension == dim)
 
-    # Assigning to read-only property
+    # Assigning to read-only properties
     with pytest.raises(AttributeError):
         # This is related to Issue #98
         multi_index.lp_degree = LpDegree
+        # This is related to Issue #100
+        multi_index.poly_degree = PolyDegree
 
 
 def test_attributes_incomplete_exponents(SpatialDimension, PolyDegree, LpDegree):
