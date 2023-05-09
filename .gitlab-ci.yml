@@ -52,6 +52,23 @@ unittest:
     reports:
       junit: report.xml
 
+test-notebooks:
+  stage: test
+  script:
+    - pip install pytest pytest-cov nbmake
+    - pip install -e .
+    - pytest --junitxml=report-notebooks.xml -vvv --nbmake "./docs/getting-started" "./docs/how-to"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'dev'
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'main'
+  artifacts:
+    when: always
+    paths:
+      - report-notebooks.xml
+    reports:
+      junit: report-notebooks.xml
+
 coverage:
   stage: test
   script:
