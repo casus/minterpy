@@ -11,6 +11,11 @@ from typing import List
 
 from pkg_resources import get_distribution
 
+from sphinx.ext.autosummary import Autosummary
+from sphinx.ext.autosummary import get_documenter
+from docutils.parsers.rst import directives
+from sphinx.util.inspect import safe_getattr
+
 # -- Project information -----------------------------------------------------
 
 project = "minterpy"
@@ -27,7 +32,6 @@ version = get_distribution(project).version
 extensions = [
     "myst_parser",
     "sphinx.ext.autodoc",
-    "numpydoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
@@ -36,7 +40,7 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.autosectionlabel",
     "sphinxcontrib.bibtex",
-    "nbsphinx"
+    "nbsphinx",
 ]
 
 
@@ -53,15 +57,6 @@ intersphinx_mapping = {
 # --- bibtex config
 bibtex_bibfiles = ["bibliography.bib"]
 
-# --- Configure numpydoc
-
-numpydoc_show_class_members = False
-
-# So the methods of a class can be rendered without printing no stub warnings 
-numpydoc_class_members_toctree = False
-
-# Display todos by setting to True
-todo_include_todos = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = []
@@ -80,11 +75,29 @@ autosectionlabel_prefix_document = True
 # Math configurations
 math_eqref_format = 'Eq. ({number})'
 
+# --- ToDo  options
+
+# Display todos by setting to True
+todo_include_todos = True
+
+# --- Autodoc customization
+
 # Don't sort the API elements alphabetically; instead, follow the source
 autodoc_member_order = 'bysource'
 
 # Don't expand/evaluate the default value in function signatures
 autodoc_preserve_defaults = True
+
+# Only show typehints in the functions/methods description, not signature
+autodoc_typehints = "description"
+
+# --- napoleon options
+napoleon_use_rtype = True
+napoleon_use_param = True
+
+# --- Autosummary options
+autosummary_generate = True
+autosummary_imported_members = True
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -105,3 +118,95 @@ html_static_path: List[str] = []
 
 html_favicon = './assets/favicon.ico'
 html_logo = './assets/minterpy-logo.png'
+
+
+# --- Custom directives -------------------------------------------------------
+
+class ClassAutosummary(Autosummary):
+    """Create a summary of class attributes, properties, and methods.
+
+    Notes
+    -----
+    - Only public attributes, methods, and properties (do not start with
+      "_") will be summarized.
+    - Only class, not instance, attributes will be summarized. That means,
+      attributes defined under `__init__` will not be visible.
+    - This implementation is adapted from an `answer`_ in Stack Overflow. Note
+      that the answer will not work out-of-the-box.
+
+    .. _answer: https://stackoverflow.com/a/30783465
+    """
+
+    option_spec = {
+        "attributes": directives.unchanged,  # Class, not instance, attribs
+        "properties": directives.unchanged,
+        "methods": directives.unchanged,
+    }
+
+    required_arguments = 1
+
+    @staticmethod
+    def get_members(app, obj, typ, include_public=None):
+        if not include_public:
+            include_public = []
+        items = []
+        for name in dir(obj):
+            try:
+                documenter = get_documenter(app, safe_getattr(obj, name), obj)
+            except AttributeError:
+                continue
+            if documenter.objtype == typ:
+                items.append(name)
+        public = [
+            x for x in items if x in include_public or not x.startswith("_")
+        ]
+
+        return public, items
+
+    def run(self):
+        """Execute run() method when the directive is used."""
+
+        # Get the current Sphinx application attached to self
+        try:
+            app = self.state.document.settings.env.app
+        except AttributeError:
+            app = None
+
+        cls = self.arguments[0]
+        (module_name, class_name) = cls.rsplit(".", 1)
+        m = __import__(module_name, globals(), locals(), [class_name])
+        c = getattr(m, class_name)
+        if "methods" in self.options:
+            # Always include __init__
+            _, methods = self.get_members(app, c, "method", ["__init__"])
+
+            self.content = [
+                f"~{cls}.{method}"
+                for method in methods
+                if not method.startswith("_")
+            ]
+
+        if "attributes" in self.options:
+            _, attribs = self.get_members(app, c, "attribute")
+
+            self.content = [
+                f"~{cls}.{attrib}"
+                for attrib in attribs
+                if not attrib.startswith("_")
+            ]
+
+        if "properties" in self.options:
+            _, props = self.get_members(app, c, "property")
+
+            self.content = [
+                f"~{cls}.{prop}" for prop in props if not prop.startswith("_")
+            ]
+
+        return super(ClassAutosummary, self).run()
+
+
+def setup(app):
+    try:
+        app.add_directive("classautosummary", ClassAutosummary)
+    except BaseException as e:
+        raise e

@@ -98,15 +98,6 @@ class NewtonPolynomial(MultivariatePolynomialSingleABC):
 
     .. todo::
         - provide a short definition of this base here.
-
-    Attributes
-    ----------
-    coeffs
-    nr_active_monomials
-    spatial_dimension
-    unisolvent_nodes
-
-
     """
 
     # Virtual Functions

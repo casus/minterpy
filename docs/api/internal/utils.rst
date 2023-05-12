@@ -1,7 +1,6 @@
-
 #################
-utility functions
+Utility functions
 #################
 
 .. automodule:: minterpy.utils
-    :members:
+   :members:

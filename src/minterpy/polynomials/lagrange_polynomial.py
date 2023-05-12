@@ -198,13 +198,6 @@ class LagrangePolynomial(MultivariatePolynomialSingleABC):
     A polynomial in Lagrange basis is the sum of so called Lagrange polynomials (each multiplied with a coefficient).
     A `single` Lagrange monomial is per definition 1 on one of the grid points and 0 on all others.
 
-    Attributes
-    ----------
-    coeffs
-    nr_active_monomials
-    spatial_dimension
-    unisolvent_nodes
-
     Notes
     -----
     A polynomial in Lagrange basis is well defined also for multi indices which are lexicographically incomplete. This means that the corresponding Lagrange polynomials also form a basis in such cases. These Lagrange polynomials however will possess their special property of being 1 on a single grid point and 0 on all others, with respect to the given grid! This allows defining very "sparse" polynomials (few multi indices -> few coefficients), but which still fulfill additional constraints (vanish on additional grid points). Practically this can be achieved by storing a "larger" grid (defined on a larger set of multi indices). In this case the transformation matrices become non-square, since there are fewer Lagrange polynomials than there are grid points (<-> only some of the Lagrange polynomials of this basis are "active"). Conceptually this is equal to fix the "inactivate" coefficients to always be 0.

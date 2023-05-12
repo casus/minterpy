@@ -47,23 +47,6 @@ class OrdinaryRegression(RegressionABC):
         The polynomial basis on which the regression is carried out.
         This parameter is optional and, by default, is set to the
         :py:class:`.LagrangePolynomial`.
-
-    Attributes
-    ----------
-    multi_index
-    loocv_error
-    regfit_l1_error
-    regfit_l2_error
-    grid
-    origin_poly
-    eval_poly
-
-    Methods
-    -------
-    fit
-    get_regression_matrix
-    predict
-    show
     """
 
     def __init__(

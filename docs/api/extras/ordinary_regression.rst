@@ -11,3 +11,14 @@ Ordinary Polynomial Regression
    :show-inheritance:
    :private-members:
    :inherited-members:
+
+   .. rubric:: Properties
+
+   .. classautosummary:: minterpy.extras.regression.ordinary_regression.OrdinaryRegression
+      :properties:
+
+   .. rubric:: Methods
+
+   .. classautosummary:: minterpy.extras.regression.ordinary_regression.OrdinaryRegression
+      :methods:
+

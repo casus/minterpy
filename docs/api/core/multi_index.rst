@@ -12,3 +12,13 @@ Multi index sets
    :private-members:
    :inherited-members:
    :special-members:
+
+   .. rubric:: Properties
+
+   .. classautosummary:: minterpy.core.multi_index.MultiIndexSet
+      :properties:
+
+   .. rubric:: Methods
+
+   .. classautosummary:: minterpy.core.multi_index.MultiIndexSet
+      :methods:

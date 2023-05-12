@@ -1,8 +1,8 @@
-.. currentmodule:: minterpy.core.tree
+################
+Multi-index tree
+################
 
-################
-Multi index tree
-################
+.. currentmodule:: minterpy.core.tree
 
 .. automodule:: minterpy.core.tree
 
@@ -12,3 +12,8 @@ Multi index tree
    :private-members:
    :inherited-members:
    :special-members:
+
+   .. rubric:: Properties
+
+   .. classautosummary:: minterpy.core.tree.MultiIndexTree
+      :properties:

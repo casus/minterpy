@@ -1,10 +1,9 @@
-.. currentmodule:: minterpy.polynomials
-
-.. lagrange_polynomial.LagrangePolynomial:
-
 ########################
 Lagrange Polynomial Base
 ########################
+
+.. currentmodule:: minterpy.polynomials.lagrange_polynomial
+
 .. automodule:: minterpy.polynomials.lagrange_polynomial
 
 .. autoclass:: LagrangePolynomial
@@ -13,3 +12,13 @@ Lagrange Polynomial Base
    :private-members:
    :inherited-members:
    :special-members:
+
+   .. rubric:: Properties
+
+   .. classautosummary:: minterpy.polynomials.lagrange_polynomial.LagrangePolynomial
+      :properties:
+
+   .. rubric:: Methods
+
+   .. classautosummary:: minterpy.polynomials.lagrange_polynomial.LagrangePolynomial
+      :methods:

@@ -1,8 +1,8 @@
-.. currentmodule:: minterpy.schemes.barycentric.operators
-
 ####################
 Barycentric Operator
 ####################
+
+.. currentmodule:: minterpy.schemes.barycentric.operators
 
 .. autoclass:: BarycentricOperator
    :members:
@@ -10,3 +10,13 @@ Barycentric Operator
    :private-members:
    :inherited-members:
    :special-members:
+
+   .. rubric:: Properties
+
+   .. classautosummary:: minterpy.schemes.barycentric.operators.BarycentricFactorisedOperator
+      :properties:
+
+   .. rubric:: Methods
+
+   .. classautosummary:: minterpy.schemes.barycentric.operators.BarycentricFactorisedOperator
+      :methods:

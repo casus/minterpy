@@ -1,9 +1,8 @@
-.. currentmodule:: minterpy.interpolation
-
-
 ##################
 Interpolator class
 ##################
+
+.. currentmodule:: minterpy.interpolation
 
 .. autoclass:: Interpolator
    :members:

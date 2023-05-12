@@ -1,7 +1,6 @@
-
 ######################
-verification functions
+Verification functions
 ######################
 
 .. automodule:: minterpy.core.verification
-    :members:
+   :members:

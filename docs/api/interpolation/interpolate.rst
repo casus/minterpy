@@ -1,8 +1,7 @@
-.. currentmodule:: minterpy.interpolation
-
-
 ####################
 interpolate function
 ####################
+
+.. currentmodule:: minterpy.interpolation
 
 .. autofunction:: interpolate

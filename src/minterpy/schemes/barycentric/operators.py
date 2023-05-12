@@ -31,11 +31,6 @@ from .transformation_fcts import (
 class BarycentricOperator(OperatorABC):
     """Base class for the barycentric transformation operators.
        Specialized versions (dict, factorised, and piecewise) are derived from this base class.
-
-    Attributes
-    ----------
-    array_representation
-
     """
 
     _array_representation: Optional[ARRAY] = None

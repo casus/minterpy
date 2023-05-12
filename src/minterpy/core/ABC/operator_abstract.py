@@ -27,12 +27,6 @@ class OperatorABC(ABC):
     """Abstract base class for transformation operators.
 
     All transformation operators must be derived from this base class.
-
-    Attributes
-    ----------
-    array_repr_full
-    array_repr_sparse
-
     """
 
     # ATTENTION: this approach is only valid for single polynomials

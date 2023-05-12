@@ -32,14 +32,6 @@ class MultiIndexSet:
     The instances of this class provide storrage for the exponents of a multi variate
     polynomial independently of the base assumed in the polynomial space. Only
     the polynomial degree (w.r.t. a given `l_p` norm) as well as the dimension of the space are used to build the set of exponents.
-
-    Attributes
-    ----------
-    exponents
-    lp_degree
-    exponents_completed
-    is_complete
-    spatial_dimension
     """
 
     def __init__(self, exponents: ARRAY, lp_degree: float):
