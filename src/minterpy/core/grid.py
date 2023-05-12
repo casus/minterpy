@@ -47,16 +47,6 @@ class Grid:
         - insert a small introduction to the purpose of :class:`Grid` here.
         - refactor the exposed attributes (each needs at least a getter)
         - naming issues for ``generating_points`` and ``generating_values``
-
-    Attributes
-    ----------
-    unisolvent_nodes
-    spatial_dimension
-    generating_values
-    tree
-    multi_index : The :class:`MultiIndexSet` instance this :class:`Grid` is based on.
-    generating_points : The (multivariate) points the grid is based on.
-
     """
 
     # TODO make all attributes read only!

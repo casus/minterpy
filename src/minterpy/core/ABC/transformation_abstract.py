@@ -23,17 +23,6 @@ class TransformationABC(ABC):
 
     All polynomial basis transformers should be derived from this class to maintain a uniform interface for
      basis transformations.
-
-    Attributes
-    ----------
-    origin_type
-    target_type
-    origin_poly : MultivariatePolynomialSingleABC
-        The instance of the polynomial to be transformed.
-    multi_index
-    grid
-
-
     """
 
     available_transforms: Dict[Any, Any] = {}

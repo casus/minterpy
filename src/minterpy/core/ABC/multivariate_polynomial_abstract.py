@@ -24,14 +24,6 @@ class MultivariatePolynomialABC(abc.ABC):
     """the most general abstract base class for multivariate polynomials.
 
     Every data type which needs to behave like abstract polynomial(s) should subclass this class and implement all the abstract methods.
-
-    Attributes
-    ----------
-    coeffs
-    nr_active_monomials
-    spatial_dimension
-    unisolvent_nodes
-
     """
 
     @property
@@ -130,8 +122,6 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
     ----------
     multi_index : MultiIndexSet
         The multi-indices of the multivariate polynomial.
-    coeffs : np.ndarray
-
     internal_domain : array_like
         The domain the polynomial is defined on (basically the domain of the unisolvent nodes).
         Either one-dimensional domain (min,max), a stack of domains for each

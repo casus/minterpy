@@ -26,19 +26,6 @@ __all__ = ["MultiIndexTree"]
 
 class MultiIndexTree:
     """Base class for MultiIndexTree
-
-    Attributes
-    ----------
-    multi_index : MultiIndex
-
-    grid : Grid
-
-    split_positions : List
-
-    subtree_sizes : List
-
-    problem_sizes : List
-
     """
 
     #  TODO prevent dynamic attribute assignment (-> safe memory)
