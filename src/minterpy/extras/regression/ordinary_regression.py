@@ -1,5 +1,10 @@
 """
 This module contains the concrete implementation of ordinary regression.
+
+A polynomial regression model is used when the given dataset do not lie
+on the unisolvent nodes of an interpolating polynomial.
+In such cases, the function values at the unisolvent nodes are obtained via
+least-squares.
 """
 import numpy as np
 import scipy
@@ -9,7 +14,9 @@ from minterpy.transformations import LagrangeToNewton
 from minterpy.utils import eval_newton_monomials, eval_newton_polynomials
 from minterpy.core.ABC import MultivariatePolynomialSingleABC
 from minterpy.polynomials import (
-    LagrangePolynomial, NewtonPolynomial, CanonicalPolynomial
+    LagrangePolynomial,
+    NewtonPolynomial,
+    CanonicalPolynomial,
 )
 from minterpy.core.multi_index import MultiIndexSet
 from minterpy.core.grid import Grid
@@ -19,40 +26,55 @@ from .regression_abc import RegressionABC
 __all__ = ["OrdinaryRegression"]
 
 
-TOriginPoly = Union[
-    Type[LagrangePolynomial], Type[NewtonPolynomial], Type[CanonicalPolynomial]
-]
-
-
 class OrdinaryRegression(RegressionABC):
     """Implementation of an ordinary (weighted/unweighted) poly. regression.
 
+    ``OrdinaryRegression`` fits a polynomial model specified by a multi-index
+    set on a given dataset.
+
     Parameters
     ----------
-    multi_index : MultiIndexSet, optional
+    multi_index : :py:class:`.MultiIndexSet`, optional
         The multi-index set that defines the underlying polynomial.
         This parameter is optional if a grid is specified; in that case,
         the multi-index set is set to the one attached to the grid.
-    grid : Grid, optional
+    grid : :py:class:`.Grid`, optional
         The grid where the polynomial lives.
         This parameter is optional if a multi-index set is specified;
         in that case, the grid is constructed from the specified
         multi-index set.
-    origin_poly : TOriginPoly, optional
+    origin_poly : Type[:py:class:`.MultivariatePolynomialSingleABC`], optional
         The polynomial basis on which the regression is carried out.
-        This parameter is optional and, by default, is set to the Lagrange
-        polynomial.
+        This parameter is optional and, by default, is set to the
+        :py:class:`.LagrangePolynomial`.
+
+    Attributes
+    ----------
+    multi_index
+    loocv_error
+    regfit_l1_error
+    regfit_l2_error
+    grid
+    origin_poly
+    eval_poly
+
+    Methods
+    -------
+    fit
+    get_regression_matrix
+    predict
+    show
     """
 
     def __init__(
-            self,
-            multi_index: Optional[MultiIndexSet] = None,
-            grid: Optional[Grid] = None,
-            origin_poly: TOriginPoly = LagrangePolynomial,
+        self,
+        multi_index: Optional[MultiIndexSet] = None,
+        grid: Optional[Grid] = None,
+        origin_poly: Type[MultivariatePolynomialSingleABC] = LagrangePolynomial,
     ):
         if multi_index is None and grid is None:
             raise ValueError(
-                "Either multi-index set or grid must be specified!"
+                "Either a multi-index set or a grid must be specified!"
             )
 
         # Initialize and verify the grid
@@ -87,35 +109,140 @@ class OrdinaryRegression(RegressionABC):
         self._eval_poly = None
 
     @property
-    def multi_index(self):
+    def multi_index(self) -> MultiIndexSet:
+        """Multi-index set that defines the polynomial."""
         return self._multi_index
 
     @property
-    def loocv_error(self):
+    def loocv_error(self) -> Tuple[float, float]:
+        r"""Leave-one-out CV error of the fitted polynomial (abs. and norm.).
+
+        The leave-one-out (LOO) cross-validation (CV) error is defined
+        as follows:
+
+        .. math::
+
+           \epsilon_{LOO} = \frac{1}{N} \sum_{i = 1}^N \left( y^{(i)} - \hat{f}_{\setminus i} \left(\boldsymbol{x}^{(i)}\right) \right)^2
+
+        where:
+
+        - :math:`N` is the number of data points;
+        - :math:`y^{(i)}` is the :math:`i`-th response data point;
+        - :math:`\boldsymbol{x}^{(i)}` is the :math:`i`-th input data point;
+        - :math:`\hat{f}_{\setminus i}` is the polynomial fitted on the dataset
+          excluding the $i$-th data point.
+
+        The normalized LOO-CV error is defined as follows:
+
+        .. math::
+
+           \epsilon_{LOO, \text{norm}} = \frac{\epsilon_{LOO}}{\mathbb{V}[\boldsymbol{y}]}
+
+        where :math:`\mathbb{V}[\boldsymbol{y}]` denotes the variance
+        of the response data (:math:`\boldsymbol{y}`).
+        """
         return self._loocv_error
 
     @property
-    def regfit_l1_error(self):
+    def regfit_l1_error(self) -> Tuple[float, float]:
+        r""":math:`L_1` regression fit error (in abs. and norm. terms).
+
+        The :math:`L_1` regression fit error is defined as follows:
+
+        .. math::
+
+           \epsilon_{L_1} = \max_{i} \; \lvert y^{(i)} - \hat{f}\left(\boldsymbol{x}^{(i)}\right) \rvert
+
+        where:
+
+        - :math:`y^{(i)}` is the :math:`i`-th response data point;
+        - :math:`\boldsymbol{x}^{(i)}` is the :math:`i`-th input data point;
+        - :math:`\hat{f}` is the fitted polynomial.
+
+        The normalized :math:`L_1` regression fit error is defined as follows:
+
+        .. math::
+
+           \epsilon_{L_1, \text{norm}} = \frac{\epsilon_{L_1}}{\mathbb{V}[\boldsymbol{y}]}
+
+        where :math:`\mathbb{V}[\boldsymbol{y}]` denotes the variance
+        of the response data (:math:`\boldsymbol{y}`).
+        """
         return self._regfit_l1_error
 
     @property
-    def regfit_l2_error(self):
+    def regfit_l2_error(self) -> Tuple[float, float]:
+        r""":math:`L_2` regression fit error (in abs. and norm. terms).
+
+        The :math:`L_2` regression fit error is defined as follows:
+
+        .. math::
+
+           \epsilon_{L_2} = \frac{1}{N} \sum_{i = 1}^N \left( y^{(i)} - \hat{f}\left(\boldsymbol{x}^{(i)}\right) \right)^2
+
+        where:
+
+        - :math:`N` is the number of data points;
+        - :math:`y^{(i)}` is the :math:`i`-th response data point;
+        - :math:`\boldsymbol{x}^{(i)}` is the :math:`i`-th input data point;
+        - :math:`\hat{f}` is the fitted polynomial.
+
+        The normalized :math:`L_2` regression fit error is defined as follows:
+
+        .. math::
+
+           \epsilon_{L_2, \text{norm}} = \frac{\epsilon_{L_2}}{\mathbb{V}[\boldsymbol{y}]}
+
+        where :math:`\mathbb{V}[\boldsymbol{y}]` denotes the variance
+        of the response data (:math:`\boldsymbol{y}`).
+        """
         return self._regfit_l2_error
 
     @property
-    def grid(self):
+    def grid(self) -> Grid:
+        """Grid on which the polynomial lives."""
         return self._grid
 
     @property
-    def origin_poly(self):
+    def origin_poly(
+        self
+    ) -> Union[LagrangePolynomial, NewtonPolynomial, CanonicalPolynomial]:
+        """Polynomial basis on which the regression is carried out."""
         return self._origin_poly
 
     @property
-    def eval_poly(self):
+    def eval_poly(
+        self
+    ) -> Union[NewtonPolynomial, CanonicalPolynomial]:
+        """Polynomial basis use for the prediction.
+
+        Notes
+        -----
+        - Because Minterpy cannot directly evaluate a polynomial
+          in the Lagrange basis on a set of query points,
+          the corresponding polynomial in the Newton basis is
+          created and used for prediction.
+        """
         return self._eval_poly
 
-    def get_regression_matrix(self, xx):
-        """Get the regression matrix on a set of evaluation points."""
+    def get_regression_matrix(self, xx: np.ndarray) -> np.ndarray:
+        r"""Get the regression matrix on a set of query points.
+
+        Parameters
+        ----------
+        xx : :class:`numpy:numpy.ndarray`
+            Evaluation points, an array of shape :math:`N_e \times M`, where
+            :math:`N_e` and :math:`M` correspond to the number of evaluation
+            points and the number of spatial dimensions, respectively.
+
+        Returns
+        -------
+        :class:`numpy:numpy.ndarray`
+            Regression matrix in the chosen polynomial basis,
+            an array of shape :math:`N_e \times N_b`, where
+            :math:`N_e` and :math:`N_b` correspond to the number of evaluation
+            points and the number of monomials, respectively.
+        """
         return compute_regression_matrix(self._origin_poly, xx)
 
     def fit(
@@ -125,29 +252,64 @@ class OrdinaryRegression(RegressionABC):
         weights: np.ndarray = None,
         lstsq_solver: Union[str, Callable] = "lstsq",
         **kwargs,
-    ):
-        """Fit the ordinary polynomial regression model.
+    ) -> None:
+        r"""Fit the ordinary polynomial regression model.
+
+        Fitting an (unweighted) ordinary polynomial regression model solves
+        for the set of coefficients :math:`\boldsymbol{c}` in the following
+        least-squares problem:
+
+        .. math::
+
+           \hat{\boldsymbol{c}} = \underset{\boldsymbol{c}}{\mathrm{arg min}} \lVert \boldsymbol{R} \boldsymbol{c} - \boldsymbol{y} \rVert_2^2
+
+        where:
+
+        - :math:`\lVert \cdot \rVert_2^2` denotes the square of the Euclidian
+          norm;
+        - :math:`\boldsymbol{R}` is the regression matrix evaluated
+          on the input data points in the chosen polynomial basis;
+        - :math:`\boldsymbol{y}` is the response data points.
+
+        Moreover, if the weights matrix :math:`\boldsymbol{W}` are provided,
+        then fitting a weighted ordinary polynomial regression model obtains
+        the fitted coefficients :math:`\hat{\boldsymbol{c}}`
+        from the following relation:
+
+        .. math ::
+
+           (\boldsymbol{R}^T \boldsymbol{W} \boldsymbol{R}) \hat{\boldsymbol{c}} = \boldsymbol{R}^T \boldsymbol{W} \boldsymbol{y}
 
         Parameters
         ----------
-        xx : np.ndarray
+        xx : :class:`numpy:numpy.ndarray`
             Input matrix, also known as the training inputs.
-        yy : np.ndarray
+        yy : :class:`numpy:numpy.ndarray`
             Response vector, observed or evaluated at ``xx``.
-        weights: np.ndarray, optional
+        weights : :class:`numpy:numpy.ndarray`, optional
             Individual weights for each input points.
             The default is ``None``.
-        lstsq_solver : str, optional
-            Least-square solver. The default is ``lstsq`` from SciPy.
-        compute_loocv: bool, optional
+        lstsq_solver : Union[:py:class:`str`, ``Callable``], optional
+            Least-square solver. The default is ``"lstsq"`` from `SciPy`_.
+            The additional following linear solvers are available
+            as pre-defined:
+
+            - ``"inv"``: (Gram) matrix inversion (NumPy)
+            - ``"pinv"``: pseudo-inversion of the regression matrix (NumPy)
+            - ``"dgesv"``: LU with full pivoting solver (SciPy)
+            - ``"dsysv"``: Diagonal pivoting solver (SciPy)
+            - ``"dposv"``: Cholesky decomposition solver (SciPy)
+            - ``"qr"``: QR-decomposition-based solver (NumPy)
+            - ``"svd"``: SVD-based solver (NumPy)
+        compute_loocv : :py:class:`bool`, optional
             Flag to compute the leave-one-out cross-validation (LOO-CV) error.
             For a problem of certain size, the LOO-CV computation
             may be costly.
-            The default is set to True.
+            The default is set to ``True``.
 
         Returns
         -------
-        None
+        ``None``
             The instance itself is updated with a fitted polynomial.
             After a successful fitting, the instance can be evaluated on
             a set of query points.
@@ -157,6 +319,8 @@ class OrdinaryRegression(RegressionABC):
         - ``**kwargs`` may take additional keyword arguments that are passed
           to the selected least-square solver. Refer to the documentation
           of the solver for the list of supported keyword arguments.
+
+        .. _Scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.lstsq.html
         """
 
         # Parse 'kwargs'
@@ -168,7 +332,7 @@ class OrdinaryRegression(RegressionABC):
                 f"Got instead {type(compute_loocv)!r} ."
             )
 
-        # Get the regression matrix on the evaluation points
+        # Get the regression matrix on the data points
         self._regression_matrix = self.get_regression_matrix(xx)
 
         # Solve the least-squares problem to obtain the coefficients
@@ -197,7 +361,7 @@ class OrdinaryRegression(RegressionABC):
             lag_poly = LagrangePolynomial(
                 multi_index=self.multi_index,
                 coeffs=self._coeffs,
-                grid=self.grid
+                grid=self.grid,
             )
             l2n = LagrangeToNewton(lag_poly)
             eval_poly = l2n()
@@ -206,18 +370,51 @@ class OrdinaryRegression(RegressionABC):
             eval_poly = type(self.origin_poly)(
                 multi_index=self.multi_index,
                 coeffs=self._coeffs,
-                grid=self.grid
+                grid=self.grid,
             )
 
         self._eval_poly = eval_poly
 
-    def show(self):
-        output = f"Ordinary Polynomial Regression\n" \
-                 f"------------------------------\n" \
-                 f"Spatial dimension: {self.multi_index.spatial_dimension}\n" \
-                 f"Poly. degree     : {self.multi_index.poly_degree}\n"\
-                 f"Lp-degree        : {self.multi_index.lp_degree}\n" \
-                 f"Origin poly.     : {type(self.origin_poly)}\n"
+    def predict(self, xx: np.ndarray) -> np.ndarray:
+        r"""Predict using the fitted polynomial model a set of points.
+
+        Parameters
+        ----------
+        xx : :class:`numpy:numpy.ndarray`
+            Query points, a two-dimensional array of shape
+            :math:`N_q \times M`, where :math:`N_q` and :math:`M` correspond to
+            the number of query points and the number of spatial dimensions,
+            respectively.
+
+        Returns
+        -------
+        :class:`numpy:numpy.ndarray`
+            Predicted response at the query points, a one-dimensional
+            array of length :math:`N_q`, the number of query points.
+
+        Notes
+        -----
+        - A fitted polynomial regression model can be directly called on the
+          set of points without accessing the ``predict()`` method.
+        """
+        if self._eval_poly is None:
+            raise TypeError(
+                "Ordinary regression model is not fitted, "
+                "regression polynomial can't be evaluated!"
+            )
+        else:
+            return self._eval_poly(xx)
+
+    def show(self) -> None:
+        """Show the summary of the polynomial regression model."""
+        output = (
+            f"Ordinary Polynomial Regression\n"
+            f"------------------------------\n"
+            f"Spatial dimension: {self.multi_index.spatial_dimension}\n"
+            f"Poly. degree     : {self.multi_index.poly_degree}\n"
+            f"Lp-degree        : {self.multi_index.lp_degree}\n"
+            f"Origin poly.     : {type(self.origin_poly)}\n"
+        )
         if self.regfit_l1_error is not None:
             output += (
                 f"{'Error':<19s}  {'Absolute':>10s}  {'Relative':>10s}\n"
@@ -234,17 +431,9 @@ class OrdinaryRegression(RegressionABC):
 
         print(output)
 
-    def predict(self, xx) -> np.ndarray:
-        if self._eval_poly is None:
-            raise TypeError("Ordinary regression model is not fitted, "
-                            "regression polynomial can't be evaluated!")
-        else:
-            return self._eval_poly(xx)
-
 
 def compute_regression_matrix(
-    basis_poly: MultivariatePolynomialSingleABC,
-    xx: np.ndarray
+    basis_poly: MultivariatePolynomialSingleABC, xx: np.ndarray
 ) -> np.ndarray:
     """Construct a regression matrix of the chosen polynomial basis.
 
@@ -393,7 +582,7 @@ def compute_loocv_error(
     regression_matrix: np.ndarray,
     coeffs: np.ndarray,
     yy: np.ndarray,
-    weights: np.ndarray
+    weights: np.ndarray,
 ) -> Tuple[float, float]:
     """Calculate the leave-one-out (LOO) cross-validation (CV) errors.
 
@@ -426,11 +615,12 @@ def compute_loocv_error(
     if regression_matrix.shape[0] >= regression_matrix.shape[1]:
         # Determined or over-determined system
         hi = np.diag(
-            regression_matrix @ np.linalg.pinv(
-                regression_matrix.T @ weights @ regression_matrix
-            ) @ regression_matrix.T @ weights
+            regression_matrix
+            @ np.linalg.pinv(regression_matrix.T @ weights @ regression_matrix)
+            @ regression_matrix.T
+            @ weights
         )
-        loo_cv = ((yy - regression_matrix @ coeffs) / (1 - hi))**2
+        loo_cv = ((yy - regression_matrix @ coeffs) / (1 - hi)) ** 2
         idx = np.where(np.isnan(loo_cv))
         loo_cv[idx] = np.infty
         loo_cv_error = np.mean(loo_cv)
@@ -508,16 +698,16 @@ def compute_regfit_l2_error(
 def _verify_multi_index(multi_index: MultiIndexSet):
     """Verify the instance of MultiIndexSet passed to the constructor."""
     if not isinstance(multi_index, MultiIndexSet):
-        raise TypeError(f"Unexpected type {type(multi_index)} "
-                        f"of the input multi-index set!")
+        raise TypeError(
+            f"Unexpected type {type(multi_index)} "
+            "of the input multi-index set!"
+        )
 
 
 def _verify_grid(grid: Grid, multi_index: Optional[MultiIndexSet] = None):
     """Verify the instance of Grid passed to the constructor"""
     if not isinstance(grid, Grid):
-        raise TypeError(
-            f"Unexpected type {type(grid)} of the input grid!"
-        )
+        raise TypeError(f"Unexpected type {type(grid)} of the input grid!")
 
     if multi_index is not None:
         if not grid.multi_index.is_super_index_set_of(multi_index):
@@ -601,7 +791,7 @@ def _solve_dsysv(
         ww = np.eye(len(yy))
 
     _, _, coeffs, _ = scipy.linalg.lapack.dsysv(
-            rr.T @ ww @ rr, rr.T @ ww @ yy, **kwargs
+        rr.T @ ww @ rr, rr.T @ ww @ yy, **kwargs
     )
 
     return coeffs

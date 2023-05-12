@@ -50,12 +50,15 @@ intersphinx_mapping = {
     "pytest": ("https://docs.pytest.org/en/stable", None),
 }
 
-# bibtex config
+# --- bibtex config
 bibtex_bibfiles = ["bibliography.bib"]
 
-# configure numpydoc
+# --- Configure numpydoc
 
 numpydoc_show_class_members = False
+
+# So the methods of a class can be rendered without printing no stub warnings 
+numpydoc_class_members_toctree = False
 
 # Display todos by setting to True
 todo_include_todos = True
@@ -76,6 +79,12 @@ autosectionlabel_prefix_document = True
 
 # Math configurations
 math_eqref_format = 'Eq. ({number})'
+
+# Don't sort the API elements alphabetically; instead, follow the source
+autodoc_member_order = 'bysource'
+
+# Don't expand/evaluate the default value in function signatures
+autodoc_preserve_defaults = True
 
 # -- Options for HTML output -------------------------------------------------
 
