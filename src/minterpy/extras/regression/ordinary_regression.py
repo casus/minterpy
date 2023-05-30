@@ -194,6 +194,11 @@ class OrdinaryRegression(RegressionABC):
         return self._origin_poly
 
     @property
+    def coeffs(self):
+        """The fitted coefficients with respect to the origin poly. basis."""
+        return self._coeffs
+
+    @property
     def eval_poly(
         self
     ) -> Union[NewtonPolynomial, CanonicalPolynomial]:
