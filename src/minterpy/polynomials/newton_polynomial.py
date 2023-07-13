@@ -6,13 +6,17 @@ Module of the NewtonPolynomial class
 """
 import numpy as np
 
+from minterpy.core.ABC.multivariate_polynomial_abstract import (
+    MultivariatePolynomialSingleABC,
+)
+from minterpy.core.verification import verify_domain
+from minterpy.dds import dds
 from minterpy.global_settings import DEBUG
 from minterpy.utils import eval_newton_polynomials
-from minterpy.dds import dds
-from .utils import deriv_newt_eval
-
-from ..core.ABC.multivariate_polynomial_abstract import MultivariatePolynomialSingleABC
-from ..core.verification import verify_domain
+from minterpy.polynomials.utils import (
+    deriv_newt_eval,
+    integrate_monomials_newton,
+)
 
 __all__ = ["NewtonPolynomial"]
 
@@ -66,6 +70,7 @@ def _newton_partial_diff(poly: "NewtonPolynomial", dim: int, order: int) -> "New
     deriv_order_along[dim] = order
     return _newton_diff(poly, deriv_order_along)
 
+
 def _newton_diff(poly: "NewtonPolynomial", order: np.ndarray) -> "NewtonPolynomial":
     """ Partial differentiation in Newton basis.
 
@@ -85,6 +90,37 @@ def _newton_diff(poly: "NewtonPolynomial", order: np.ndarray) -> "NewtonPolynomi
 
     return NewtonPolynomial(coeffs=newt_coeffs, multi_index=poly.multi_index,
                               grid=poly.grid)
+
+
+def _newton_integrate_over(
+    poly: "NewtonPolynomial", bounds: np.ndarray
+) -> np.ndarray:
+    """Definite integration of a polynomial in the Newton basis.
+
+    Parameters
+    ----------
+    poly : NewtonPolynomial
+        The polynomial of which the integration is carried out.
+    bounds : :class:`numpy:numpy.ndarray`
+        The bounds (lower and upper) of the definite integration, an ``(M, 2)``
+        array, where ``M`` is the number of spatial dimensions.
+
+    Returns
+    -------
+    :class:`numpy:numpy.ndarray`
+        The integral value of the polynomial over the given domain.
+    """
+
+    # --- Compute the integrals of the Newton monomials (quadrature weights)
+    exponents = poly.multi_index.exponents
+    generating_points = poly.grid.generating_points
+
+    quad_weights = integrate_monomials_newton(
+        exponents, generating_points, bounds
+    )
+
+    return quad_weights @ poly.coeffs
+
 
 # TODO redundant
 newton_generate_internal_domain = verify_domain
@@ -110,6 +146,8 @@ class NewtonPolynomial(MultivariatePolynomialSingleABC):
 
     _partial_diff = staticmethod(_newton_partial_diff)
     _diff = staticmethod(_newton_diff)
+
+    _integrate_over = _newton_integrate_over
 
     generate_internal_domain = staticmethod(newton_generate_internal_domain)
     generate_user_domain = staticmethod(newton_generate_user_domain)

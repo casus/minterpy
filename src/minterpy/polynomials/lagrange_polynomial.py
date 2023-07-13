@@ -1,17 +1,21 @@
 """
 LagrangePolynomial class
 """
-from typing import Any, Optional
-
 import numpy as np
 
-import minterpy
-from minterpy.global_settings import ARRAY
+from typing import Any, Optional
 
-from ..core import Grid, MultiIndexSet
-from ..core.ABC import MultivariatePolynomialSingleABC
-from ..core.verification import verify_domain
-from .canonical_polynomial import _match_dims, _matching_internal_domain
+import minterpy as mp
+
+from minterpy.core import Grid, MultiIndexSet
+from minterpy.core.ABC import MultivariatePolynomialSingleABC
+from minterpy.core.verification import verify_domain
+from minterpy.global_settings import ARRAY
+from minterpy.polynomials.canonical_polynomial import (
+    _match_dims,
+    _matching_internal_domain,
+)
+from minterpy.polynomials.utils import integrate_monomials_lagrange
 
 __all__ = ["LagrangePolynomial"]
 
@@ -43,9 +47,9 @@ def _lagrange_add(
     """
     p1, p2 = _match_dims(poly1, poly2)
     if _matching_internal_domain(p1, p2):
-        l2n_p1 = minterpy.transformations.LagrangeToNewton(p1)
+        l2n_p1 = mp.LagrangeToNewton(p1)
         newt_p1 = l2n_p1()
-        l2n_p2 = minterpy.transformations.LagrangeToNewton(p2)
+        l2n_p2 = mp.LagrangeToNewton(p2)
         newt_p2 = l2n_p2()
 
         max_poly_degree = np.max(
@@ -96,9 +100,9 @@ def _lagrange_sub(
     """
     p1, p2 = _match_dims(poly1, poly2)
     if _matching_internal_domain(p1, p2):
-        l2n_p1 = minterpy.transformations.LagrangeToNewton(p1)
+        l2n_p1 = mp.LagrangeToNewton(p1)
         newt_p1 = l2n_p1()
-        l2n_p2 = minterpy.transformations.LagrangeToNewton(p2)
+        l2n_p2 = mp.LagrangeToNewton(p2)
         newt_p2 = l2n_p2()
 
         max_poly_degree = np.max(
@@ -149,9 +153,9 @@ def _lagrange_mul(
     """
     p1, p2 = _match_dims(poly1, poly2)
     if _matching_internal_domain(p1, p2):
-        l2n_p1 = minterpy.transformations.LagrangeToNewton(p1)
+        l2n_p1 = mp.LagrangeToNewton(p1)
         newt_p1 = l2n_p1()
-        l2n_p2 = minterpy.transformations.LagrangeToNewton(p2)
+        l2n_p2 = mp.LagrangeToNewton(p2)
         newt_p2 = l2n_p2()
 
         degree_poly1 = p1.multi_index.poly_degree
@@ -187,6 +191,36 @@ def _lagrange_mul(
         )
 
 
+def _integrate_over_lagrange(
+    poly: "LagrangePolynomial", bounds: np.ndarray
+) -> np.ndarray:
+    """Compute the definite integral of a polynomial in the Lagrange basis.
+
+    Parameters
+    ----------
+    poly : LagrangePolynomial
+        The polynomial of which the integration is carried out.
+    bounds : :class:`numpy:numpy.ndarray`
+        The bounds (lower and upper) of the definite integration, an ``(M, 2)``
+        array, where ``M`` is the number of spatial dimensions.
+
+    Returns
+    -------
+    :class:`numpy:numpy.ndarray`
+        The integral value of the polynomial over the given domain.
+    """
+    # --- Compute the integrals of the Lagrange monomials (quadrature weights)
+    exponents = poly.multi_index.exponents
+    generating_points = poly.grid.generating_points
+    tree = poly.grid.tree
+
+    quad_weights = integrate_monomials_lagrange(
+        exponents, generating_points, tree, bounds
+    )
+
+    return quad_weights @ poly.coeffs
+
+
 # TODO redundant
 lagrange_generate_internal_domain = verify_domain
 lagrange_generate_user_domain = verify_domain
@@ -218,6 +252,8 @@ class LagrangePolynomial(MultivariatePolynomialSingleABC):
 
     _partial_diff = staticmethod(dummy)
     _diff = staticmethod(dummy)
+
+    _integrate_over = _integrate_over_lagrange
 
     generate_internal_domain = staticmethod(lagrange_generate_internal_domain)
     generate_user_domain = staticmethod(lagrange_generate_user_domain)

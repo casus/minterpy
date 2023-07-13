@@ -21,7 +21,13 @@ from conftest import (
 )
 from numpy.testing import assert_, assert_almost_equal
 
-from minterpy import CanonicalPolynomial, MultiIndexSet
+from minterpy import (
+    CanonicalPolynomial,
+    CanonicalToLagrange,
+    CanonicalToNewton,
+    Grid,
+    MultiIndexSet,
+)
 
 # tests with a single polynomial
 
@@ -240,3 +246,162 @@ def test_partial_diff_multiple_poly():
     can_poly_dz = can_poly.partial_diff(2)
     coeffs_dz = can_poly_dz.coeffs
     assert np.allclose(coeffs_dz, groundtruth_coeffs_dz)
+
+
+def test_integrate_over_bounds_invalid_shape(
+    SpatialDimension, PolyDegree, LpDegree
+):
+    """Test polynomial integration with bounds of invalid shape."""
+    # Create a Canonical polynomial
+    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+    can_coeffs = np.random.rand(len(mi))
+    can_poly = CanonicalPolynomial(mi, can_coeffs)
+
+    # Create bounds (outside the canonical domain of [-1, 1]^M)
+    bounds = np.random.rand(SpatialDimension + 3, 2)
+    bounds[:, 0] *= -1
+
+    with pytest.raises(ValueError):
+        can_poly.integrate_over(bounds)
+
+
+def test_integrate_over_bounds_invalid_domain(
+    SpatialDimension, PolyDegree, LpDegree
+):
+    """Test polynomial integration with bounds of invalid domain."""
+    # Create a Canonical polynomial
+    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+    can_coeffs = np.random.rand(len(mi))
+    can_poly = CanonicalPolynomial(mi, can_coeffs)
+
+    # Create bounds (outside the canonical domain of [-1, 1]^M)
+    bounds = 2 * np.ones((SpatialDimension, 2))
+    bounds[:, 0] *= -1
+
+    with pytest.raises(ValueError):
+        can_poly.integrate_over(bounds)
+
+
+def test_integrate_over_bounds_equal(
+    SpatialDimension, PolyDegree, LpDegree
+):
+    """Test polynomial integration with equal bounds (should be zero)."""
+    # Create a Canonical polynomial
+    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+    can_coeffs = np.random.rand(len(mi))
+    can_poly = CanonicalPolynomial(mi, can_coeffs)
+
+    # Create bounds (one of them has lb == ub)
+    bounds = np.random.rand(SpatialDimension, 2)
+    bounds[:, 0] *= -1
+    idx = np.random.choice(SpatialDimension)
+    bounds[idx, 0] = bounds[idx, 1]
+
+    # Compute the integral
+    ref = 0.0
+    value = can_poly.integrate_over(bounds)
+
+    # Assertion
+    assert np.isclose(ref, value)
+
+
+def test_integrate_over_bounds_flipped(
+    SpatialDimension, PolyDegree, LpDegree
+):
+    """Test polynomial integration with flipped bounds."""
+    # Create a Canonical polynomial
+    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+    can_coeffs = np.random.rand(len(mi))
+    can_poly = CanonicalPolynomial(mi, can_coeffs)
+
+    # Compute the integral
+    value_1 = can_poly.integrate_over()
+
+    # Flip bounds
+    bounds = np.ones((SpatialDimension, 2))
+    bounds[:, 0] *= -1
+    bounds[:, [0, 1]] = bounds[:, [1, 0]]
+
+    # Compute the integral with flipped bounds
+    value_2 = can_poly.integrate_over(bounds)
+
+    if np.mod(SpatialDimension, 2) == 1:
+        # Odd spatial dimension flips the sign
+        assert np.isclose(value_1, -1 * value_2)
+    else:
+        assert np.isclose(value_1, value_2)
+
+
+def test_integrate_over(
+    SpatialDimension, PolyDegree, LpDegree
+):
+    """Test polynomial integration in different basis (sanity check)."""
+    # Create a Canonical polynomial
+    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+    can_coeffs = np.random.rand(len(mi))
+    can_poly = CanonicalPolynomial(mi, can_coeffs)
+
+    # Transform to other polynomial bases
+    nwt_poly = CanonicalToNewton(can_poly)()
+    lag_poly = CanonicalToLagrange(can_poly)()
+
+    # Compute the integral
+    # NOTE: Canonical integration won't work in high degree
+    value_can = can_poly.integrate_over()
+    value_nwt = nwt_poly.integrate_over()
+    value_lag = lag_poly.integrate_over()
+
+    # Assertions
+    assert np.isclose(value_can, value_nwt)
+    assert np.isclose(value_can, value_lag)
+
+    # Create bounds
+    bounds = np.random.rand(SpatialDimension, 2)
+    bounds[:, 0] *= -1
+
+    # Compute the integral with bounds
+    value_can = can_poly.integrate_over(bounds)
+    value_nwt = nwt_poly.integrate_over(bounds)
+    value_lag = lag_poly.integrate_over(bounds)
+
+    # Assertions
+    assert np.isclose(value_can, value_nwt)
+    assert np.isclose(value_can, value_lag)
+
+
+def test_integrate_over_multiple_polynomials(
+    SpatialDimension, PolyDegree, LpDegree
+):
+    """Test polynomial integration in different basis (sanity check)."""
+    # Create a set of Canonical polynomials
+    num_polys = 6
+    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+    can_coeffs = np.random.rand(len(mi), num_polys)
+    can_poly = CanonicalPolynomial(mi, can_coeffs)
+
+    # Transform to other polynomial bases
+    nwt_poly = CanonicalToNewton(can_poly)()
+    lag_poly = CanonicalToLagrange(can_poly)()
+
+    # Compute the integral
+    # NOTE: Canonical integration won't work in high degree
+    value_can = can_poly.integrate_over()
+    value_nwt = nwt_poly.integrate_over()
+    value_lag = lag_poly.integrate_over()
+
+    # Assertions
+    assert np.allclose(value_can, value_nwt)
+    assert np.allclose(value_can, value_lag)
+
+    # Create bounds
+    bounds = np.random.rand(SpatialDimension, 2)
+    bounds[:, 0] *= -1
+
+    # Compute the integral with bounds
+    value_can = can_poly.integrate_over(bounds)
+    value_nwt = nwt_poly.integrate_over(bounds)
+    value_lag = lag_poly.integrate_over(bounds)
+
+    # Assertions
+    assert np.allclose(value_can, value_nwt)
+    assert np.allclose(value_can, value_lag)

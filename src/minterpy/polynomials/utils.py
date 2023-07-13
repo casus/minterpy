@@ -3,8 +3,15 @@ set of utility functions to be used in polynomials submodule
 """
 import itertools
 import numpy as np
+
+from scipy.special import roots_legendre
+from typing import Callable
+
+from minterpy.core.tree import MultiIndexTree
+from minterpy.dds import dds
 from minterpy.global_settings import FLOAT_DTYPE
-from minterpy.utils import rectify_eval_input
+from minterpy.utils import rectify_eval_input, eval_newton_monomials
+
 
 def deriv_newt_eval(x: np.ndarray, coefficients: np.ndarray, exponents: np.ndarray,
                     generating_points: np.ndarray, derivative_order_along: np.ndarray) -> np.ndarray:
@@ -114,3 +121,192 @@ def deriv_newt_eval(x: np.ndarray, coefficients: np.ndarray, exponents: np.ndarr
         results[point_nr] = np.sum(monomial_vals[:,None] * coefficients, axis=0)
 
     return results
+
+
+def integrate_monomials_newton(
+    exponents: np.ndarray, generating_points: np.ndarray, bounds: np.ndarray
+) -> np.ndarray:
+    """Integrate the Newton monomials given a set of exponents.
+
+    Parameters
+    ----------
+    exponents : :class:`numpy:numpy.ndarray`
+        A set of exponents from a multi-index set that defines the polynomial,
+        an ``(N, M)`` array, where ``N`` is the number of exponents
+        (multi-indices) and ``M`` is the number of spatial dimensions.
+        The number of exponents corresponds to the number of monomials.
+    generating_points : :class:`numpy:numpy.ndarray`
+        A set of generating points of the interpolating polynomial,
+        a ``(P + 1, M)`` array, where ``P`` is the maximum degree of
+        the polynomial in any dimensions and ``M`` is the number
+        of spatial dimensions.
+    bounds : :class:`numpy:numpy.ndarray`
+        The bounds (lower and upper) of the definite integration, an ``(M, 2)``
+        array, where ``M`` is the number of spatial dimensions.
+
+    Returns
+    -------
+    np.ndarray
+        The integrated Newton monomials, an ``(N,)`` array, where N is
+        the number of monomials (exponents).
+    """
+    # --- Get some basic data
+    num_monomials, num_dim = exponents.shape
+    max_exp = np.max(exponents)
+    max_exps_in_dim = np.max(exponents, axis=0)
+
+    # --- Compute the integrals of one-dimensional bases
+    one_dim_integrals = np.empty((max_exp + 1, num_dim))  # A lookup table
+    for j in range(num_dim):
+        max_exp_in_dim = max_exps_in_dim[j]
+        exponents_1d = np.arange(max_exp_in_dim + 1)[:, np.newaxis]
+        generating_points_in_dim = generating_points[:, j][:, np.newaxis]
+        # NOTE: Newton monomials are polynomials, Gauss-Legendre quadrature
+        #       will be exact for degree == 2*num_points - 1.
+        quad_num_points = np.ceil((max_exp_in_dim + 1) / 2)
+
+        # Compute the integrals
+        one_dim_integrals[: max_exp_in_dim + 1, j] = _gauss_leg_quad(
+            lambda x: eval_newton_monomials(
+                x, exponents_1d, generating_points_in_dim
+            ),
+            num_points=quad_num_points,
+            bounds=bounds[j],
+        )
+
+    # --- Compute integrals of the monomials (multi-dimensional basis)
+    integrated_monomials = np.zeros(num_monomials)
+    for i in range(num_monomials):
+        out = 1.0
+        for j in range(num_dim):
+            exp = exponents[i, j]
+            out *= one_dim_integrals[exp, j]
+        integrated_monomials[i] = out
+
+    return integrated_monomials
+
+
+def integrate_monomials_canonical(
+    exponents: np.ndarray,
+    bounds: np.ndarray,
+) -> np.ndarray:
+    """Integrate the monomials in the canonical basis.
+
+    Parameters
+    ----------
+    exponents : :class:`numpy:numpy.ndarray`
+        A set of exponents from a multi-index set that defines the polynomial,
+        an ``(N, M)`` array, where ``N`` is the number of exponents
+        (multi-indices) and ``M`` is the number of spatial dimensions.
+        The number of exponents corresponds to the number of monomials.
+    bounds : :class:`numpy:numpy.ndarray`
+        The bounds (lower and upper) of the definite integration, an ``(M, 2)``
+        array, where ``M`` is the number of spatial dimensions.
+
+    Returns
+    -------
+    np.ndarray
+        The integrated Canonical monomials, an ``(N,)`` array, where ``N`` is
+        the number of monomials (exponents).
+    """
+    bounds_diff = np.diff(bounds)
+
+    if np.allclose(bounds_diff, 2):
+        # NOTE: Over the whole canonical domain [-1, 1]^M, no need to compute
+        #       the odd-degree terms.
+        case = np.all(np.mod(exponents, 2) == 0, axis=1)  # All even + 0
+        even_terms = exponents[case]
+
+        integrated_even_terms = bounds_diff.T / (even_terms + 1)
+
+        integrated_monomials = np.zeros(exponents.shape)
+        integrated_monomials[case] = integrated_even_terms
+
+        return integrated_monomials.prod(axis=1)
+
+    # NOTE: Bump the exponent by 1 (polynomial integration)
+    bounds_power = np.power(bounds.T[:, None, :], (exponents + 1)[None, :, :])
+    bounds_diff = bounds_power[1, :] - bounds_power[0, :]
+
+    integrated_monomials = bounds_diff / (exponents + 1)
+
+    return integrated_monomials.prod(axis=1)
+
+
+def integrate_monomials_lagrange(
+    exponents: np.ndarray,
+    generating_points: np.ndarray,
+    tree: MultiIndexTree,
+    bounds: np.ndarray,
+) -> np.ndarray:
+    """Integrate the Lagrange monomials given a set of exponents.
+
+    Parameters
+    ----------
+    exponents : :class:`numpy:numpy.ndarray`
+        A set of exponents from a multi-index set that defines the polynomial,
+        an ``(N, M)`` array, where ``N`` is the number of exponents
+        (multi-indices) and ``M`` is the number of spatial dimensions.
+        The number of exponents corresponds to the number of monomials.
+    generating_points : :class:`numpy:numpy.ndarray`
+        A set of generating points of the interpolating polynomial,
+        a ``(P + 1, M)`` array, where ``P`` is the maximum degree of
+        the polynomial in any dimensions and ``M`` is the number
+        of spatial dimensions.
+    tree : MultiIndexTree
+        The MultiIndexTree to perform multi-dimensional divided-difference
+        scheme (DDS) for transforming the Newton basis to Lagrange basis.
+    bounds : :class:`numpy:numpy.ndarray`
+        The bounds (lower and upper) of the definite integration, an ``(M, 2)``
+        array, where ``M`` is the number of spatial dimensions.
+
+    Returns
+    -------
+    :class:`numpy:numpy.ndarray`
+        The integrated Lagrange monomials, an ``(N,)`` array, where ``N``
+        is the number of monomials (exponents).
+
+    Notes
+    -----
+    - The Lagrange monomials are represented in the Newton basis.
+      For integration, first integrate the Newton monomials and then transform
+      the results back to the Lagrange basis. This is why the `MultiIndexTree`
+      instance is needed.
+    """
+    integrated_newton_monomials = integrate_monomials_newton(
+        exponents, generating_points, bounds
+    )
+    l2n = dds(np.eye(exponents.shape[0]), tree)
+
+    return l2n.T @ integrated_newton_monomials
+
+
+def _gauss_leg_quad(
+    fun: Callable, num_points: int, bounds: np.ndarray
+) -> np.ndarray:
+    """Integrate a one-dimensional function using Gauss-Legendre quadrature.
+
+    Parameters
+    ----------
+    fun : Callable
+        The function to integrate, the output may be a vector.
+    num_points : int
+        The number of points used in the quadrature scheme.
+    bounds : :class:`numpy:numpy.ndarray`
+        The bounds of integration, an 1-by-2 array (lower and upper bounds).
+
+    Returns
+    -------
+    np.ndarray
+        The integral of the function over the given bounds.
+    """
+    quad_nodes, quad_weights = roots_legendre(num_points)
+
+    bound_diff = np.diff(bounds)
+    bound_sum = np.sum(bounds)
+
+    fun_vals = fun(bound_diff / 2.0 * quad_nodes + bound_sum / 2)
+
+    integrals = bound_diff / 2 * quad_weights @ fun_vals
+
+    return integrals

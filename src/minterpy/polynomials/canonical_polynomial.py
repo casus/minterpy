@@ -2,19 +2,20 @@
 Base class for polynomials in the canonical base.
 
 """
-from copy import deepcopy
-
 import numpy as np
+
+from copy import deepcopy
 from scipy.special import factorial
 
+from minterpy.core import MultiIndexSet
+from minterpy.core.ABC import MultivariatePolynomialSingleABC
+from minterpy.core.utils import find_match_between
+from minterpy.core.verification import convert_eval_output, rectify_eval_input, verify_domain
 from minterpy.global_settings import DEBUG, FLOAT_DTYPE, INT_DTYPE
 from minterpy.jit_compiled_utils import can_eval_mult, all_indices_are_contained
+from minterpy.polynomials.utils import integrate_monomials_canonical
+from minterpy.utils import make_coeffs_2d
 
-from ..core import MultiIndexSet
-from ..core.ABC import MultivariatePolynomialSingleABC
-from ..core.verification import convert_eval_output, rectify_eval_input, verify_domain
-from ..core.utils import find_match_between
-from ..utils import make_coeffs_2d
 
 __all__ = ["CanonicalPolynomial"]
 
@@ -327,6 +328,33 @@ def _canonical_diff(poly: "CanonicalPolynomial", order: np.ndarray) -> "Canonica
     return CanonicalPolynomial.from_poly(poly, new_coeffs.reshape(poly.coeffs.shape))
 
 
+def _integrate_over_canonical(
+    poly: "CanonicalPolynomial",
+    bounds: np.ndarray,
+) -> np.ndarray:
+    """Compute the definite integral of a polynomial in the canonical basis.
+
+    Parameters
+    ----------
+    poly : CanonicalPolynomial
+        The polynomial of which the integration is carried out.
+    bounds : :class:`numpy:numpy.ndarray`
+        The bounds (lower and upper) of the definite integration, an ``(M, 2)``
+        array, where ``M`` is the number of spatial dimensions.
+
+    Returns
+    -------
+    :class:`numpy:numpy.ndarray`
+        The integral value of the polynomial over the given domain.
+    """
+    # --- Compute the integral of the canonical monomials (quadrature weights)
+    exponents = poly.multi_index.exponents
+
+    quad_weights = integrate_monomials_canonical(exponents, bounds)
+
+    return quad_weights @ poly.coeffs
+
+
 class CanonicalPolynomial(MultivariatePolynomialSingleABC):
     """
     Polynomial type in the canonical base.
@@ -347,6 +375,8 @@ class CanonicalPolynomial(MultivariatePolynomialSingleABC):
 
     _partial_diff = staticmethod(_canonical_partial_diff)
     _diff = staticmethod(_canonical_diff)
+
+    _integrate_over = _integrate_over_canonical
 
     generate_internal_domain = staticmethod(canonical_generate_internal_domain)
     generate_user_domain = staticmethod(canonical_generate_user_domain)
