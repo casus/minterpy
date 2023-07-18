@@ -95,7 +95,7 @@ def _newton_diff(poly: "NewtonPolynomial", order: np.ndarray) -> "NewtonPolynomi
 def _newton_integrate_over(
     poly: "NewtonPolynomial", bounds: np.ndarray
 ) -> np.ndarray:
-    """Definite integration of a polynomial in the Newton basis.
+    """Compute the definite integral of a polynomial in the Newton basis.
 
     Parameters
     ----------
@@ -147,7 +147,7 @@ class NewtonPolynomial(MultivariatePolynomialSingleABC):
     _partial_diff = staticmethod(_newton_partial_diff)
     _diff = staticmethod(_newton_diff)
 
-    _integrate_over = _newton_integrate_over
+    _integrate_over = staticmethod(_newton_integrate_over)
 
     generate_internal_domain = staticmethod(newton_generate_internal_domain)
     generate_user_domain = staticmethod(newton_generate_user_domain)

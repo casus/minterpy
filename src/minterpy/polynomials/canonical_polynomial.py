@@ -328,7 +328,7 @@ def _canonical_diff(poly: "CanonicalPolynomial", order: np.ndarray) -> "Canonica
     return CanonicalPolynomial.from_poly(poly, new_coeffs.reshape(poly.coeffs.shape))
 
 
-def _integrate_over_canonical(
+def _canonical_integrate_over(
     poly: "CanonicalPolynomial",
     bounds: np.ndarray,
 ) -> np.ndarray:
@@ -376,7 +376,7 @@ class CanonicalPolynomial(MultivariatePolynomialSingleABC):
     _partial_diff = staticmethod(_canonical_partial_diff)
     _diff = staticmethod(_canonical_diff)
 
-    _integrate_over = _integrate_over_canonical
+    _integrate_over = staticmethod(_canonical_integrate_over)
 
     generate_internal_domain = staticmethod(canonical_generate_internal_domain)
     generate_user_domain = staticmethod(canonical_generate_user_domain)

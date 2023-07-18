@@ -191,7 +191,7 @@ def _lagrange_mul(
         )
 
 
-def _integrate_over_lagrange(
+def _lagrange_integrate_over(
     poly: "LagrangePolynomial", bounds: np.ndarray
 ) -> np.ndarray:
     """Compute the definite integral of a polynomial in the Lagrange basis.
@@ -253,7 +253,7 @@ class LagrangePolynomial(MultivariatePolynomialSingleABC):
     _partial_diff = staticmethod(dummy)
     _diff = staticmethod(dummy)
 
-    _integrate_over = _integrate_over_lagrange
+    _integrate_over = staticmethod(_lagrange_integrate_over)
 
     generate_internal_domain = staticmethod(lagrange_generate_internal_domain)
     generate_user_domain = staticmethod(lagrange_generate_user_domain)

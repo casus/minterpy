@@ -126,7 +126,7 @@ def deriv_newt_eval(x: np.ndarray, coefficients: np.ndarray, exponents: np.ndarr
 def integrate_monomials_newton(
     exponents: np.ndarray, generating_points: np.ndarray, bounds: np.ndarray
 ) -> np.ndarray:
-    """Integrate the Newton monomials given a set of exponents.
+    """Integrate the monomials in the Newton basis given a set of exponents.
 
     Parameters
     ----------
@@ -190,7 +190,7 @@ def integrate_monomials_canonical(
     exponents: np.ndarray,
     bounds: np.ndarray,
 ) -> np.ndarray:
-    """Integrate the monomials in the canonical basis.
+    """Integrate the monomials in the canonical basis given a set of exponents.
 
     Parameters
     ----------
@@ -239,7 +239,7 @@ def integrate_monomials_lagrange(
     tree: MultiIndexTree,
     bounds: np.ndarray,
 ) -> np.ndarray:
-    """Integrate the Lagrange monomials given a set of exponents.
+    """Integrate the monomials in the Lagrange basis given a set of exponents.
 
     Parameters
     ----------

@@ -118,8 +118,11 @@ class MultivariatePolynomialABC(abc.ABC):
     # TODO mathematical operations? abstract
     # TODO copy operations. abstract
 
+    @staticmethod
     @abc.abstractmethod
-    def _integrate_over(self, bounds: Optional[np.ndarray]) -> np.ndarray:
+    def _integrate_over(
+        poly: "MultivariatePolynomialABC", bounds: Optional[np.ndarray]
+    ) -> np.ndarray:
         """Abstract definite integration method."""
         pass
 
@@ -827,12 +830,12 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
     def integrate_over(
         self, bounds: Optional[Union[List[List[float]], np.ndarray]] = None,
     ) -> Union[float, np.ndarray]:
-        """Compute the definite integration of the polynomial over the bounds.
+        """Compute the definite integral of the polynomial over the bounds.
 
         Parameters
         ----------
         bounds : Union[List[List[float]], np.ndarray], optional
-            The bounds of the integration, an ``(M, 2)`` array where ``M``
+            The bounds of the integral, an ``(M, 2)`` array where ``M``
             is the number of spatial dimensions. Each row corresponds to
             the bounds in a given dimension.
             If not given, then the canonical bounds [-1, 1]^M will be used
@@ -876,7 +879,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         if np.any(np.isclose(bounds[:, 0], bounds[:, 1])):
             return 0.0
 
-        value = self._integrate_over(bounds)
+        value = self._integrate_over(self, bounds)
 
         try:
             # One-element array (one set of coefficients), just return the item
