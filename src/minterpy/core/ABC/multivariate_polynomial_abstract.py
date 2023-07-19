@@ -118,14 +118,6 @@ class MultivariatePolynomialABC(abc.ABC):
     # TODO mathematical operations? abstract
     # TODO copy operations. abstract
 
-    @staticmethod
-    @abc.abstractmethod
-    def _integrate_over(
-        poly: "MultivariatePolynomialABC", bounds: Optional[np.ndarray]
-    ) -> np.ndarray:
-        """Abstract definite integration method."""
-        pass
-
 
 class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
     """abstract base class for "single instance" multivariate polynomials
@@ -214,6 +206,14 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         :rtype: Grid
         """
         return Grid(multi_index)
+
+    @staticmethod
+    @abc.abstractmethod
+    def _integrate_over(
+        poly: "MultivariatePolynomialABC", bounds: Optional[np.ndarray]
+    ) -> np.ndarray:
+        """Abstract definite integration method."""
+        pass
 
     def __init__(
         self,
