@@ -853,6 +853,12 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         ValueError
             If the bounds either of inconsistent shape or not in the [-1, 1]^M
             domain.
+
+        TODO
+        ----
+        - The default fixed domain [-1, 1]^M may in the future be relaxed.
+          In that case, the domain check below along with the concrete
+          implementations for the poly. classes must be updated.
         """
         num_dim = self.spatial_dimension
         if bounds is None:

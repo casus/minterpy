@@ -149,6 +149,15 @@ def integrate_monomials_newton(
     np.ndarray
         The integrated Newton monomials, an ``(N,)`` array, where N is
         the number of monomials (exponents).
+
+    TODO
+    ----
+    - The whole integration domain is assumed to be :math:`[-1, 1]^M` where
+      :math:`M` is the number of spatial dimensions because the polynomial
+      itself is defined in that domain. This condition may be relaxed in
+      the future and the implementation below should be modified.
+    - Possibly reorganize this function in another module. Note, however, that
+      this function is shared by both the Newton basis and the Lagrange basis.
     """
     # --- Get some basic data
     num_monomials, num_dim = exponents.shape
@@ -175,15 +184,15 @@ def integrate_monomials_newton(
         )
 
     # --- Compute integrals of the monomials (multi-dimensional basis)
-    integrated_monomials = np.zeros(num_monomials)
+    monomials_integrals = np.zeros(num_monomials)
     for i in range(num_monomials):
         out = 1.0
         for j in range(num_dim):
             exp = exponents[i, j]
             out *= one_dim_integrals[exp, j]
-        integrated_monomials[i] = out
+        monomials_integrals[i] = out
 
-    return integrated_monomials
+    return monomials_integrals
 
 
 def integrate_monomials_canonical(
@@ -208,6 +217,16 @@ def integrate_monomials_canonical(
     np.ndarray
         The integrated Canonical monomials, an ``(N,)`` array, where ``N`` is
         the number of monomials (exponents).
+
+    TODO
+    ----
+    - The whole integration domain is assumed to be :math:`[-1, 1]^M` where
+      :math:`M` is the number of spatial dimensions because the polynomial
+      itself is defined in that domain. This condition may be relaxed in
+      the future and the implementation below should be modified.
+    - Possibly reorganize this function in another module. This function is
+      currently only used by the concrete implementation of
+      the canonical basis.
     """
     bounds_diff = np.diff(bounds)
 
@@ -217,20 +236,20 @@ def integrate_monomials_canonical(
         case = np.all(np.mod(exponents, 2) == 0, axis=1)  # All even + 0
         even_terms = exponents[case]
 
-        integrated_even_terms = bounds_diff.T / (even_terms + 1)
+        monomials_integrals_even_terms = bounds_diff.T / (even_terms + 1)
 
-        integrated_monomials = np.zeros(exponents.shape)
-        integrated_monomials[case] = integrated_even_terms
+        monomials_integrals = np.zeros(exponents.shape)
+        monomials_integrals[case] = monomials_integrals_even_terms
 
-        return integrated_monomials.prod(axis=1)
+        return monomials_integrals.prod(axis=1)
 
     # NOTE: Bump the exponent by 1 (polynomial integration)
     bounds_power = np.power(bounds.T[:, None, :], (exponents + 1)[None, :, :])
     bounds_diff = bounds_power[1, :] - bounds_power[0, :]
 
-    integrated_monomials = bounds_diff / (exponents + 1)
+    monomials_integrals = np.prod(bounds_diff / (exponents + 1), axis=1)
 
-    return integrated_monomials.prod(axis=1)
+    return monomials_integrals
 
 
 def integrate_monomials_lagrange(
@@ -272,13 +291,26 @@ def integrate_monomials_lagrange(
       For integration, first integrate the Newton monomials and then transform
       the results back to the Lagrange basis. This is why the `MultiIndexTree`
       instance is needed.
+
+    TODO
+    ----
+    - The whole integration domain is assumed to be :math:`[-1, 1]^M` where
+      :math:`M` is the number of spatial dimensions because the polynomial
+      itself is defined in that domain. This condition may be relaxed in
+      the future and the implementation below should be modified.
+    - Possibly reorganize this function in another module. This function is
+      currently only used by the concrete implementation of
+      the Lagrange basis.
     """
-    integrated_newton_monomials = integrate_monomials_newton(
+    monomials_integrals_newton = integrate_monomials_newton(
         exponents, generating_points, bounds
     )
     l2n = dds(np.eye(exponents.shape[0]), tree)
 
-    return l2n.T @ integrated_newton_monomials
+    # --- Carry out the transformation from Newton to Lagrange
+    monomials_integrals = l2n.T @ monomials_integrals_newton
+
+    return monomials_integrals
 
 
 def _gauss_leg_quad(
