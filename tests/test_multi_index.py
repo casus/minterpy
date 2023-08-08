@@ -181,3 +181,26 @@ def test_attributes_from_degree(spatial_dimension, poly_degree, LpDegree):
     dim = multi_index.exponents.shape[1]
     assert_(multi_index.spatial_dimension == spatial_dimension)
     assert_(dim == spatial_dimension)
+
+
+def test_make_complete(SpatialDimension, PolyDegree, LpDegree):
+    """Test the method to make the set of exponents complete.
+
+    Notes
+    -----
+    - This test is included due to Issue #115.
+    """
+    mi_ref = MultiIndexSet.from_degree(
+        SpatialDimension, PolyDegree, LpDegree
+    )
+    mi_incomplete = MultiIndexSet(
+        mi_ref.exponents[-1][np.newaxis,:], lp_degree=LpDegree
+    )
+
+    # Make complete
+    mi_complete = mi_incomplete.make_complete()
+
+    # Assertion
+    assert mi_complete.is_complete
+    assert np.all(mi_complete.exponents == mi_ref.exponents)
+
