@@ -25,7 +25,7 @@ from minterpy.global_settings import INT_DTYPE
 from minterpy.utils import eval_newton_polynomials
 from minterpy import Grid
 
-from minterpy import NewtonPolynomial, NewtonToCanonical, CanonicalToNewton
+from minterpy import NewtonPolynomial, NewtonToCanonical, CanonicalToNewton, NewtonToLagrange
 
 
 def test_eval(MultiIndices, NrPoints, NrPolynomials):
@@ -106,3 +106,124 @@ def test_diff(SpatialDimension, PolyDegree, LpDegree, NrPolynomials):
     newt_diff_poly = newton_poly.diff(diff_order)
 
     assert_polynomial_almost_equal(newt_can_diff_poly, newt_diff_poly)
+
+
+def test_integrate_over_bounds_invalid_shape(
+    SpatialDimension, PolyDegree, LpDegree
+):
+    """Test polynomial integration with bounds of invalid shape."""
+    # Create a Newton polynomial
+    nwt_poly = build_random_newton_polynom(
+        SpatialDimension, PolyDegree, LpDegree
+    )
+
+    # Create bounds (outside the canonical domain of [-1, 1]^M)
+    bounds = np.random.rand(SpatialDimension + 3, 2)
+    bounds[:, 0] *= -1
+
+    with pytest.raises(ValueError):
+        nwt_poly.integrate_over(bounds)
+
+
+def test_integrate_over_bounds_invalid_domain(
+    SpatialDimension, PolyDegree, LpDegree
+):
+    """Test polynomial integration with bounds of invalid domain."""
+    # Create a Newton polynomial
+    nwt_poly = build_random_newton_polynom(
+        SpatialDimension, PolyDegree, LpDegree
+    )
+
+    # Create bounds (outside the canonical domain of [-1, 1]^M)
+    bounds = 2 * np.ones((SpatialDimension, 2))
+    bounds[:, 0] *= -1
+
+    with pytest.raises(ValueError):
+        nwt_poly.integrate_over(bounds)
+
+
+def test_integrate_over_bounds_equal(
+    SpatialDimension, PolyDegree, LpDegree
+):
+    """Test polynomial integration with equal bounds (should be zero)."""
+    # Create a Newton polynomial
+    nwt_poly = build_random_newton_polynom(
+        SpatialDimension, PolyDegree, LpDegree
+    )
+
+    # Create bounds (one of them has lb == ub)
+    bounds = np.random.rand(SpatialDimension, 2)
+    bounds[:, 0] *= -1
+    idx = np.random.choice(SpatialDimension)
+    bounds[idx, 0] = bounds[idx, 1]
+
+    # Compute the integral
+    ref = 0.0
+    value = nwt_poly.integrate_over(bounds)
+
+    # Assertion
+    assert np.isclose(ref, value)
+
+
+def test_integrate_over_bounds_flipped(
+    SpatialDimension, PolyDegree, LpDegree
+):
+    """Test polynomial integration with specified and valid bounds."""
+    # Create a Newton polynomial
+    nwt_poly = build_random_newton_polynom(
+        SpatialDimension, PolyDegree, LpDegree
+    )
+
+    # Compute the integral
+    value_1 = nwt_poly.integrate_over()
+
+    # Flip bounds
+    bounds = np.ones((SpatialDimension, 2))
+    bounds[:, 0] *= -1
+    bounds[:, [0, 1]] = bounds[:, [1, 0]]
+
+    # Compute the integral with flipped bounds
+    value_2 = nwt_poly.integrate_over(bounds)
+
+    if np.mod(SpatialDimension, 2) == 1:
+        # Odd spatial dimension flips the sign
+        assert np.isclose(value_1, -1 * value_2)
+    else:
+        assert np.isclose(value_1, value_2)
+
+
+def test_integrate_over(
+    SpatialDimension, PolyDegree, LpDegree
+):
+    """Test polynomial integration in different basis (sanity check)."""
+    # Create a Canonical polynomial
+    nwt_poly = build_random_newton_polynom(
+        SpatialDimension, PolyDegree, LpDegree
+    )
+
+    # Transform to other polynomial bases
+    lag_poly = NewtonToLagrange(nwt_poly)()
+    can_poly = NewtonToCanonical(nwt_poly)()
+
+    # Compute the integral
+    value_nwt = nwt_poly.integrate_over()
+    value_lag = lag_poly.integrate_over()
+    # NOTE: Canonical integration won't work in high degree
+    value_can = can_poly.integrate_over()
+
+    # Assertions
+    assert np.isclose(value_nwt, value_lag)
+    assert np.isclose(value_nwt, value_can)
+
+    # Create bounds
+    bounds = np.random.rand(SpatialDimension, 2)
+    bounds[:, 0] *= -1
+
+    # Compute the integral with bounds
+    value_lag = lag_poly.integrate_over(bounds)
+    value_nwt = nwt_poly.integrate_over(bounds)
+    value_can = can_poly.integrate_over(bounds)
+
+    # Assertions
+    assert np.isclose(value_nwt, value_lag)
+    assert np.isclose(value_nwt, value_can)

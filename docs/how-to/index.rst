@@ -2,7 +2,13 @@
 How-to Guides
 #############
 
-This page is still under construction.
+This page contains a series of guides on how to carry out routine numerical
+tasks with polynomials in Minterpy.
+
+.. toctree::
+   :maxdepth: 2
+
+   Integration <integration/index>
 
 ..
     .. todo::

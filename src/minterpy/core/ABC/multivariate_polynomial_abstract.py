@@ -6,7 +6,7 @@ This ensures that all polynomials work with the same interface, so futher featur
 """
 import abc
 from copy import deepcopy
-from typing import Any, Optional, Union
+from typing import Any, List, Optional, Union
 
 import numpy as np
 
@@ -15,7 +15,11 @@ from minterpy.global_settings import ARRAY
 from ..grid import Grid
 from ..multi_index import MultiIndexSet
 from ..utils import _expand_dim, find_match_between
-from ..verification import check_shape, check_type_n_values, verify_domain
+from ..verification import (
+    check_shape,
+    check_type_n_values,
+    verify_domain,
+)
 
 __all__ = ["MultivariatePolynomialABC", "MultivariatePolynomialSingleABC"]
 
@@ -202,6 +206,14 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         :rtype: Grid
         """
         return Grid(multi_index)
+
+    @staticmethod
+    @abc.abstractmethod
+    def _integrate_over(
+        poly: "MultivariatePolynomialABC", bounds: Optional[np.ndarray]
+    ) -> np.ndarray:
+        """Abstract definite integration method."""
+        pass
 
     def __init__(
         self,
@@ -814,3 +826,69 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
                              f"expected <{self.spatial_dimension}> corresponding to each spatial dimension")
 
         return self._diff(self, order)
+
+    def integrate_over(
+        self, bounds: Optional[Union[List[List[float]], np.ndarray]] = None,
+    ) -> Union[float, np.ndarray]:
+        """Compute the definite integral of the polynomial over the bounds.
+
+        Parameters
+        ----------
+        bounds : Union[List[List[float]], np.ndarray], optional
+            The bounds of the integral, an ``(M, 2)`` array where ``M``
+            is the number of spatial dimensions. Each row corresponds to
+            the bounds in a given dimension.
+            If not given, then the canonical bounds [-1, 1]^M will be used
+            instead.
+
+        Returns
+        -------
+        Union[:py:class:`float`, :class:`numpy:numpy.ndarray`]
+            The integral value of the polynomial over the given bounds.
+            If only one polynomial is available, the return value is of
+            a :py:class:`float` type.
+
+        Raises
+        ------
+        ValueError
+            If the bounds either of inconsistent shape or not in the [-1, 1]^M
+            domain.
+
+        TODO
+        ----
+        - The default fixed domain [-1, 1]^M may in the future be relaxed.
+          In that case, the domain check below along with the concrete
+          implementations for the poly. classes must be updated.
+        """
+        num_dim = self.spatial_dimension
+        if bounds is None:
+            # The canonical bounds are [-1, 1]^M
+            bounds = np.ones((num_dim, 2))
+            bounds[:, 0] *= -1
+
+        if isinstance(bounds, list):
+            bounds = np.atleast_2d(bounds)
+
+        # --- Bounds verification
+        # Shape
+        if bounds.shape != (num_dim, 2):
+            raise ValueError(
+                "The bounds shape is inconsistent! "
+                f"Given {bounds.shape}, expected {(num_dim, 2)}."
+            )
+        # Domain fit, i.e., in [-1, 1]^M
+        if np.any(bounds < -1) or np.any(bounds > 1):
+            raise ValueError("Bounds are outside [-1, 1]^M domain!")
+
+        # --- Compute the integrals
+        # If the lower and upper bounds are equal, immediately return 0
+        if np.any(np.isclose(bounds[:, 0], bounds[:, 1])):
+            return 0.0
+
+        value = self._integrate_over(self, bounds)
+
+        try:
+            # One-element array (one set of coefficients), just return the item
+            return value.item()
+        except ValueError:
+            return value
