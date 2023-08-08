@@ -358,7 +358,7 @@ class MultiIndexSet:
         if self.is_complete:
             return self
         new_exponents = self.exponents_completed  # compute if necessary!
-        new_instance = self.__class__(new_exponents)  # re-compute degree etc.
+        new_instance = self.__class__(new_exponents, self.lp_degree)  # re-compute degree etc.
         # NOTE: avoid checking for completeness again!
         new_instance._is_complete = True
         new_instance._exponents_completed = new_exponents
