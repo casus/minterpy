@@ -30,7 +30,6 @@ version = get_distribution(project).version
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "myst_parser",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.mathjax",
@@ -40,7 +39,7 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.autosectionlabel",
     "sphinxcontrib.bibtex",
-    "nbsphinx",
+    "myst_nb",
 ]
 
 
@@ -98,6 +97,12 @@ napoleon_use_param = True
 # --- Autosummary options
 autosummary_generate = True
 autosummary_imported_members = True
+
+# --- MyST-NB options
+myst_enable_extensions = [
+   "amsmath",
+   "dollarmath",  # Enable LaTeX-style dollar syntax for math.
+]
 
 # -- Options for HTML output -------------------------------------------------
 

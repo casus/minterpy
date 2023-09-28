@@ -8,6 +8,7 @@ tasks with polynomials in Minterpy.
 .. toctree::
    :maxdepth: 2
 
+   Multi-index Set <multi-index-set/index>
    Integration <integration/index>
 
 ..
