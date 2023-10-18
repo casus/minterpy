@@ -377,23 +377,57 @@ def make_derivable(indices: np.ndarray) -> np.ndarray:
     return index_array
 
 
-def make_complete(indices: np.ndarray, lp_degree: float = None) -> np.ndarray:
-    """Make a given array of exponents complete.
+def make_complete(exponents: np.ndarray, lp_degree: float) -> np.ndarray:
+    """Create a complete exponents from a given array of exponents.
 
-    :param indices: The exponent array to be completed.
-    :type indices: np.ndarray
-    :param lp_degree: lp-degree for the completation. Optional, the default is given by `minterpy.DEFAULT_LP_DEG`.
-    :type lp_degree: int (optional)
+    A complete set of exponents contains all monomials, whose :math:`l_p`-norm
+    of the exponents are smaller or equal to the polynomial degree of the set.
 
-    :return: Completed version of the input exponents.
-    :rtype: np.ndarray
+    Parameters
+    ----------
+    exponents : :class:`numpy:numpy.ndarray`
+        A given exponent array to be completed.
+    lp_degree : :py:class:`float`
+        A given :math:`l_p` of the :math:`l_p`-norm (i.e., the lp-degree)
+        for the completion.
 
+    Returns
+    -------
+    :class:`numpy:numpy.ndarray`
+        The complete exponents with respect to the given ``exponents`` and
+        ``lp_degree``.
+
+    Notes
+    -----
+    - The polynomial degree is inferred from the given exponents with
+      respect to the required ``lp_degree``. It is the smallest polynomial
+      degree with respect to the ``lp_degree`` to contain the given exponents.
+
+    Examples
+    --------
+    >>> exponent = np.array([[2, 2]])
+    >>> lp_degree = 2.0
+    >>> make_complete(exponent, lp_degree)  # Complete w.r.t the lp_degree
+    array([[0, 0],
+           [1, 0],
+           [2, 0],
+           [3, 0],
+           [0, 1],
+           [1, 1],
+           [2, 1],
+           [0, 2],
+           [1, 2],
+           [2, 2],
+           [0, 3]])
     """
-    if lp_degree is None:
-        lp_degree = DEFAULT_LP_DEG
-    poly_degree = get_poly_degree(indices, lp_degree)
-    spatial_dimension = indices.shape[-1]
-    return get_exponent_matrix(spatial_dimension, poly_degree, lp_degree)
+    poly_degree = get_poly_degree(exponents, lp_degree)
+    spatial_dimension = exponents.shape[-1]
+
+    complete_exponents = get_exponent_matrix(
+        spatial_dimension, poly_degree, lp_degree
+    )
+
+    return complete_exponents
 
 
 def find_match_between(
@@ -409,5 +443,3 @@ def find_match_between(
     positions = np.empty(nr_exp_smaller, dtype=INT_DTYPE)
     fill_match_positions(larger_idx_set, smaller_idx_set, positions)
     return positions
-
-
