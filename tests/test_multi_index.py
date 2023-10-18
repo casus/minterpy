@@ -10,13 +10,14 @@ from conftest import (
     assert_call,
     assert_multi_index_equal,
 )
+from copy import copy
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from minterpy import MultiIndexSet
 from minterpy.core.utils import (
-    find_match_between,
-    get_exponent_matrix,
     get_poly_degree,
+    get_exponent_matrix,
+    find_match_between,
     is_lexicographically_complete,
 )
 
@@ -183,24 +184,70 @@ def test_attributes_from_degree(spatial_dimension, poly_degree, LpDegree):
     assert_(dim == spatial_dimension)
 
 
-def test_make_complete(SpatialDimension, PolyDegree, LpDegree):
-    """Test the method to make the set of exponents complete.
+def test_make_complete_inplace(SpatialDimension, PolyDegree, LpDegree):
+    """Test in-place make_complete() on the MultiIndexSet instances."""
+    if PolyDegree < 1:
+        # Only test for polynomial degree of higher than 0 (0 always complete)
+        return
+
+    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+    # Get the highest multi-index set element
+    exponent = np.atleast_2d(mi.exponents[-1])
+
+    # Create a new instance with just a single exponent (incomplete exponent)
+    mi_incomplete = MultiIndexSet(exponent, LpDegree)
+    assert not mi_incomplete.is_complete
+
+    # Make complete in-place
+    mi_incomplete.make_complete(inplace=True)
+
+    # Assertions
+    assert mi_incomplete.is_complete
+    assert np.all(mi.exponents == mi_incomplete.exponents)
+
+
+def test_make_complete_outplace(SpatialDimension, PolyDegree, LpDegree):
+    """Test out-place make_complete() on the MultiIndexSet instances.
 
     Notes
-    -----
-    - This test is included due to Issue #115.
+    ----
+    - This is test is also related to Issue #115; by default, the 'inplace' 
+      parameter is set to False and a new MultiIndexSet instance is created.
     """
-    mi_ref = MultiIndexSet.from_degree(
-        SpatialDimension, PolyDegree, LpDegree
-    )
-    mi_incomplete = MultiIndexSet(
-        mi_ref.exponents[-1][np.newaxis,:], lp_degree=LpDegree
-    )
+    if PolyDegree < 1:
+        # Only test for polynomial degree of higher than 0 (0 always complete)
+        return
 
-    # Make complete
+    # NOTE: By construction, 'from_degree()' returns a complete set
+    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+    # --- Already complete set of exponents (a shallow copy is created)
+    mi_complete = mi.make_complete(inplace=False)
+    assert mi_complete.exponents is mi.exponents
+
+    # --- Incomplete set of exponents
+
+    # Get the highest multi-index set element
+    exponent = np.atleast_2d(mi.exponents[-1])
+
+    # Create a new instance with just a single exponent
+    mi_incomplete = MultiIndexSet(exponent, LpDegree)
+    assert not mi_incomplete.is_complete
+
+    # Make complete out-place (with the default parameter)
     mi_complete = mi_incomplete.make_complete()
 
-    # Assertion
+    # Assertions
     assert mi_complete.is_complete
-    assert np.all(mi_complete.exponents == mi_ref.exponents)
+    assert mi_complete is not mi_incomplete
+    assert np.all(mi_complete.exponents == mi.exponents)
+
+    # Make complete out-place (with an explicit argument)
+    mi_complete = mi_incomplete.make_complete(inplace=False)
+
+    # Assertions
+    assert mi_complete.is_complete
+    assert mi_complete is not mi_incomplete
+    assert np.all(mi_complete.exponents == mi.exponents)
 

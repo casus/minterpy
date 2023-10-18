@@ -1,7 +1,7 @@
 """
 Module of the MultiIndexSet class
 """
-from copy import deepcopy
+from copy import copy, deepcopy
 from typing import Optional
 
 import numpy as np
@@ -11,8 +11,7 @@ from minterpy.jit_compiled_utils import (
     all_indices_are_contained,
     have_lexicographical_ordering,
 )
-
-from .utils import (
+from minterpy.core.utils import (
     _expand_dim,
     get_poly_degree,
     get_exponent_matrix,
@@ -20,6 +19,7 @@ from .utils import (
     is_lexicographically_complete,
     make_complete,
 )
+
 from .verification import check_shape, check_values, verify_lp_degree
 
 __all__ = ["MultiIndexSet"]
@@ -340,29 +340,53 @@ class MultiIndexSet:
         new_exponents = insert_lexicographically(self._exponents, exponents)
         return self._new_instance_if_necessary(new_exponents)
 
-    def make_complete(self) -> "MultiIndexSet":
-        """Completion of this instance.
+    def make_complete(
+        self,
+        inplace: bool = False,
+    ) -> Optional["MultiIndexSet"]:
+        """Create a complete multi-index set from the current exponents.
 
-        Bulid a new instance of :class:`MultiIndexSet`, where the exponents are completed, i.e. in lexicographical ordering, there will be no exponent missing.
+        Parameters
+        ----------
+        inplace : bool, optional
+            Flag to determine whether the current instance is modified
+            in-place with the complete exponents. If `inplace` is `False`,
+            a new `MultiIndexSet` instance is created.
+            The default is ``False``.
 
-        :return: Completed version of this instance
-        :rtype: MultiIndexSet
+        Returns
+        -------
+        `MultiIndexSet`, optional
+            The multi-index set with a complete set of exponents.
+            If ``inplace`` is set to ``True``, then the modification
+            is carried out in-place without an explicit output.
 
-        .. todo::
-            - since this returns a copy of this instance, maybe this shall be given as a separate function.
-            - why not an implace version of that?
-
+        Notes
+        -----
+        - If the current MultIndexSet exponents are already complete,
+          setting 'inplace=False' (the default) creates a shallow copy.
         """
-        # ATTENTION: the make_complete() fct should not be called with already complete idx sets (inefficient!)
-        # should return the same object if already complete (avoid creation of identical instance)
         if self.is_complete:
-            return self
-        new_exponents = self.exponents_completed  # compute if necessary!
-        new_instance = self.__class__(new_exponents, self.lp_degree)  # re-compute degree etc.
-        # NOTE: avoid checking for completeness again!
-        new_instance._is_complete = True
-        new_instance._exponents_completed = new_exponents
-        return new_instance
+            if not inplace:
+                # Create a shallow copy of the current instance
+                return copy(self)
+
+        else:
+            completed_exponents = make_complete(self.exponents, self.lp_degree)
+            if inplace:
+                # Modify the current instance
+                self._exponents = completed_exponents
+                # By construction, the current instance is now complete
+                self._is_complete = True
+            else:
+                # Create a new instance
+                new_instance = self.__class__(
+                    exponents=completed_exponents, lp_degree=self.lp_degree
+                )
+                # By construction, the new instance is complete
+                new_instance._is_complete = True
+
+                return new_instance
 
     # TODO make_derivable(): add (only) partial derivative exponent vectors,
-    #  NOTE: not meaningful since derivation requires complete index sets anyway?
+    # NOTE: not meaningful since derivation requires complete index sets anyway?
