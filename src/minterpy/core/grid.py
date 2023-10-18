@@ -240,6 +240,8 @@ class Grid:
         :rtype: Grid
         """
         multi_indices_old = self.multi_index
+        # TODO: Following MR !69, the MultiIndexSet will always be a new
+        # instance, revise this for consistency.
         if multi_indices_new is multi_indices_old:
             return self
         # construct new:
@@ -259,7 +261,7 @@ class Grid:
 
 
         """
-        multi_indices_new = self.multi_index.make_complete()
+        multi_indices_new = self.multi_index.make_complete(inplace=False)
         return self._new_instance_if_necessary(multi_indices_new)
 
     def add_points(self, exponents: ARRAY) -> "Grid":
