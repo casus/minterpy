@@ -195,19 +195,20 @@ def check_dtype(a: np.ndarray, expected_dtype):
         )
 
 
-def check_values(a: np.ndarray, *args, **kwargs):
+def check_values(xx: np.ndarray):
     """Verify that the input array has neither ``NaN`` nor ``inf`` values.
 
-    :param a: Array to be checked.
-    :type a: np.ndarray
+    Parameters
+    ----------
+    xx : :class:`numpy:numpy.ndarray`
+        The array to be checked.
 
-    :raise ValueError: if input array contains either ``NaN`` or ``inf`` values (or both).
-
-    .. todo::
-        - why pass ``*args, **kwargs``?
-
+    Raises
+    ------
+    ValueError
+        If the input array contains either ``NaN`` or ``inf``.
     """
-    if np.any(np.isnan(a)) or np.any(np.isinf(a)):
+    if np.any(np.isnan(xx)) or np.any(np.isinf(xx)):
         raise ValueError("values must not be NaN or infinity!")
 
 
