@@ -317,28 +317,73 @@ class MultiIndexSet:
             # new_instance._exponents = _exponents_completed
         return new_instance
 
-    def add_exponents(self, exponents: ARRAY) -> "MultiIndexSet":
+    def add_exponents(
+        self,
+        exponents: ARRAY,
+        inplace=False
+    ) -> Optional["MultiIndexSet"]:
+        """Add a set of exponents lexicographically into this instance.
+
+        Parameters
+        ----------
+        exponents : ARRAY
+            Array of exponents to be added. The set of exponents must be of
+            integer type.
+        inplace : bool, optional
+            Flag to determine whether the current instance is modified
+            in-place with the complete exponents. If ``inplace`` is ``False``,
+            a new `MultiIndexSet` instance is created.
+            The default is ``False``.
+
+        Returns
+        -------
+        `MultiIndexSet`, optional
+            The multi-index set with an updated set of exponents.
+            If ``inplace`` is set to ``True``, then the modification
+            is carried out in-place without an explicit output
+            (it returns ``None``).
+
+        Notes
+        -----
+        - The array of added exponents must be of integer types; non-integer
+          types will be converted to integer.
+        - If the current :py:class:`.MultiIndexSet` exponents already
+          include the added set of exponents and ``inplace`` is set
+          to ``False`` (the default) a shallow copy is created.
+        """
+        # --- Pre-process the input exponents
         exponents = np.require(exponents, dtype=INT_DTYPE)
         check_values(exponents)
-        exponents = exponents.reshape(-1, self.spatial_dimension)
-        """Insert a set if exponents lexicographically into the exponents of this instance.
-
-        :param exponents: Array of exponents to be inserted.
-        :type exponents: np.ndarray
-
-        :return: New instance of :class:`MultiIndexSet` (if necessary), where the additional exponents are inserted uniquely.
-        :rtype: MultiIndexSet
-
-
-        .. todo::
-            - shall be renamed to ``insert_exponents`` or ``insert_multi_index``
-        """
         # convert input to 2D in expected shape
-        #  NOTE: the insertion is expected to return the same identical array instance
-        #  if all exponents are already contained!
-        # -> no need to check for inclusion first!
+        exponents = exponents.reshape(-1, self.spatial_dimension)
+
+        #  NOTE: If all added exponents are already contained, identical array
+        #        is returned.
         new_exponents = insert_lexicographically(self._exponents, exponents)
-        return self._new_instance_if_necessary(new_exponents)
+        if new_exponents is self._exponents:
+            # Identical array
+            if inplace:
+                return None
+            else:
+                # Return a shallow copy of the current instance
+                return copy(self)
+        else:
+            # The exponents have been updated
+            if inplace:
+                self._exponents = new_exponents
+                # The polynomial degree must be re-computed
+                self._poly_degree = get_poly_degree(
+                    exponents=new_exponents, lp_degree=self.lp_degree
+                )
+                # Can't guarantee the updated exponents are still complete
+                self._is_complete = None
+            else:
+                # Create a new instance
+                new_instance = self.__class__(
+                    exponents=new_exponents, lp_degree=self.lp_degree
+                )
+
+                return new_instance
 
     def make_complete(
         self,
@@ -350,7 +395,7 @@ class MultiIndexSet:
         ----------
         inplace : bool, optional
             Flag to determine whether the current instance is modified
-            in-place with the complete exponents. If `inplace` is `False`,
+            in-place with the complete exponents. If ``inplace`` is ``False``,
             a new `MultiIndexSet` instance is created.
             The default is ``False``.
 
@@ -363,8 +408,9 @@ class MultiIndexSet:
 
         Notes
         -----
-        - If the current MultIndexSet exponents are already complete,
-          setting 'inplace=False' (the default) creates a shallow copy.
+        - If the current :py:class:`.MultiIndexSet` exponents are already
+          complete, setting ``inplace`` to ``False`` (the default) creates
+          a shallow copy.
         """
         if self.is_complete:
             if not inplace:

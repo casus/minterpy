@@ -71,13 +71,34 @@ def test_init_fail_from_degree():
 
 # Test methods
 
-def test_add_exponents(SpatialDimension, PolyDegree, LpDegree):
-    """Test the add_exponents method of a MultiIndex instance.
+def test_add_exponents_outplace(SpatialDimension, PolyDegree, LpDegree):
+    """Test the add_exponents method of a MultiIndex instance outplace.
     
     Notes
     -----
-    - This is related to the fix for Issue #75.
+    - This is related to the fix for Issue #75
+      and the refactoring of Issue #117.
     """
+
+    # --- Already contained exponents (should return identical exponents)
+
+    # Create a set of exponents
+    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+    mi = MultiIndexSet(exponents, lp_degree=LpDegree)
+
+    # Add the same set of exponents with default parameter value
+    mi_added = mi.add_exponents(exponents)
+    # Assertions
+    assert_multi_index_equal(mi_added, mi)
+    assert mi_added.exponents is exponents
+
+    # Add the same set of exponents with parameter
+    mi_added = mi.add_exponents(exponents, inplace=False)
+    # Assertions
+    assert_multi_index_equal(mi_added, mi)
+    assert mi_added.exponents is exponents
+
+    # --- A new set of exponents
     
     # Create 2 exponents, one twice the polynomial degree of the other
     exponents_1 = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
@@ -92,13 +113,83 @@ def test_add_exponents(SpatialDimension, PolyDegree, LpDegree):
     mi_1 = MultiIndexSet(exponents_1, lp_degree=LpDegree)
     mi_2 = MultiIndexSet(exponents_2, lp_degree=LpDegree)
 
-    # Act: Add the exponents difference to the smaller multi-index set
+    # Add the exponents difference with default parameter value
     mi_added = mi_1.add_exponents(exponents_diff)
-
-    # Assert: The added multi-index must be the same as the big one
+    # Assertion: The added multi-index must be the same as the big one
     assert_multi_index_equal(mi_added, mi_2)
 
-# test attributes
+    # Add the exponents difference with parameter
+    mi_added = mi_1.add_exponents(exponents_diff, inplace=False)
+    # Assertion: The added multi-index must be the same as the big one
+    assert_multi_index_equal(mi_added, mi_2)
+
+
+def test_add_exponents_inplace(SpatialDimension, PolyDegree, LpDegree):
+    """Test in-place add_exponents() on the MultiIndexSet instances.
+
+    Notes
+    -----
+    - This test is related to the refactoring of Issue #117.
+    """
+
+    # --- Already contained exponents (should return identical exponents)
+
+    # Create a set of exponents
+    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+    mi = MultiIndexSet(exponents, lp_degree=LpDegree)
+    poly_degree = mi.poly_degree
+
+    # Add the same set of exponents in-place
+    mi.add_exponents(exponents, inplace=True)
+    # Assertions
+    assert mi.exponents is exponents
+    assert mi.poly_degree == poly_degree
+
+    # --- New set of exponents
+
+    # Create 2 exponents, one twice the polynomial degree of the other
+    exponents_1 = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+    exponents_2 = get_exponent_matrix(SpatialDimension, 2*PolyDegree, LpDegree)
+
+    # Compute the set difference between the larger set and the smaller set
+    exponents_diff = np.array(
+        list(set(map(tuple, exponents_2)) - set(map(tuple, exponents_1)))
+    )
+
+    # Create the multi-index sets
+    mi_1 = MultiIndexSet(exponents_1, lp_degree=LpDegree)
+    mi_2 = MultiIndexSet(exponents_2, lp_degree=LpDegree)
+
+    # Add the exponents difference in-place
+    mi_1.add_exponents(exponents_diff, inplace=True)
+    # Assertion: The added multi-index must be the same as the big one
+    assert_multi_index_equal(mi_1, mi_2)
+
+
+def test_add_exponents_sparse():
+    """Test adding exponents to a high-dimensional sparse multi-index set.
+
+    Notes
+    -----
+    - This test is related to Issue #81.
+    """
+    # Create a 20-dimensional but sparse exponents
+    m = 20
+    exponents = np.zeros((m, m), dtype=int)
+    exponents[:, 0] = np.arange(m)
+    mi = MultiIndexSet(exponents, lp_degree=1.0)
+
+    # Assertion
+    assert mi.is_complete
+
+    # Add a new (sparse) element
+    new_element = np.zeros(m)
+    new_element[0] = m
+    mi_added = mi.add_exponents(new_element)
+
+    # Assertions
+    assert mi_added.is_complete
+    assert mi_added.poly_degree == mi.poly_degree + 1
 
 
 def test_attributes(SpatialDimension, PolyDegree, LpDegree):
@@ -250,4 +341,3 @@ def test_make_complete_outplace(SpatialDimension, PolyDegree, LpDegree):
     assert mi_complete.is_complete
     assert mi_complete is not mi_incomplete
     assert np.all(mi_complete.exponents == mi.exponents)
-
