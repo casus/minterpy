@@ -14,7 +14,7 @@ from minterpy.global_settings import ARRAY
 
 from ..grid import Grid
 from ..multi_index import MultiIndexSet
-from ..utils import _expand_dim, find_match_between
+from ..utils import expand_dim, find_match_between
 from ..verification import (
     check_shape,
     check_type_n_values,
@@ -750,23 +750,22 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         :param dim: Number of additional dimensions.
         :type dim: int
         """
-        expand_dim = dim - self.multi_index.spatial_dimension
+        diff_dim = dim - self.multi_index.spatial_dimension
 
-        self.multi_index.expand_dim(
-            dim
-        )  # breaks if dim<spacial_dimension, i.e. expand_dim<0
+        # If dim<spatial_dimension, i.e. expand_dim<0, exception is raised
+        self.multi_index = self.multi_index.expand_dim(dim)
 
         grid = self.grid
-        new_gen_pts = _expand_dim(grid.generating_points, dim)
-        new_gen_vals = _expand_dim(grid.generating_values.reshape(-1, 1), dim)
+        new_gen_pts = expand_dim(grid.generating_points, dim)
+        new_gen_vals = expand_dim(grid.generating_values.reshape(-1, 1), dim)
 
         self.grid = Grid(self.multi_index, new_gen_pts, new_gen_vals)
 
-        extra_internal_domain = verify_domain(extra_internal_domain, expand_dim)
+        extra_internal_domain = verify_domain(extra_internal_domain, diff_dim)
         self.internal_domain = np.concatenate(
             (self.internal_domain, extra_internal_domain)
         )
-        extra_user_domain = verify_domain(extra_user_domain, expand_dim)
+        extra_user_domain = verify_domain(extra_user_domain, diff_dim)
         self.user_domain = np.concatenate((self.user_domain, extra_user_domain))
 
     def partial_diff(self, dim: int, order: int = 1) -> "MultivariatePolynomialSingleABC":

@@ -12,7 +12,7 @@ from minterpy.jit_compiled_utils import (
     have_lexicographical_ordering,
 )
 from minterpy.core.utils import (
-    _expand_dim,
+    expand_dim,
     get_poly_degree,
     get_exponent_matrix,
     insert_lexicographically,
@@ -185,13 +185,6 @@ class MultiIndexSet:
         """
         raise NotImplementedError("MultiIndexSet.union() is not implemented yet.")
 
-    def expand_dim(self, dim):
-        # TODO avoid transpose
-        # print("self.__exponents",self.__exponents)
-        # print("self.__exponents.T",self.__exponents.T)
-        # print("_expand_dim(self.__exponents.T,dim)",_expand_dim(self.__exponents.T,dim))
-        self._exponents = _expand_dim(self._exponents, dim)
-
     def ordering(self, order):
         """This function is not implemented yet.
 
@@ -332,7 +325,7 @@ class MultiIndexSet:
         inplace : bool, optional
             Flag to determine whether the current instance is modified
             in-place with the complete exponents. If ``inplace`` is ``False``,
-            a new `MultiIndexSet` instance is created.
+            a new :py:class:`.MultiIndexSet` instance is created.
             The default is ``False``.
 
         Returns
@@ -385,6 +378,71 @@ class MultiIndexSet:
 
                 return new_instance
 
+    def expand_dim(
+        self,
+        new_dimension: int,
+        inplace: bool = False
+    ) -> Optional["MultiIndexSet"]:
+        """Expand the dimension of the multi-index set.
+
+        After expansion, the value of exponents in the new dimension is 0.
+
+        Parameters
+        ----------
+        new_dimension : int
+            The new spatial dimension. It must be larger than or equal
+            to the current spatial dimension of the multi-index set.
+        inplace : bool, optional
+            Flag to determine whether the current instance is modified
+            in-place with the expanded dimension. If ``inplace`` is ``False``,
+            a new :py:class:`.MultiIndexSet` instance is created.
+            The default is ``False``.
+
+        Returns
+        -------
+        `MultiIndexSet`, optional
+            The multi-index set with an expanded dimension.
+            If ``inplace`` is set to ``True``, then the modification
+            is carried out in-place without an explicit output.
+
+        Notes
+        -----
+        - If the new dimension is the same as the current spatial dimension
+          of the :py:class:`.MultiIndexSet` instance, setting ``inplace``
+          to ``False`` (the default) creates a shallow copy.
+
+        Raises
+        ------
+        ValueError
+            If the target dimension is smaller than the current spatial
+            dimension of the :py:class:`.MultiIndexSet` instance.
+        """
+        # Expand the dimension of the current exponents, i.e., add a new column
+        expanded_exponents = expand_dim(
+            self._exponents, new_dimension
+        )
+
+        if expanded_exponents is self._exponents:
+            # Identical exponents after expansion
+            if inplace:
+                return None
+            else:
+                # Return a shallow copy of the current instance
+                return copy(self)
+        else:
+            # The exponents have been updated
+            if inplace:
+                self._exponents = expanded_exponents
+                # By construction, the exponents are not complete anymore
+                self._is_complete = False
+            else:
+                # Create a new instance
+                new_instance = self.__class__(
+                    exponents=expanded_exponents, lp_degree=self.lp_degree
+                )
+
+                return new_instance
+
     def make_complete(
         self,
         inplace: bool = False,
@@ -396,7 +454,7 @@ class MultiIndexSet:
         inplace : bool, optional
             Flag to determine whether the current instance is modified
             in-place with the complete exponents. If ``inplace`` is ``False``,
-            a new `MultiIndexSet` instance is created.
+            a new :py:class:`.MultiIndexSet` instance is created.
             The default is ``False``.
 
         Returns
@@ -413,10 +471,12 @@ class MultiIndexSet:
           a shallow copy.
         """
         if self.is_complete:
-            if not inplace:
+            # Already complete before
+            if inplace:
+                return None
+            else:
                 # Create a shallow copy of the current instance
                 return copy(self)
-
         else:
             completed_exponents = make_complete(self.exponents, self.lp_degree)
             if inplace:
