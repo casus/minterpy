@@ -230,8 +230,8 @@ def expand_dim(
 
     Examples
     --------
-    >>> array = np.array([[0, 0], [1, 0], [0, 1]])  # two columns / "dimension"
-    >>> expand_dim(array, 4)  # expand to four columns / "dimensions"
+    >>> array = np.array([[0, 0], [1, 0], [0, 1]])  # 2 columns / "dimensions"
+    >>> expand_dim(array, 4)  # expand to 4 columns / "dimensions"
     array([[0, 0, 0, 0],
            [1, 0, 0, 0],
            [0, 1, 0, 0]])
