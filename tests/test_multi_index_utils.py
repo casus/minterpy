@@ -15,6 +15,7 @@ from numpy.testing import assert_, assert_equal, assert_raises
 from minterpy.core.utils import (
     _gen_multi_index_exponents,
     find_match_between,
+    expand_dim,
     get_exponent_matrix,
     insert_lexicographically,
     is_lexicographically_complete,
@@ -245,3 +246,86 @@ def test_all_indices_are_contained(SpatialDimension, PolyDegree, LpDegree):
     assert_(not all_indices_are_contained(enlarged_exponents, exponents))
     # but the other way round should hold:
     assert_(all_indices_are_contained(exponents, enlarged_exponents))
+
+
+def test_expand_dim_invalid_shape():
+    """Test expanding the dimension of an exponent or grid array
+    of an invalid shape.
+    """
+    # 1D
+    xx = np.random.rand(10)
+    # Assertion: too few dimension
+    assert_raises(ValueError, expand_dim, xx, 2, None)
+
+    # 3D
+    xx = np.random.rand(10, 3).reshape(1, 3, 10)
+    # Assertion: too many dimension
+    assert_raises(ValueError, expand_dim, xx, xx.shape[1] + 1, None)
+
+
+def test_expand_dim_contraction(SpatialDimension):
+    """Test expanding the dimension of an exponent or grid array
+    with an invalid target dimension.
+    """
+    # Create an input array
+    xx = np.random.rand(100, SpatialDimension)
+
+    # Assertion: invalid target number of columns (contraction)
+    assert_raises(ValueError, expand_dim, xx, xx.shape[1] - 1, None)
+
+
+def test_expand_dim_invalid_new_values(SpatialDimension):
+    """Test expanding the dimension of an exponent or grid array
+    with a set of invalid new values.
+    """
+    # Create an input array
+    xx = np.random.rand(100, SpatialDimension)
+    new_dim = SpatialDimension * 3
+    xx_new = np.random.rand(new_dim - SpatialDimension - 1)
+
+    # Assertion: number of new values mismatches with the expanded columns
+    assert_raises(ValueError, expand_dim, xx, new_dim, xx_new)
+
+
+def test_expand_dim_no_expansion(SpatialDimension):
+    """Test expanding the dimension of an exponent or grid array
+    to the current number of dimensions.
+    """
+    # Create an input array
+    xx = np.random.rand(100, SpatialDimension)
+    xx_expanded = expand_dim(xx, SpatialDimension)
+
+    # Assertion: identical array because the number of columns remains
+    assert xx is xx_expanded
+
+
+def test_expand_dim(SpatialDimension):
+    """Test expanding the dimension of an exponent or grid array."""
+    # Create an input array
+    num_rows = 100
+    xx = np.random.rand(num_rows, SpatialDimension)
+
+    # Expand the column
+    new_dim = SpatialDimension * 3
+    xx_expanded = expand_dim(xx, new_dim)
+
+    # Assertion: By default, expanded columns are filled with 0
+    assert np.all(xx_expanded[:, SpatialDimension:] == 0)
+
+
+def test_expand_dim_new_values(SpatialDimension):
+    """Test expanding the dimension of an exponent or grid array column
+    with a given set of values.
+    """
+    # Create an input array
+    num_rows = 100
+    xx = np.random.rand(num_rows, SpatialDimension)
+
+    # Expand the column
+    new_dim = SpatialDimension * 3
+    diff_cols = new_dim - SpatialDimension
+    new_values = np.random.rand(diff_cols)
+    xx_expanded = expand_dim(xx, new_dim, new_values)
+
+    # Assertion
+    assert np.all(xx_expanded[:, SpatialDimension:] == new_values)

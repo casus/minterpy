@@ -283,16 +283,20 @@ def test_make_complete_inplace(SpatialDimension, PolyDegree, LpDegree):
 
     mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
 
+    # --- Make complete of an already complete set
+    exponents = mi.exponents
+    mi.make_complete(inplace=True)
+    # Assertion: the exponents are identical
+    assert mi.exponents is exponents
+
+    # --- Make complete of an incomplete set
     # Get the highest multi-index set element
     exponent = np.atleast_2d(mi.exponents[-1])
-
     # Create a new instance with just a single exponent (incomplete exponent)
     mi_incomplete = MultiIndexSet(exponent, LpDegree)
     assert not mi_incomplete.is_complete
-
     # Make complete in-place
     mi_incomplete.make_complete(inplace=True)
-
     # Assertions
     assert mi_incomplete.is_complete
     assert np.all(mi.exponents == mi_incomplete.exponents)
@@ -341,3 +345,51 @@ def test_make_complete_outplace(SpatialDimension, PolyDegree, LpDegree):
     assert mi_complete.is_complete
     assert mi_complete is not mi_incomplete
     assert np.all(mi_complete.exponents == mi.exponents)
+
+
+def test_expand_dim_invalid(SpatialDimension, PolyDegree, LpDegree):
+    """Test invalid dimension expansion (i.e., contraction)."""
+    # Create a multi-index set instance
+    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+    # Expand the dimension
+    new_dimension = SpatialDimension - 1
+    # Assertion: Contraction raises an exception
+    assert_raises(ValueError, mi.expand_dim, new_dimension)
+
+
+def test_expand_dim_inplace(SpatialDimension, PolyDegree, LpDegree):
+    """Test in-place multi-index set dimension expansion."""
+    # Create a multi-index set instance
+    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+    # Expand the dimension in-place (same dimension)
+    new_dimension = SpatialDimension
+    exponents = mi.exponents
+    mi.expand_dim(new_dimension, inplace=True)
+    # Assertion: identical exponents after expansion
+    assert exponents is mi.exponents
+
+    # Expand the dimension in-place (twice the dimension)
+    new_dimension = SpatialDimension * 2
+    mi.expand_dim(new_dimension, inplace=True)
+    # Assertion: new columns are added to the exponents with 0 values
+    assert np.all(mi.exponents[:, SpatialDimension:] == 0)
+
+
+def test_expand_dim_outplace(SpatialDimension, PolyDegree, LpDegree):
+    """Test out-place multi-index set dimension expansion."""
+    # Create a multi-index set instance
+    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+    # Expand the dimension out-place (same dimension)
+    new_dimension = SpatialDimension
+    expanded_mi = mi.expand_dim(new_dimension)
+    # Assertion: identical exponents after expansion (shallow copy)
+    assert mi.exponents is expanded_mi.exponents
+
+    # Expand the dimension out-place (twice the dimension)
+    new_dimension = SpatialDimension * 2
+    expanded_mi = mi.expand_dim(new_dimension)
+    # Assertion: new columns are added to the expanded index set with 0 values
+    assert np.all(expanded_mi.exponents[:, SpatialDimension:] == 0)
