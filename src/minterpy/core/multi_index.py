@@ -9,7 +9,6 @@ import numpy as np
 from minterpy.global_settings import ARRAY, INT_DTYPE, DEFAULT_LP_DEG
 from minterpy.jit_compiled_utils import (
     all_indices_are_contained,
-    have_lexicographical_ordering,
 )
 from minterpy.core.utils import (
     expand_dim,
@@ -18,6 +17,7 @@ from minterpy.core.utils import (
     insert_lexicographically,
     is_lexicographically_complete,
     make_complete,
+    lex_sort,
 )
 
 from .verification import check_shape, check_values, verify_lp_degree
@@ -27,24 +27,40 @@ __all__ = ["MultiIndexSet"]
 
 # TODO implement (set) comparison operations based on the multi index utils (>=, == ...)
 class MultiIndexSet:
-    """Class representation of the set of multi indices for a polynomial.
+    """A class to represent the set of multi-indices.
 
-    The instances of this class provide storrage for the exponents of a multi variate
-    polynomial independently of the base assumed in the polynomial space. Only
-    the polynomial degree (w.r.t. a given `l_p` norm) as well as the dimension of the space are used to build the set of exponents.
+    The instances of this class provide the data structure for the exponents
+    of multi-dimensional polynomials independently of the chosen basis in
+    the polynomial space.
+
+    Parameters
+    ----------
+    exponents : :class:`numpy:numpy.ndarray`
+        Set of exponents given as a two-dimensional ``N-by-M`` integer array,
+        where ``N`` is the number of multi-index elements (exponents) and
+        ``M`` is the number of spatial dimension.
+        Each row of the array indicates the vector of exponents.
+    lp_degree : float
+        :math:`p` of the :math:`l_p`-norm (i.e., the :math:`l_p`-degree)
+        that is used to define the multi-index set.
+
+    Notes
+    -----
+    - If the set of exponents is not given as an integer array, it is converted
+      to an integer array once the instance has been constructed.
+    - The resulting polynomial degree corresponds to the minimum degree
+      that would include the given set of exponents with respect to
+      the :math:`l_p`-degree.
     """
 
-    def __init__(self, exponents: ARRAY, lp_degree: float):
+    def __init__(self, exponents: np.ndarray, lp_degree: float):
 
         # Check and assign the exponents
         exponents = np.require(exponents, dtype=INT_DTYPE)
         check_shape(exponents, dimensionality=2)
-        if not have_lexicographical_ordering(exponents):
-            raise ValueError(
-                "The multi-index set must be lexicographically ordered from "
-                "the last to the first column."
-            )
-        self._exponents: ARRAY = exponents
+
+        # Keep only unique entries and sort lexicographically
+        self._exponents = lex_sort(exponents)
 
         # Verify the given lp_degree
         self._lp_degree = verify_lp_degree(lp_degree)
@@ -52,8 +68,9 @@ class MultiIndexSet:
         # Compute the polynomial degree given the exponents and lp-degree
         self._poly_degree = get_poly_degree(exponents, self._lp_degree)
 
-        self._is_complete: Optional[bool] = None
+        self._is_complete: Optional[bool] = None  # Lazy evaluation
         # for avoiding to complete the exponents multiple times
+        # TODO: Possibly remove this property
         self._exponents_completed: Optional[ARRAY] = None
 
     @classmethod
@@ -76,17 +93,22 @@ class MultiIndexSet:
         return cls(exponents, lp_degree=lp_degree)
 
     @property
-    def exponents(
-        self,
-    ):
-        """Array of exponents.
+    def exponents(self) -> np.ndarray:
+        """Array of exponents in the form of multi-indices.
 
-        :return: A 2D :class:`ndarray` which stores the exponents, where the first axis refers to the explicit exponent and the second axis refers to the variable which is powerd by the entry at this array position. These exponents are always lexicographically ordered w.r.t. the first axis.
+        Returns
+        -------
+        :class:`numpy:numpy.ndarray`
+            A two-dimensional integer array of exponents in the form of
+            lexicographically sorted (ordered) multi-indices.
+            This is a read-only property and defined at construction.
 
-        :rtype: np.ndarray
+        Notes
+        -----
+        - Each row corresponds to the exponent of a multi-dimensional
+          polynomial basis while, each column corresponds to the exponent
+          of a given dimension of a multi-dimensional polynomial basis.
         """
-        # read only: must not be altered since transformation matrices etc. depends on this
-
         return self._exponents
 
     @property
@@ -124,12 +146,12 @@ class MultiIndexSet:
 
     @property
     def lp_degree(self) -> float:
-        """:math:`l_p` of :math:`l_p`-norm used to define the multi-index set.
+        """:math:`p` of :math:`l_p`-norm used to define the multi-index set.
 
         Returns
         -------
         float
-            The :math:`l_p` of the :math:`l_p`-norm
+            The :math:`p` of the :math:`l_p`-norm
             (i.e., the :math:`l_p`-degree) that is used to define
             the multi-index set. This property is read-only
             and defined at construction.
@@ -149,13 +171,16 @@ class MultiIndexSet:
         return self._poly_degree
 
     @property
-    def spatial_dimension(self):
-        """The dimentsion of the domain space.
+    def spatial_dimension(self) -> int:
+        """The dimension of the domain space.
 
-         :return: The dimension of the space, where a polynomial described by this ``multi_index`` lives on. It is equal to the number of powers in each exponent vector.
-
-        :rtype: int
-
+        Returns
+        -------
+        int
+            The dimension of the domain space, on which a polynomial described
+            by this instance of :py:class:`.MultiIndexSet` lives.
+            It is equal to the number of elements (columns) in each element
+            of multi-indices.
         """
         return self._exponents.shape[1]
 
@@ -312,14 +337,14 @@ class MultiIndexSet:
 
     def add_exponents(
         self,
-        exponents: ARRAY,
-        inplace=False
+        exponents: np.ndarray,
+        inplace=False,
     ) -> Optional["MultiIndexSet"]:
         """Add a set of exponents lexicographically into this instance.
 
         Parameters
         ----------
-        exponents : ARRAY
+        exponents : `numpy:numpy.ndarray`
             Array of exponents to be added. The set of exponents must be of
             integer type.
         inplace : bool, optional
@@ -383,7 +408,7 @@ class MultiIndexSet:
     def expand_dim(
         self,
         new_dimension: int,
-        inplace: bool = False
+        inplace: bool = False,
     ) -> Optional["MultiIndexSet"]:
         """Expand the dimension of the multi-index set.
 
@@ -407,17 +432,17 @@ class MultiIndexSet:
             If ``inplace`` is set to ``True``, then the modification
             is carried out in-place without an explicit output.
 
-        Notes
-        -----
-        - If the new dimension is the same as the current spatial dimension
-          of the :py:class:`.MultiIndexSet` instance, setting ``inplace``
-          to ``False`` (the default) creates a shallow copy.
-
         Raises
         ------
         ValueError
             If the new dimension is smaller than the current spatial
             dimension of the :py:class:`.MultiIndexSet` instance.
+
+        Notes
+        -----
+        - If the new dimension is the same as the current spatial dimension
+          of the :py:class:`.MultiIndexSet` instance, setting ``inplace``
+          to ``False`` (the default) creates a shallow copy.
         """
         # Expand the dimension of the current exponents, i.e., add a new column
         expanded_exponents = expand_dim(

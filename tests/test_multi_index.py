@@ -24,20 +24,32 @@ from minterpy.core.utils import (
 
 # test initialization
 def test_init_from_exponents(SpatialDimension, PolyDegree, LpDegree):
+    """Test the default constructor of MultiIndexSet."""
+    # --- Complete exponents
     exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+    # Assertion
     assert_call(MultiIndexSet, exponents, lp_degree=LpDegree)
+
+    # --- Non-lexicographically sorted (but complete) exponents
+    idx = np.arange(len(exponents))
+    np.random.shuffle(idx)
+    exponents_shuffled = exponents[idx]
+    # Assertion
+    assert_call(MultiIndexSet, exponents_shuffled, lp_degree=LpDegree)
+
+    # --- Non-lexicographically sorted and incomplete exponents
+    idx_size = int(np.ceil(0.5 * len(exponents)))
+    idx = np.random.choice(len(exponents), idx_size, replace=False)
+    exponents_random = exponents[idx]
+    # Assertion
+    assert_call(MultiIndexSet, exponents_random, lp_degree=LpDegree)
 
 
 def test_init_fail_from_exponents():
     """Test if invalid parameter values raise the expected errors."""
-    # --- Non-downward-closed multi-index set exponents
-    spatial_dimension, poly_degree, lp_degree = (2, 1, 1)
-    exponents = get_exponent_matrix(spatial_dimension, poly_degree, lp_degree)
-    exponents[0] = 1
-    assert_raises(ValueError, MultiIndexSet, exponents, lp_degree)
-
     # --- Invalid lp-degree
-    exponents = get_exponent_matrix(3, 2, 2)  # arbitrary exponents
+    # Create arbitrary complete exponents
+    exponents = get_exponent_matrix(3, 2, 2)
     # Zero
     assert_raises(ValueError, MultiIndexSet, exponents, 0.0)
     # Negative value
@@ -83,20 +95,18 @@ def test_add_exponents_outplace(SpatialDimension, PolyDegree, LpDegree):
     # --- Already contained exponents (should return identical exponents)
 
     # Create a set of exponents
-    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    mi = MultiIndexSet(exponents, lp_degree=LpDegree)
+    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
 
     # Add the same set of exponents with default parameter value
+    exponents = mi.exponents
     mi_added = mi.add_exponents(exponents)
     # Assertions
     assert_multi_index_equal(mi_added, mi)
-    assert mi_added.exponents is exponents
 
     # Add the same set of exponents with parameter
     mi_added = mi.add_exponents(exponents, inplace=False)
     # Assertions
     assert_multi_index_equal(mi_added, mi)
-    assert mi_added.exponents is exponents
 
     # --- A new set of exponents
     
@@ -135,9 +145,9 @@ def test_add_exponents_inplace(SpatialDimension, PolyDegree, LpDegree):
     # --- Already contained exponents (should return identical exponents)
 
     # Create a set of exponents
-    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    mi = MultiIndexSet(exponents, lp_degree=LpDegree)
+    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
     poly_degree = mi.poly_degree
+    exponents = mi.exponents
 
     # Add the same set of exponents in-place
     mi.add_exponents(exponents, inplace=True)
@@ -217,7 +227,11 @@ def test_attributes(SpatialDimension, PolyDegree, LpDegree):
         multi_index.poly_degree = PolyDegree
 
 
-def test_attributes_incomplete_exponents(SpatialDimension, PolyDegree, LpDegree):
+def test_attributes_incomplete_exponents(
+    SpatialDimension,
+    PolyDegree,
+    LpDegree
+):
     """Test the attributes with an incomplete exponents for MultiIndexSet.
     
     Notes
@@ -319,7 +333,9 @@ def test_make_complete_outplace(SpatialDimension, PolyDegree, LpDegree):
 
     # --- Already complete set of exponents (a shallow copy is created)
     mi_complete = mi.make_complete(inplace=False)
-    assert mi_complete.exponents is mi.exponents
+    assert mi_complete.is_complete
+    assert mi_complete is not mi
+    assert np.all(mi_complete.exponents == mi.exponents)
 
     # --- Incomplete set of exponents
 
@@ -385,8 +401,8 @@ def test_expand_dim_outplace(SpatialDimension, PolyDegree, LpDegree):
     # Expand the dimension out-place (same dimension)
     new_dimension = SpatialDimension
     expanded_mi = mi.expand_dim(new_dimension)
-    # Assertion: identical exponents after expansion (shallow copy)
-    assert mi.exponents is expanded_mi.exponents
+    # Assertion: exponents after expansion have the same value
+    assert np.all(mi.exponents == expanded_mi.exponents)
 
     # Expand the dimension out-place (twice the dimension)
     new_dimension = SpatialDimension * 2

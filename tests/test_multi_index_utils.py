@@ -21,10 +21,11 @@ from minterpy.core.utils import (
     is_lexicographically_complete,
     make_complete,
     make_derivable,
+    lex_sort,
 )
 from minterpy.jit_compiled_utils import (
     all_indices_are_contained,
-    have_lexicographical_ordering,
+    is_lex_sorted,
     index_is_contained,
     lex_smaller_or_equal,
 )
@@ -105,16 +106,57 @@ def test_index_is_contained(SpatialDimension, PolyDegree, LpDegree):
     assert_(not index_is_contained(exponents2, deleted_exponent_vector))
 
 
+# --- lex_smaller_or_equal()
+
 def test_lex_smaller_or_equal(SpatialDimension, PolyDegree, LpDegree):
+    """Test lexicographically comparing two different multi-index elements."""
     exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    number_of_monomials, dim = exponents.shape
 
     # TODO: is it necessary to do this for every element?
-    for exp_vect in exponents:
-        assert_(lex_smaller_or_equal(exp_vect, exp_vect))
-        bigger_exponent_vector = get_lex_bigger(exp_vect)
-        assert_(lex_smaller_or_equal(exp_vect, bigger_exponent_vector))
-        assert_(not lex_smaller_or_equal(bigger_exponent_vector, exp_vect))
+    for exponent in exponents:
+        # Assertion: Equal exponent
+        assert lex_smaller_or_equal(exponent, exponent)
+        # Get the bigger exponent
+        bigger_exponent = get_lex_bigger(exponent)
+        # Assertion: Smaller exponent
+        assert lex_smaller_or_equal(exponent, bigger_exponent)
+        # Assertion: Larger exponent
+        assert not lex_smaller_or_equal(bigger_exponent, exponent)
+
+
+# --- have_lexicographical_ordering()
+
+def test_lexicographical_ordering(SpatialDimension, PolyDegree, LpDegree):
+    """Test checking whether a multi-index set is lexicographically ordered."""
+    # --- By construction, below is lexicographically ordered
+    indices = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+
+    # Assertion
+    assert is_lex_sorted(indices)
+
+
+def test_lexicographical_ordering_single():
+    """Test if a single entry multi-index set is lexicographically ordered."""
+    index = np.random.randint(1, 5, (1, 10))
+
+    # Assertion - Always, lexicographical
+    assert is_lex_sorted(index)
+
+
+def test_lexicographical_ordering_random():
+    """Test if a random integer array is lexicographically ordered."""
+    indices = np.random.randint(1, 5, (5, 10))
+
+    # Assertion - Not lexicographical
+    assert not is_lex_sorted(indices)
+
+
+def test_lexicographical_ordering_duplicates():
+    """Test if a multi-index set with duplicate entries is lexicographical."""
+    indices = np.array([[0, 0], [2, 0], [2, 0]])
+
+    # Assertion - Not lexicographical
+    assert not is_lex_sorted(indices)
 
 
 def test_is_lexicographically_complete(SpatialDimension, PolyDegree, LpDegree):
@@ -217,7 +259,7 @@ def test_make_complete(SpatialDimension, PolyDegree, LpDegree):
     # Make the set complete
     completed_exponents = make_complete(incomplete_exponents, LpDegree)
     # Completed set must be lexicographically ordered
-    assert_(have_lexicographical_ordering(completed_exponents))
+    assert_(is_lex_sorted(completed_exponents))
     # Completed set must be complete
     assert_(is_lexicographically_complete(completed_exponents))
 
@@ -329,3 +371,32 @@ def test_expand_dim_new_values(SpatialDimension):
 
     # Assertion
     assert np.all(xx_expanded[:, SpatialDimension:] == new_values)
+
+
+def test_sort_lexicographically(SpatialDimension, PolyDegree, LpDegree):
+    """Test sorting a shuffled multi-index set."""
+
+    # --- Create a complete multi-indices (no duplication)
+    indices = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+
+    # Shuffle the indices
+    idx = np.arange(len(indices))
+    np.random.shuffle(idx)
+    indices_shuffled = indices[idx]
+
+    # Sort lexicographically
+    indices_lexsorted = lex_sort(indices_shuffled)
+    # Assertions
+    assert is_lex_sorted(indices_lexsorted)
+    assert np.all(indices == indices_lexsorted)
+
+    # --- Introduce duplicate entries
+    idx_2 = np.arange(len(indices))
+    np.random.shuffle(idx_2)
+    indices_shuffled = np.concatenate((indices[idx], indices[idx_2]))
+
+    # Sort lexicographically and remove duplicate entries
+    indices_lexsorted = lex_sort(indices_shuffled)
+    # Assertions
+    assert is_lex_sorted(indices_lexsorted)
+    assert np.all(indices == indices_lexsorted)
