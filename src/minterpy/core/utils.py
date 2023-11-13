@@ -13,7 +13,7 @@ from minterpy.global_settings import DEFAULT_LP_DEG, INT_DTYPE
 from minterpy.jit_compiled_utils import (
     fill_match_positions,
     index_is_contained,
-    lex_smaller_or_equal,
+    is_lex_smaller_or_equal,
 )
 from minterpy.utils import cartesian_product, lp_norm, lp_sum
 
@@ -359,7 +359,7 @@ def list_insert_single(
         nr_of_indices  # default: insert at the last position, ATTENTION: -1 not working
     )
     for i, contained_index in enumerate(list_of_indices):
-        if lex_smaller_or_equal(index2insert, contained_index):
+        if is_lex_smaller_or_equal(index2insert, contained_index):
             insertion_idx = i
             break
 
@@ -509,3 +509,38 @@ def find_match_between(
     positions = np.empty(nr_exp_smaller, dtype=INT_DTYPE)
     fill_match_positions(larger_idx_set, smaller_idx_set, positions)
     return positions
+
+
+def lex_sort(indices: np.ndarray) -> np.ndarray:
+    """Lexicographically sort an array of multi-indices.
+
+    Parameters
+    ----------
+    indices : :class:`numpy:numpy.ndarray`
+        Two-dimensional array of multi-indices to be sorted.
+
+    Returns
+    -------
+    :class:`numpy:numpy.ndarray`
+        Lexicographically sorted array, having the same type as ``indices``.
+        Only unique entries are kept in the sorted array.
+
+    Examples
+    --------
+    >>> xx = np.array([
+    ... [0, 1, 2, 3],
+    ... [0, 1, 0, 1],
+    ... [0, 0, 0, 0],
+    ... [0, 0, 1, 1],
+    ... [0, 0, 0, 0],
+    ... ])
+    >>> lex_sort(xx)  # Sort and remove duplicates
+    array([[0, 0, 0, 0],
+           [0, 1, 0, 1],
+           [0, 0, 1, 1],
+           [0, 1, 2, 3]])
+    """
+    indices_unique = np.unique(indices, axis=0)
+    indices_lex_sorted = indices_unique[np.lexsort(indices_unique.T)]
+
+    return indices_lex_sorted

@@ -7,7 +7,7 @@ Core modules
 .. toctree::
    :maxdepth: 2
 
-   Multi index sets <multi_index>
+   Multi-Index Sets <multi_index>
    Grid <grid>
    Multi index tree <tree>
    Abstract base classes <ABC/index>

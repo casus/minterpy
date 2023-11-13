@@ -231,47 +231,110 @@ def compute_vandermonde_n2c(V_n2c, nodes, exponents):
 
 
 @njit(b1(I_1D, I_1D), cache=True)
-def lex_smaller_or_equal(index1: np.ndarray, index2: np.ndarray) -> bool:
-    """Compares whether multi-index 1 is lexicographically smaller than or equal to multi-index 2.
+def is_lex_smaller_or_equal(index_1: np.ndarray, index_2: np.ndarray) -> bool:
+    """Check if an index is lexicographically smaller than or equal to another.
 
-    - ``m`` spatial dimension
+    Parameters
+    ----------
+    index_1 : :class:`numpy:numpy.ndarray`
+        A given multi-index, a one-dimensional array of length ``M``.
+    index_2 : :class:`numpy:numpy.ndarray`
+        Another multi-index, a one dimensional array of length ``M``.
 
-    :param index1: a multi-index entry of shape ``m``.
-    :param index2: another multi-index entry.
-    :return: ``True`` if ``index1 <= index2`` (lexicographically), otherwise ``False``.
+    Returns
+    -------
+    bool
+        Return `True` if ``index_1 <= index_2`` lexicographically,
+        otherwise `False`.
 
+    Notes
+    -----
+    - By default, Numba disables the bound-checking for performance reason.
+      Therefore, if the two input arrays are of inconsistent shapes, no
+      exception will be raised and the results cannot be trusted.
+
+    Examples
+    --------
+    >>> my_index_1 = np.array([1, 2, 3])  # "Reference index"
+    >>> my_index_2 = np.array([1, 2, 3])  # Equal
+    >>> is_lex_smaller_or_equal(my_index_1, my_index_2)
+    True
+    >>> my_index_3 = np.array([2, 4, 5])  # Larger
+    >>> is_lex_smaller_or_equal(my_index_1, my_index_3)
+    True
+    >>> my_index_4 = np.array([0, 3, 2])  # Smaller
+    >>> is_lex_smaller_or_equal(my_index_1, my_index_4)
+    False
     """
-    spatial_dimension = len(index1)
-    for m in range(spatial_dimension - 1, -1, -1):  # from last to first dimension
-        if index1[m] > index2[m]:
+    spatial_dimension = len(index_1)
+    # lexicographic: Iterate backward from the highest dimension
+    for m in range(spatial_dimension - 1, -1, -1):
+        if index_1[m] > index_2[m]:
+            # index_1 is lexicographically larger
             return False
-        if index1[m] < index2[m]:
+
+        if index_1[m] < index_2[m]:
+            # index_1 is Lexicographically smaller
             return True
-    return True  # all equal
+
+    # index_1 is lexicographically equal
+    return True
 
 
 @njit(B_TYPE(I_2D), cache=True)
-def have_lexicographical_ordering(indices: np.ndarray) -> bool:
-    """Checks if an array of indices is ordered lexicographically
+def is_lex_sorted(indices: np.ndarray) -> bool:
+    """Check if an array of multi-indices is lexicographically sorted.
 
-    - ``m`` spatial dimension
-    - ``N`` number of monomials
+    Parameters
+    ----------
+    indices : :class:`numpy:numpy.ndarray`
+        Two-dimensional integer array to check with shape ``(N, M)`` where
+        ``N`` is the number of multi-indices and ``M`` is the number of
+        spatial dimensions.
 
-    :param indices: array of multi-indices with shape ``(N x m)``.
-    :return: ``True`` if indices are lexicographically ordered, ``False`` otherwise.
+    Returns
+    -------
+    bool
+        ``True`` if the multi-indices is lexicographically sorted, and
+        ``False`` otherwise
 
+    Notes
+    -----
+    - If there are any duplicate entries (between rows),
+      an array of multi-indices does not have a lexicographical ordering.
+
+    Examples
+    --------
+    >>> my_indices = np.array([[0, 2, 0]])  # single entry
+    >>> is_lex_sorted(my_indices)
+    True
+    >>> my_indices = np.array([[0, 0], [1, 0], [0, 2]])  # already sorted
+    >>> is_lex_sorted(my_indices)
+    True
+    >>> my_indices = np.array([[1, 0], [0, 0], [0, 2]])  # unsorted
+    >>> is_lex_sorted(my_indices)
+    False
+    >>> my_indices = np.array([[0, 0], [2, 0], [2, 0]])  # duplicate entries
+    >>> is_lex_sorted(my_indices)
+    False
     """
-    nr_exponents, spatial_dimension = indices.shape
-    if nr_exponents <= 1:
+    nr_indices = indices.shape[0]
+
+    # --- Single entry is always lexicographically ordered
+    if nr_indices <= 1:
         return True
-    i1 = indices[0, :]
-    for n in range(1, nr_exponents):
-        i2 = indices[n, :]
-        if lex_smaller_or_equal(i2, i1):
+
+    # --- Loop over the multi-indices and find any unsorted entry or duplicate
+    index_1 = indices[0, :]
+    for n in range(1, nr_indices):
+        index_2 = indices[n, :]
+
+        if is_lex_smaller_or_equal(index_2, index_1):
+            # Unsorted entry or duplicates
             return False
-        if np.all(i1 == i2):  # duplicates are not allowed
-            return False
-        i1 = i2
+
+        index_1 = index_2
+
     return True
 
 
@@ -302,12 +365,12 @@ def get_match_idx(indices: np.ndarray, index: np.ndarray) -> int:
     out = NOT_FOUND
     for i in range(nr_exponents):  # O(N)
         contained_index = indices[i, :]
-        if lex_smaller_or_equal(index, contained_index):  # O(m)
+        if is_lex_smaller_or_equal(index, contained_index):  # O(m)
             # i is now pointing to the (smallest) index which is lexicographically smaller or equal
             # the two indices are equal iff the contained index is also smaller or equal than the query index
             # NOTE: testing for equality directly is faster, but only in the case of equality (<- rare!)
             #   most of the times the index won't be smaller and the check can be performed with fewer comparisons
-            is_equal = lex_smaller_or_equal(contained_index, index)
+            is_equal = is_lex_smaller_or_equal(contained_index, index)
             if is_equal:  # found the position of the index
                 out = i
             break  # stop looking (an even bigger index cannot be equal)
@@ -382,7 +445,7 @@ def fill_match_positions(larger_idx_set, smaller_idx_set, positions):
         while 1:
             search_pos += 1
             idx2 = larger_idx_set[search_pos, :]
-            if lex_smaller_or_equal(idx1, idx2) and lex_smaller_or_equal(idx2, idx1):
+            if is_lex_smaller_or_equal(idx1, idx2) and is_lex_smaller_or_equal(idx2, idx1):
                 # NOTE: testing for equality directly is faster, but only in the case of equality (<- rare!)
                 #   most of the times the index won't be smaller and the check can be performed with fewer comparisons
                 positions[i] = search_pos

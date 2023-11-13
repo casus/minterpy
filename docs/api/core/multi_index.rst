@@ -1,5 +1,5 @@
 ################
-Multi index sets
+Multi-Index Sets
 ################
 
 :construction: Here we need a description of multi index sets :construction:
@@ -12,6 +12,7 @@ Multi index sets
    :private-members:
    :inherited-members:
    :special-members:
+   :exclude-members: __init__
 
    .. rubric:: Properties
 
