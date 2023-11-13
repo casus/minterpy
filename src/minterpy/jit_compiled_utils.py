@@ -231,7 +231,7 @@ def compute_vandermonde_n2c(V_n2c, nodes, exponents):
 
 
 @njit(b1(I_1D, I_1D), cache=True)
-def lex_smaller_or_equal(index_1: np.ndarray, index_2: np.ndarray) -> bool:
+def is_lex_smaller_or_equal(index_1: np.ndarray, index_2: np.ndarray) -> bool:
     """Check if an index is lexicographically smaller than or equal to another.
 
     Parameters
@@ -257,17 +257,17 @@ def lex_smaller_or_equal(index_1: np.ndarray, index_2: np.ndarray) -> bool:
     --------
     >>> my_index_1 = np.array([1, 2, 3])  # "Reference index"
     >>> my_index_2 = np.array([1, 2, 3])  # Equal
-    >>> lex_smaller_or_equal(my_index_1, my_index_2)
+    >>> is_lex_smaller_or_equal(my_index_1, my_index_2)
     True
     >>> my_index_3 = np.array([2, 4, 5])  # Larger
-    >>> lex_smaller_or_equal(my_index_1, my_index_3)
+    >>> is_lex_smaller_or_equal(my_index_1, my_index_3)
     True
     >>> my_index_4 = np.array([0, 3, 2])  # Smaller
-    >>> lex_smaller_or_equal(my_index_1, my_index_4)
+    >>> is_lex_smaller_or_equal(my_index_1, my_index_4)
     False
     """
     spatial_dimension = len(index_1)
-    # Iterate backward from the highest dimension
+    # lexicographic: Iterate backward from the highest dimension
     for m in range(spatial_dimension - 1, -1, -1):
         if index_1[m] > index_2[m]:
             # index_1 is lexicographically larger
@@ -283,7 +283,7 @@ def lex_smaller_or_equal(index_1: np.ndarray, index_2: np.ndarray) -> bool:
 
 @njit(B_TYPE(I_2D), cache=True)
 def is_lex_sorted(indices: np.ndarray) -> bool:
-    """Checks if an array of multi-indices is lexicographically sorted.
+    """Check if an array of multi-indices is lexicographically sorted.
 
     Parameters
     ----------
@@ -318,18 +318,18 @@ def is_lex_sorted(indices: np.ndarray) -> bool:
     >>> is_lex_sorted(my_indices)
     False
     """
-    nr_exponents = indices.shape[0]
+    nr_indices = indices.shape[0]
 
     # --- Single entry is always lexicographically ordered
-    if nr_exponents <= 1:
+    if nr_indices <= 1:
         return True
 
     # --- Loop over the multi-indices and find any unsorted entry or duplicate
     index_1 = indices[0, :]
-    for n in range(1, nr_exponents):
+    for n in range(1, nr_indices):
         index_2 = indices[n, :]
 
-        if lex_smaller_or_equal(index_2, index_1):
+        if is_lex_smaller_or_equal(index_2, index_1):
             # Unsorted entry or duplicates
             return False
 
@@ -365,12 +365,12 @@ def get_match_idx(indices: np.ndarray, index: np.ndarray) -> int:
     out = NOT_FOUND
     for i in range(nr_exponents):  # O(N)
         contained_index = indices[i, :]
-        if lex_smaller_or_equal(index, contained_index):  # O(m)
+        if is_lex_smaller_or_equal(index, contained_index):  # O(m)
             # i is now pointing to the (smallest) index which is lexicographically smaller or equal
             # the two indices are equal iff the contained index is also smaller or equal than the query index
             # NOTE: testing for equality directly is faster, but only in the case of equality (<- rare!)
             #   most of the times the index won't be smaller and the check can be performed with fewer comparisons
-            is_equal = lex_smaller_or_equal(contained_index, index)
+            is_equal = is_lex_smaller_or_equal(contained_index, index)
             if is_equal:  # found the position of the index
                 out = i
             break  # stop looking (an even bigger index cannot be equal)
@@ -445,7 +445,7 @@ def fill_match_positions(larger_idx_set, smaller_idx_set, positions):
         while 1:
             search_pos += 1
             idx2 = larger_idx_set[search_pos, :]
-            if lex_smaller_or_equal(idx1, idx2) and lex_smaller_or_equal(idx2, idx1):
+            if is_lex_smaller_or_equal(idx1, idx2) and is_lex_smaller_or_equal(idx2, idx1):
                 # NOTE: testing for equality directly is faster, but only in the case of equality (<- rare!)
                 #   most of the times the index won't be smaller and the check can be performed with fewer comparisons
                 positions[i] = search_pos

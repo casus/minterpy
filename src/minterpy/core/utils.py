@@ -13,7 +13,7 @@ from minterpy.global_settings import DEFAULT_LP_DEG, INT_DTYPE
 from minterpy.jit_compiled_utils import (
     fill_match_positions,
     index_is_contained,
-    lex_smaller_or_equal,
+    is_lex_smaller_or_equal,
 )
 from minterpy.utils import cartesian_product, lp_norm, lp_sum
 
@@ -359,7 +359,7 @@ def list_insert_single(
         nr_of_indices  # default: insert at the last position, ATTENTION: -1 not working
     )
     for i, contained_index in enumerate(list_of_indices):
-        if lex_smaller_or_equal(index2insert, contained_index):
+        if is_lex_smaller_or_equal(index2insert, contained_index):
             insertion_idx = i
             break
 
