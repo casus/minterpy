@@ -16,8 +16,9 @@ from minterpy.core.utils import (
     get_exponent_matrix,
     insert_lexicographically,
     is_lexicographically_complete,
-    make_complete,
     lex_sort,
+    make_complete,
+    multiply_indices,
 )
 
 from .verification import check_shape, check_values, verify_lp_degree
@@ -523,6 +524,37 @@ class MultiIndexSet:
             new_instance._is_complete = True
 
             return new_instance
+
+    def __mul__(self, other: "MultiIndexSet") -> "MultiIndexSet":
+        """Multiply an instance of MultiIndexSet with another.
+
+        Parameters
+        ----------
+        other : MultiIndexSet
+            The second operand of the multi-index set multiplication.
+
+        Returns
+        -------
+        MultiIndexSet
+            The product of two multi-index sets. If the :math:`l_p`-degrees
+            of the operands are different, then the :math:`l_p`-degree of the
+            product is the maximum of the two operands.
+        """
+        # Get the exponents of the operands
+        exp_self = self.exponents
+        exp_other = other.exponents
+
+        # Decide the lp-degree of the product
+        lp_degree_self = self.lp_degree
+        lp_degree_other = other.lp_degree
+        lp_degree_prod = max([lp_degree_self, lp_degree_other])
+
+        # Take the product of the exponents (multi-indices multiplication)
+        exp_prod = multiply_indices(exp_self, exp_other)
+
+        return self.__class__(
+            exponents=exp_prod, lp_degree=lp_degree_prod,
+        )
 
     # TODO make_derivable(): add (only) partial derivative exponent vectors,
     # NOTE: not meaningful since derivation requires complete index sets anyway?

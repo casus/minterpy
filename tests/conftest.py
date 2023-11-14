@@ -15,6 +15,9 @@ from minterpy import MultiIndexSet, NewtonPolynomial
 # Global seed
 SEED = 12345678
 
+# Global settings
+MIN_POLY_DEG = 0
+MAX_POLY_DEG = 10
 
 # asserts that a call runs as expected
 def assert_call(fct, *args, **kwargs):

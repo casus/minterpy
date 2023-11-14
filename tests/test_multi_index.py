@@ -19,6 +19,7 @@ from minterpy.core.utils import (
     get_exponent_matrix,
     find_match_between,
     is_lexicographically_complete,
+    multiply_indices,
 )
 
 
@@ -289,6 +290,7 @@ def test_attributes_from_degree(spatial_dimension, poly_degree, LpDegree):
     assert_(dim == spatial_dimension)
 
 
+# --- make_complete()
 def test_make_complete_inplace(SpatialDimension, PolyDegree, LpDegree):
     """Test in-place make_complete() on the MultiIndexSet instances."""
     if PolyDegree < 1:
@@ -363,6 +365,7 @@ def test_make_complete_outplace(SpatialDimension, PolyDegree, LpDegree):
     assert np.all(mi_complete.exponents == mi.exponents)
 
 
+# --- expand_dim()
 def test_expand_dim_invalid(SpatialDimension, PolyDegree, LpDegree):
     """Test invalid dimension expansion (i.e., contraction)."""
     # Create a multi-index set instance
@@ -409,3 +412,67 @@ def test_expand_dim_outplace(SpatialDimension, PolyDegree, LpDegree):
     expanded_mi = mi.expand_dim(new_dimension)
     # Assertion: new columns are added to the expanded index set with 0 values
     assert np.all(expanded_mi.exponents[:, SpatialDimension:] == 0)
+
+
+# --- __mul__()
+def test_multiplication_diff_deg(SpatialDimension, PolyDegree, LpDegree):
+    """Test the multiplication of 2 MultiIndexSet instances with diff. deg."""
+    # Problem setup
+    m = SpatialDimension
+    d_1 = PolyDegree
+    d_2 = PolyDegree + np.random.randint(1, 3)
+    p = LpDegree
+    mi_1 = MultiIndexSet.from_degree(m, d_1, p)
+    mi_2 = MultiIndexSet.from_degree(m, d_2, p)
+
+    # MultiIndexSet product
+    mi_prod = mi_1 * mi_2
+    if p == 1.0:
+        # This reference only applies if lp-degree is 1.0
+        total_degree = d_1 + d_2  # the sum of degrees
+        mi_prod_ref = MultiIndexSet.from_degree(m, total_degree, p)
+    else:
+        exp_prod = multiply_indices(mi_1.exponents, mi_2.exponents)
+        mi_prod_ref = MultiIndexSet(exponents=exp_prod, lp_degree=p)
+
+    # Assertion
+    assert_multi_index_equal(mi_prod, mi_prod_ref)
+
+
+def test_multiplication_diff_dim(SpatialDimension, PolyDegree, LpDegree):
+    """Test the multiplication of 2 MultiIndexSet instances with diff. dim."""
+    # Problem setup
+    d = PolyDegree
+    p = LpDegree
+    m_1 = SpatialDimension
+    m_2 = SpatialDimension + 1
+    mi_1 = MultiIndexSet.from_degree(m_1, d, p)
+    mi_2 = MultiIndexSet.from_degree(m_2, d, p)
+
+    # MultiIndexSet product
+    mi_prod = mi_1 * mi_2
+    exp_prod = multiply_indices(mi_1.exponents, mi_2.exponents)
+    mi_prod_ref = MultiIndexSet(exponents=exp_prod, lp_degree=p)
+
+    # Assertion
+    assert_multi_index_equal(mi_prod, mi_prod_ref)
+
+
+def test_multiplication_diff_lp(SpatialDimension, PolyDegree):
+    """Test the multiplication of 2 MultiIndexSet instances with diff. lp."""
+    # Problem setup
+    m = SpatialDimension
+    d = PolyDegree
+    lp_degrees = [0.5, 1.0, 2.0, 3.0, np.inf]
+    p_1, p_2 = np.random.choice(lp_degrees, 2)
+    mi_1 = MultiIndexSet.from_degree(m, d, p_1)
+    mi_2 = MultiIndexSet.from_degree(m, d, p_2)
+
+    # MultiIndexSet product
+    mi_prod = mi_1 * mi_2
+    exp_prod = multiply_indices(mi_1.exponents, mi_2.exponents)
+    lp_prod = max([p_1, p_2])
+    mi_prod_ref = MultiIndexSet(exponents=exp_prod, lp_degree=lp_prod)
+
+    # Assertion
+    assert_multi_index_equal(mi_prod, mi_prod_ref)

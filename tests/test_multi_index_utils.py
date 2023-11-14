@@ -21,6 +21,7 @@ from minterpy.core.utils import (
     is_lexicographically_complete,
     make_complete,
     make_derivable,
+    multiply_indices,
     lex_sort,
 )
 from minterpy.jit_compiled_utils import (
@@ -407,6 +408,70 @@ def test_expand_dim_new_values(SpatialDimension):
 
     # Assertion
     assert np.all(xx_expanded[:, SpatialDimension:] == new_values)
+
+
+# --- multiply_indices()
+def test_multiply_indices_same_dim(SpatialDimension):
+    """Test the multiplication of MultiIndexSet instances with the same dim.
+
+    Notes
+    -----
+    - This test is related to Issue #119.
+    """
+    # Create random multi-indices of the same dimension
+    indices_1 = build_rnd_exponents(SpatialDimension, 5)
+    indices_2 = build_rnd_exponents(SpatialDimension, 2)
+
+    # Create a reference from a naive implementation (only for the same dim.)
+    ref_prod = []
+    for index_1 in indices_1:
+        for index_2 in indices_2:
+            ref_prod.append(index_1 + index_2)
+    ref_prod = lex_sort(np.array(ref_prod))
+
+    # Multiply the indices
+    indices_prod = multiply_indices(indices_1, indices_2)
+
+    # Assertion
+    assert np.all(ref_prod == indices_prod)
+
+
+def test_multiply_indices_diff_dim(SpatialDimension, PolyDegree, LpDegree):
+    """Test the multiplication of MultiIndexSet instances with different dims.
+
+    With different dimension, the values of the last dimensions take the values
+    from the indices of the higher dimension.
+
+    Notes
+    -----
+    - This is related to Issue #119.
+    """
+    # --- One dimension difference
+    dim_1 = SpatialDimension
+    dim_2 = SpatialDimension + 1
+    indices_1 = get_exponent_matrix(dim_1, PolyDegree, LpDegree)
+    indices_2 = get_exponent_matrix(dim_2, PolyDegree, LpDegree)
+    # Multiply the indices
+    indices_prod = multiply_indices(indices_1, indices_2)
+    # Assertion: The additional dimension in the product only has values
+    #            from the set with the higher dimension.
+    assert np.all(
+        np.unique(indices_2[:, -1]) == np.unique(indices_prod[:, -1])
+    )
+
+    # --- Two dimensions difference
+    dim_3 = SpatialDimension + 2
+    indices_3 = get_exponent_matrix(dim_3, PolyDegree, LpDegree)
+    # Multiply the indices
+    indices_prod = multiply_indices(indices_1, indices_3)
+    # Assertions: the additional two dimensions only have values from the set
+    #             with the higher dimension.
+    assert np.all(
+        np.unique(indices_3[:, -2]) == np.unique(indices_prod[:, -2])
+    )
+    assert np.all(
+        np.unique(indices_3[:, -1]) == np.unique(indices_prod[:, -1])
+    )
 
 
 # --- lex_sort()
