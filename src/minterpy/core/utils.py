@@ -3,11 +3,12 @@ Here we store the core utilities of `minterpy`.
 """
 from __future__ import annotations
 
-from typing import Iterable, no_type_check
-
 import numpy as np
-from math import ceil
+
 from decimal import Decimal, ROUND_HALF_UP
+from itertools import product
+from math import ceil
+from typing import Iterable, no_type_check
 
 from minterpy.global_settings import DEFAULT_LP_DEG, INT_DTYPE
 from minterpy.jit_compiled_utils import (
@@ -544,3 +545,84 @@ def lex_sort(indices: np.ndarray) -> np.ndarray:
     indices_lex_sorted = indices_unique[np.lexsort(indices_unique.T)]
 
     return indices_lex_sorted
+
+
+def multiply_indices(
+    indices_1: np.ndarray,
+    indices_2: np.ndarray
+) -> np.ndarray:
+    """Multiply an array of multi-indices with another array of multi-indices.
+
+    Parameters
+    ----------
+    indices_1 : :class:`numpy:numpy.ndarray`
+        Two-dimensional array of multi-indices of shape ``(N1, m2)`` where
+        ``N1`` is the number of multi-indices and ``m2`` is the number of
+        dimensions of the first array.
+    indices_2 : :class:`numpy:numpy.ndarray`
+        Another two-dimensional array of multi-indices of shape ``(N2, m2)``
+        where ``N2`` is the number of multi-indices and ``m2`` is the number
+        of dimensions of the second array.
+
+    Returns
+    -------
+    :class:`numpy:numpy.ndarray`
+        The product of ``indices_1`` with ``indices_2`` of shape ``(N3, m3)``
+        where ``m3`` is the maximum between ``m1`` and ``m2``. The product
+        array is lexicographically sorted.
+
+    Examples
+    --------
+    >>> my_indices_1 = np.array([
+    ... [0, 0],
+    ... [1, 0],
+    ... [0, 1],
+    ... [1, 1],
+    ... ])
+    >>> my_indices_2 = np.array([
+    ... [0, 0],
+    ... [1, 0],
+    ... [0, 1],
+    ... ])
+    >>> multiply_indices(my_indices_1, my_indices_2)
+    array([[0, 0],
+           [1, 0],
+           [2, 0],
+           [0, 1],
+           [1, 1],
+           [2, 1],
+           [0, 2],
+           [1, 2]])
+    >>> my_indices_3 = np.array([
+    ... [0],
+    ... [1],
+    ... [2],
+    ... ])
+    >>> multiply_indices(my_indices_2, my_indices_3)  # Different dimension
+    array([[0, 0],
+           [1, 0],
+           [2, 0],
+           [3, 0],
+           [0, 1],
+           [1, 1],
+           [2, 1]])
+    """
+    # --- Adjust the dimension
+    m_1 = indices_1.shape[1]
+    m_2 = indices_2.shape[1]
+    if m_1 < m_2:
+        indices_1 = expand_dim(indices_1, m_2)
+    if m_1 > m_2:
+        indices_2 = expand_dim(indices_2, m_1)
+
+    # --- Take the cross product (maybe expensive for large arrays of indices)
+    prod = list(product(indices_1, indices_2))
+    prod = np.array([np.sum(np.array(i), axis=0) for i in prod])
+    prod = lex_sort(prod)
+
+    return prod
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
