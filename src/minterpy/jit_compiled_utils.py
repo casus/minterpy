@@ -237,9 +237,9 @@ def is_lex_smaller_or_equal(index_1: np.ndarray, index_2: np.ndarray) -> bool:
     Parameters
     ----------
     index_1 : :class:`numpy:numpy.ndarray`
-        A given multi-index, a one-dimensional array of length ``M``.
+        A given multi-index, a one-dimensional array of length ``m``.
     index_2 : :class:`numpy:numpy.ndarray`
-        Another multi-index, a one dimensional array of length ``M``.
+        Another multi-index, a one dimensional array of length ``m``.
 
     Returns
     -------
@@ -288,9 +288,9 @@ def is_lex_sorted(indices: np.ndarray) -> bool:
     Parameters
     ----------
     indices : :class:`numpy:numpy.ndarray`
-        Two-dimensional integer array to check with shape ``(N, M)`` where
-        ``N`` is the number of multi-indices and ``M`` is the number of
-        spatial dimensions.
+        Array of multi-indices, a two-dimensional non-negative integer array
+        of shape ``(N, m)``, where ``N`` is the number of multi-indices
+        and ``m`` is the number of spatial dimensions.
 
     Returns
     -------
@@ -339,61 +339,125 @@ def is_lex_sorted(indices: np.ndarray) -> bool:
 
 
 @njit(INT(I_2D, I_1D), cache=True)
-def get_match_idx(indices: np.ndarray, index: np.ndarray) -> int:
-    """Finds the position of a multi index entry within an exponent matrix.
+def search_lex_sorted(indices: np.ndarray, index: np.ndarray) -> int:
+    """Find the position of a given entry within an array of multi-indices.
 
-    - ``m`` spatial dimension
-    - ``N`` number of monomials
+    Parameters
+    ----------
+    indices : :class:`numpy:numpy.ndarray`
+        Array of lexicographically sorted multi-indices, a two-dimensional
+        non-negative integer array of shape ``(N, m)``,
+        where ``N`` is the number of multi-indices and ``m`` is the number
+        of spatial dimensions.
+    index : :class:`numpy:numpy.ndarray`
+        Multi-index entry to check in ``indices``. The element is represented
+        by a one-dimensional array of length ``m``, where ``m`` is the number
+        of spatial dimensions.
 
-    :param indices: array of multi indices with shape ``(N x m)``.
-    :param index: one multi index entry with shape ``m``.
-    :return: if ``index`` is present in ``indices``, the position (array index) where it is found is returned,
-             otherwise a global constant ``NOT_FOUND`` is returned.
+    Returns
+    -------
+    int
+        If ``index`` is present in ``indices``, its position in ``indices``
+        is returned (the row number). Otherwise, a global constant
+        ``NOT_FOUND`` is returned instead.
 
     Notes
     -----
-    Exploits the lexicographical order of the indices to abort early -> not testing all indices.
-    Time complexity: O(mN).
+    - ``indices`` must be lexicographically sorted.
+    - This function is a binary search implementation that exploits
+      a lexicographically sorted array of multi-indices.
+      The time complexity of the implementation is :math:`O(m\log{N})`.
+    - By Minterpy convention, duplicate entries are not allowed in
+      a lexicographically sorted multi-indices. However, having duplicate
+      entries won't stop the search. In that case, the search returns
+      the position of the first match but cannot guarantee which one is that
+      from the duplicates.
 
+    Examples
+    --------
+    >>> my_indices = np.array([
+    ... [0, 0, 0],  # 0
+    ... [1, 0, 0],  # 1
+    ... [2, 0, 0],  # 2
+    ... [0, 0, 1],  # 3
+    ... ])
+    >>> my_index_1 = np.array([2, 0, 0])  # is present in my_indices
+    >>> search_lex_sorted(my_indices, my_index_1)
+    2
+    >>> my_index_2 = np.array([0, 1, 0])  # is not present in my_indices
+    >>> search_lex_sorted(my_indices, my_index_2)
+    -1
     """
-    nr_exponents, spatial_dimension = indices.shape
-    if nr_exponents == 0:
+    nr_indices = indices.shape[0]
+    if nr_indices == 0:
+        # Zero-length multi-indices has no entry
         return NOT_FOUND
-    m = len(index)
-    if m != spatial_dimension:
-        raise ValueError("dimensions do not match.")
+
+    # Initialize the search
     out = NOT_FOUND
-    for i in range(nr_exponents):  # O(N)
-        contained_index = indices[i, :]
-        if is_lex_smaller_or_equal(index, contained_index):  # O(m)
-            # i is now pointing to the (smallest) index which is lexicographically smaller or equal
-            # the two indices are equal iff the contained index is also smaller or equal than the query index
-            # NOTE: testing for equality directly is faster, but only in the case of equality (<- rare!)
-            #   most of the times the index won't be smaller and the check can be performed with fewer comparisons
-            is_equal = is_lex_smaller_or_equal(contained_index, index)
-            if is_equal:  # found the position of the index
-                out = i
-            break  # stop looking (an even bigger index cannot be equal)
+    low = 0
+    high = nr_indices - 1
+
+    # Start the binary search
+    while low <= high:
+
+        mid = (high + low) // 2
+
+        if is_lex_smaller_or_equal(indices[mid], index):
+            # NOTE: Equality must be checked here because the function
+            #       `is_lex_smaller_or_equal()` cannot check just for smaller.
+            if is_lex_smaller_or_equal(index, indices[mid]):
+                return mid
+
+            low = mid + 1
+
+        else:
+            high = mid - 1
+
     return out
 
 
 @njit(B_TYPE(I_2D, I_1D), cache=True)
-def index_is_contained(indices: np.ndarray, index: np.ndarray) -> bool:
-    """Checks if a multi index entry is present in a set of indices.
+def is_index_contained(indices: np.ndarray, index: np.ndarray) -> bool:
+    """Check if a multi-index entry is present in a set of multi-indices.
 
-    - ``m`` spatial dimension
-    - ``N`` number of monomials
+    Parameters
+    ----------
+    indices : :class:`numpy:numpy.ndarray`
+        Array of lexicographically sorted multi-indices, a two-dimensional
+        non-negative integer array of shape ``(N, m)``,
+        where ``N`` is the number of multi-indices and ``m`` is the number
+        of spatial dimensions.
+    index : :class:`numpy:numpy.ndarray`
+        Multi-index entry to check in the set. The element is represented
+        by a one-dimensional array of length ``m``,
+        where ``m`` is the number of spatial dimensions.
 
-    :param indices: array of multi indices with shape ``(N x m)``.
-    :param index: one multi index entry with shape ``m``.
-    :return: ``True`` if the ``index`` is present in ``indices``, ``False`` otherwise.
+    Returns
+    -------
+    bool
+        ``True`` if the entry ``index`` is contained in the set ``indices``
+        and ``False`` otherwise.
 
     Notes
     -----
-    Exploits the lexicographical order of the indices to abort early -> not testing all indices.
+    - The implementation is based on the binary search and therefore
+      ``indices`` must be lexicographically sorted.
 
+    Examples
+    --------
+    >>> my_indices = np.array([
+    ... [0, 0, 0],  # 0
+    ... [1, 0, 0],  # 1
+    ... [2, 0, 0],  # 2
+    ... [0, 0, 1],  # 3
+    ... ])
+    >>> is_index_contained(my_indices, np.array([1, 0, 0]))  # is present
+    True
+    >>> is_index_contained(my_indices, np.array([0, 1, 2]))  # is not present
+    False
     """
-    return get_match_idx(indices, index) != NOT_FOUND
+    return search_lex_sorted(indices, index) != NOT_FOUND
 
 
 @njit(B_TYPE(I_2D, I_2D), cache=True)
@@ -422,7 +486,7 @@ def all_indices_are_contained(subset_indices: np.ndarray, indices: np.ndarray) -
     for i in range(nr_exp_subset):
         candidate_index = subset_indices[i, :]
         indices2search = indices[match_idx + 1 :, :]  # start from the next one
-        match_idx = get_match_idx(indices2search, candidate_index)
+        match_idx = search_lex_sorted(indices2search, candidate_index)
         if match_idx == NOT_FOUND:
             return False
     return True
@@ -450,3 +514,8 @@ def fill_match_positions(larger_idx_set, smaller_idx_set, positions):
                 #   most of the times the index won't be smaller and the check can be performed with fewer comparisons
                 positions[i] = search_pos
                 break
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
