@@ -13,7 +13,7 @@ from typing import Iterable, no_type_check
 from minterpy.global_settings import DEFAULT_LP_DEG, INT_DTYPE
 from minterpy.jit_compiled_utils import (
     fill_match_positions,
-    index_is_contained,
+    is_index_contained,
     is_lex_smaller_or_equal,
 )
 from minterpy.utils import cartesian_product, lp_norm, lp_sum
@@ -326,7 +326,7 @@ def gen_missing_derivatives(indices: np.ndarray) -> Iterable[np.ndarray]:
         ):  # all vectors "smaller by 1"
             # NOTE: looking for the index starting from the last index would be faster TODO
             indices2search = indices[:n, :]
-            if not index_is_contained(indices2search, deriv_vect):
+            if not is_index_contained(indices2search, deriv_vect):
                 yield deriv_vect
 
 
