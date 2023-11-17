@@ -295,39 +295,99 @@ def iterate_indices(indices: np.ndarray | Iterable[np.ndarray]) -> Iterable[np.n
         yield from indices
 
 
-def gen_partial_derivatives(exponent_vector: np.ndarray):
-    """yields the exponent vectors of all partial derivatives of a given exponent vector
+def gen_backward_neighbors(index: np.ndarray) -> Iterable[np.ndarray]:
+    """Yield the backward neighbors of a given multi-index set element.
 
-    NOTE: all exponent vectors "smaller by 1"
+    Parameters
+    ----------
+    index : :class:`numpy:numpy.ndarray`
+        Multi-index set element (i.e., a vector of multi-indices),
+        a one-dimensional array of length ``m``, where ``m`` is the spatial
+        dimensions.
+
+    Returns
+    -------
+    `Iterable` [:class:`numpy:numpy.ndarray`]
+        A generator that yields all the backward neighbors (i.e., all vectors
+        of multi-indices "smaller by 1") of the given multi-index element.
+
+    Examples
+    --------
+    >>> my_backward_neighbors = gen_backward_neighbors(np.array([1, 1, 2]))
+    >>> for my_backward_neighbor in my_backward_neighbors:
+    ...     print(my_backward_neighbor)
+    [0 1 2]
+    [1 0 2]
+    [1 1 1]
     """
-    spatial_dimension = len(exponent_vector)
+    spatial_dimension = len(index)
     for m in range(spatial_dimension):
-        exponent_in_dim = exponent_vector[m]
-        if exponent_in_dim == 0:  # partial derivative is 0
+        index_in_dim = index[m]
+        if index_in_dim == 0:
+            # a value in a dimension is zero, ignore
             continue
-        partial_derivative = exponent_vector.copy()
-        partial_derivative[m] = exponent_in_dim - 1
-        yield partial_derivative
+        backward_neighbor = index.copy()
+        backward_neighbor[m] = index_in_dim - 1
+
+        yield backward_neighbor
 
 
-def gen_missing_derivatives(indices: np.ndarray) -> Iterable[np.ndarray]:
-    """yields all the partial derivative exponent vectors missing from the given set of multi indices
+def gen_missing_backward_neighbors(
+    indices: np.ndarray
+) -> Iterable[np.ndarray]:
+    """Yield all the missing backward neighbors for an array of multi-indices.
 
-    ATTENTION: the input indices must have lexicographical ordering
-    ATTENTION: duplicate partial derivatives will be generated
+    Parameters
+    ----------
+    indices : :class:`numpy:numpy.ndarray`
+        Array of sorted multi-indices, a two-dimensional non-negative integer
+        array of shape ``(N, m)``, where ``N`` is the number of multi-indices
+        and ``m`` is the number of spatial dimensions.
+
+    Returns
+    -------
+    `Iterable` [:class:`numpy:numpy.ndarray`]
+        A generator that yields all the missing backward neighbors
+        (i.e., all the missing vectors of multi-indices "smaller by 1")
+        of the array of multi-indices.
+
+    Examples
+    --------
+    >>> my_missing_neighbors = gen_missing_backward_neighbors(np.array([[3]]))
+    >>> for missing_neighbor in my_missing_neighbors:
+    ...     print(missing_neighbor)
+    [2]
+    >>> my_missing_neighbors = gen_missing_backward_neighbors(
+    ...     np.array([[1, 1, 1]])
+    ... )
+    >>> for missing_neighbor in my_missing_neighbors:
+    ...     print(missing_neighbor)
+    [0 1 1]
+    [1 0 1]
+    [1 1 0]
     """
-    nr_exponents, spatial_dimension = indices.shape
-    for n in reversed(
-        range(nr_exponents)
-    ):  # start with the lexicographically biggest index
-        exp_vect = indices[n, :]
-        for deriv_vect in gen_partial_derivatives(
-            exp_vect
-        ):  # all vectors "smaller by 1"
-            # NOTE: looking for the index starting from the last index would be faster TODO
-            indices2search = indices[:n, :]
-            if not is_index_contained(indices2search, deriv_vect):
-                yield deriv_vect
+    # Set up a caching system
+    cache = set()
+
+    # Loop over the indices
+    nr_indices = len(indices)
+    for i in reversed(range(nr_indices)):
+        # Start with the lexicographically largest element
+        index = indices[i]
+        for backward_index in gen_backward_neighbors(index):
+            # All vectors of multi-index "smaller by 1"
+            indices2search = indices[:i]
+            contained = is_index_contained(indices2search, backward_index)
+
+            # Check the cache
+            backward_index_tpl = tuple(backward_index)  # must be hashable
+            in_cache = backward_index_tpl in cache
+
+            if not contained and not in_cache:
+                # Update the cache
+                cache.add(backward_index_tpl)
+
+                yield backward_index
 
 
 def is_lexicographically_complete(indices: np.ndarray) -> bool:
@@ -336,7 +396,7 @@ def is_lexicographically_complete(indices: np.ndarray) -> bool:
     ATTENTION: the input indices must have lexicographical ordering
     :returns False if there is a missing multi index vector "smaller by 1"
     """
-    for _ in gen_missing_derivatives(indices):
+    for _ in gen_missing_backward_neighbors(indices):
         return False
     return True
 
@@ -426,7 +486,7 @@ def insert_lexicographically(
 
 
 def insert_partial_derivatives(list_of_indices, exponent_vector):
-    for deriv_vect in gen_partial_derivatives(
+    for deriv_vect in gen_backward_neighbors(
         exponent_vector
     ):  # all vectors "smaller by 1"
         list_insert_single(list_of_indices, deriv_vect)
