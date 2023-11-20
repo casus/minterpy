@@ -17,6 +17,8 @@ from minterpy.core.utils import (
     find_match_between,
     expand_dim,
     get_exponent_matrix,
+    gen_backward_neighbors,
+    gen_missing_backward_neighbors,
     insert_lexicographically,
     is_lexicographically_complete,
     make_complete,
@@ -522,3 +524,67 @@ def test_multiply_indices_diff_dim(SpatialDimension, PolyDegree, LpDegree):
     assert np.all(
         np.unique(indices_3[:, -1]) == np.unique(indices_prod[:, -1])
     )
+
+
+# --- gen_backward_neighbors()
+def test_gen_backward_neighbors(SpatialDimension, PolyDegree, LpDegree):
+    """Test generating backward neighbors given a multi-index element."""
+    # Create a complete multi-index set
+    indices = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+
+    # Select an index randomly
+    idx = int(np.random.randint(0, len(indices), 1))
+    index = indices[idx]
+
+    # Non-lazy evaluation of getting the backward neighbors
+    backward_neighbors_ref = index - np.eye(SpatialDimension, dtype=int)
+    backward_neighbors_ref = backward_neighbors_ref[
+        ~np.any(backward_neighbors_ref < 0, axis=1)
+    ]
+
+    # Lazy evaluation of getting the backward neighbors (via a generator)
+    backward_neighbors = gen_backward_neighbors(index)
+    pairs = zip(backward_neighbors, backward_neighbors_ref)
+    for backward_neighbor, backward_neighbor_ref in pairs:
+        assert np.all(backward_neighbor == backward_neighbor_ref)
+
+
+# --- gen_missing_backward_neighbors()
+def test_gen_missing_backward_neighbors(
+    SpatialDimension, PolyDegree, LpDegree
+):
+    """Test generating all missing backward neighbors of a multi-index set.
+
+    Notes
+    -----
+    - This test is related to the issue described in Issue #122.
+    """
+    # Create a complete multi-index set
+    indices = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+
+    # --- No missing backward neighbors
+    missing_backward_neighbors = gen_missing_backward_neighbors(indices)
+    assert not len(list(missing_backward_neighbors))
+
+    # --- Remove one element
+    idx = 0  # Taking the first element will cause indices not downward-closed
+    index = indices[idx]
+    indices_1 = np.delete(indices, idx, axis=0)
+
+    missing_backward_neighbors = gen_missing_backward_neighbors(indices_1)
+
+    for missing_backward_neighbor in missing_backward_neighbors:
+        # Assertion: must be equal to what's removed
+        assert np.all(missing_backward_neighbor == index)
+
+    # --- Remove two elements
+    if len(indices) > 2:
+        idx = [0, 1]
+        index = indices[idx]
+        indices_2 = np.delete(indices, idx, axis=0)
+
+        missing_backward_neighbors = gen_missing_backward_neighbors(indices_2)
+
+        for missing_backward_neighbor in missing_backward_neighbors:
+            # Assertion: must be equal to what's removed
+            assert np.any(np.all(missing_backward_neighbor == index, axis=1))
