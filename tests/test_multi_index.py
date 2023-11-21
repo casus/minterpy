@@ -18,8 +18,8 @@ from minterpy.core.utils import (
     get_poly_degree,
     get_exponent_matrix,
     find_match_between,
-    is_lexicographically_complete,
     multiply_indices,
+    is_downward_closed,
 )
 
 
@@ -60,15 +60,26 @@ def test_init_fail_from_exponents():
 
 
 def test_init_from_degree(SpatialDimension, PolyDegree, LpDegree):
+    """Test the constructor 'from_degree'."""
+    # Lp-degree is optional
     assert_call(MultiIndexSet.from_degree, SpatialDimension, PolyDegree)
+    # Lp-degree specified
     assert_call(
-        MultiIndexSet.from_degree, SpatialDimension, PolyDegree, lp_degree=LpDegree
+        MultiIndexSet.from_degree,
+        SpatialDimension,
+        PolyDegree,
+        lp_degree=LpDegree
     )
-    multi_index = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
 
-    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    groundtruth = MultiIndexSet(exponents, lp_degree=LpDegree)
-    assert_multi_index_equal(multi_index, groundtruth)
+    # Create a multi-index set
+    multi_index = MultiIndexSet.from_degree(
+        SpatialDimension,
+        PolyDegree,
+        LpDegree
+    )
+    # Assertion: the exponents are complete and downward-closed (Issue #105)
+    assert multi_index.is_complete
+    assert multi_index.is_downward_closed
 
 
 def test_init_fail_from_degree():
@@ -191,7 +202,7 @@ def test_add_exponents_sparse():
     mi = MultiIndexSet(exponents, lp_degree=1.0)
 
     # Assertion
-    assert mi.is_complete
+    assert mi.is_downward_closed
 
     # Add a new (sparse) element
     new_element = np.zeros(m)
@@ -199,7 +210,7 @@ def test_add_exponents_sparse():
     mi_added = mi.add_exponents(new_element)
 
     # Assertions
-    assert mi_added.is_complete
+    assert mi_added.is_downward_closed
     assert mi_added.poly_degree == mi.poly_degree + 1
 
 
@@ -249,7 +260,7 @@ def test_attributes_incomplete_exponents(
         exponents_incomplete, lp_degree=LpDegree)
 
     # Make sure the incomplete exponents are indeed incomplete
-    assert_(not is_lexicographically_complete(exponents_incomplete))
+    assert_(not is_downward_closed(exponents_incomplete))
 
     # Compute the reference polynomial degree given the multi-index set    
     poly_degree = get_poly_degree(exponents_incomplete, LpDegree)

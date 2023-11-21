@@ -141,9 +141,9 @@ def _build_newton_to_lagrange_operator(
     :return: the transformation operator from Newton to Lagrange basis
     """
     grid = transformation.grid
-    complete_indices = grid.multi_index.is_complete
+    is_downward_closed = grid.multi_index.is_downward_closed
     identical_indices = not transformation.origin_poly.indices_are_separate
-    if complete_indices and identical_indices:
+    if is_downward_closed and identical_indices:
         # use barycentric transformation
         transformation_operator = _build_newton_to_lagrange_bary(transformation)
     else:  # use "naive" matrix transformation format
@@ -169,9 +169,9 @@ def _build_lagrange_to_newton_operator(
     :return: the transformation operator from Newton to Lagrange basis
     """
     grid = transformation.grid
-    complete_indices = grid.multi_index.is_complete
+    is_downward_closed = grid.multi_index.is_downward_closed
     identical_indices = not transformation.origin_poly.indices_are_separate
-    if complete_indices and identical_indices:
+    if is_downward_closed and identical_indices:
         # use barycentric transformation
         transformation_operator = _build_lagrange_to_newton_bary(transformation)
     else:  # use "naive" matrix transformation format

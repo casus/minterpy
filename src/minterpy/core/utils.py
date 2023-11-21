@@ -340,9 +340,10 @@ def gen_missing_backward_neighbors(
     Parameters
     ----------
     indices : :class:`numpy:numpy.ndarray`
-        Array of sorted multi-indices, a two-dimensional non-negative integer
-        array of shape ``(N, m)``, where ``N`` is the number of multi-indices
-        and ``m`` is the number of spatial dimensions.
+        Array of lexicographically sorted multi-indices, a two-dimensional
+        non-negative integer array of shape ``(N, m)``, where ``N`` is
+        the number of multi-indices and ``m`` is the number
+        of spatial dimensions.
 
     Returns
     -------
@@ -390,14 +391,116 @@ def gen_missing_backward_neighbors(
                 yield backward_index
 
 
-def is_lexicographically_complete(indices: np.ndarray) -> bool:
-    """tells weather an array of indices contains all possible lexicographically smaller indices
+def is_complete(
+    indices: np.ndarray,
+    poly_degree: int,
+    lp_degree: float
+) -> bool:
+    """Check if an array of multi-indices is complete w.r.t poly- & lp-degree.
 
-    ATTENTION: the input indices must have lexicographical ordering
-    :returns False if there is a missing multi index vector "smaller by 1"
+    Parameters
+    ----------
+    indices : :class:`numpy:numpy.ndarray`
+        Array of lexicographically sorted multi-indices, a two-dimensional
+        non-negative integer array of shape ``(N, m)``, where ``N`` is
+        the number of multi-indices and ``m`` is the number
+        of spatial dimensions.
+    poly_degree : int
+        Polynomial degree supported by the multi-index set.
+    lp_degree : float
+        :math:`p` in the :math:`l_p`-norm with respect to which
+        the multi-index set is defined.
+
+    Returns
+    -------
+    bool
+        ``True`` if the multi-index set is complete and ``False``
+        otherwise. The function also returns ``False`` if the array of
+        multi-indices is not lexicographically sorted (including containing
+        any duplicate entries).
+
+    Notes
+    -----
+    - For a definition of completeness, refer to the relevant
+      :doc:`section </how-to/multi-index-set/multi-index-set-complete>`
+      of the Minterpy Documentation.
+
+    Examples
+    --------
+    >>> my_indices = np.array([
+    ... [0, 0, 0],
+    ... [1, 0, 0],
+    ... [0, 1, 0],
+    ... [1, 1, 0],
+    ... [0, 0, 1],
+    ... [1, 0, 1],
+    ... [0, 1, 1],
+    ... [1, 1, 1]])
+    >>> is_complete(my_indices, poly_degree=1, lp_degree=np.inf)
+    True
+    >>> is_complete(my_indices, poly_degree=1, lp_degree=2.0)
+    False
+    >>> is_complete(my_indices, poly_degree=2, lp_degree=1.0)
+    False
+    """
+    m = indices.shape[1]  # spatial dimensions
+    indices_complete = get_exponent_matrix(m, poly_degree, lp_degree)
+
+    try:
+        if np.allclose(indices, indices_complete):
+            return True
+    except ValueError:
+        # Possibly because inconsistent shape of arrays in the comparison above
+        return False
+
+    return False
+
+
+def is_downward_closed(indices: np.ndarray) -> bool:
+    """Check if an array of multi-indices is downward-closed.
+
+    Parameters
+    ----------
+    indices : :class:`numpy:numpy.ndarray`
+        Array of lexicographically sorted multi-indices, a two-dimensional
+        non-negative integer array of shape ``(N, m)``, where ``N`` is
+        the number of multi-indices and ``m`` is the number
+        of spatial dimensions.
+
+    Returns
+    -------
+    bool
+        ``True`` if the multi-index set is downward-closed and ``False``
+        otherwise. The function also returns ``False`` if the array of
+        multi-indices is not lexicographically sorted (including containing
+        any duplicate entries).
+
+    Notes
+    -----
+    - A multi-index is downward-closed if it does not contain "hole" across
+      its spatial dimensions.
+    - Some synonyms for a downward-closed multi-index set are:
+      "monotonic", "lower", or "lexicographically complete".
+
+    Examples
+    --------
+    >>> my_indices = np.array([
+    ... [0, 0, 0],
+    ... [1, 0, 0],
+    ... [0, 0, 1]])
+    >>> is_downward_closed(my_indices)
+    True
+    >>> my_indices = np.array([
+    ... [0, 0, 0],
+    ... [1, 0, 0],
+    ... [0, 2, 0]])  # missing [0, 1, 0]
+    >>> is_downward_closed(my_indices)
+    False
     """
     for _ in gen_missing_backward_neighbors(indices):
+        # A "hole" is found, i.e., a missing backward neighbor
         return False
+
     return True
 
 
