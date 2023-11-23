@@ -20,7 +20,8 @@ from minterpy.core.utils import (
     gen_backward_neighbors,
     gen_missing_backward_neighbors,
     insert_lexicographically,
-    is_lexicographically_complete,
+    is_complete,
+    is_downward_closed,
     make_complete,
     make_derivable,
     multiply_indices,
@@ -34,6 +35,7 @@ from minterpy.jit_compiled_utils import (
     is_lex_smaller_or_equal,
     search_lex_sorted,
 )
+from minterpy.global_settings import NOT_FOUND
 
 MIN_POLY_DEG = 1
 MAX_POLY_DEG = 5
@@ -255,25 +257,46 @@ def test_is_index_contained(SpatialDimension, PolyDegree, LpDegree):
     assert not is_index_contained(indices, index_ref)
 
 
-def test_is_lexicographically_complete(SpatialDimension, PolyDegree, LpDegree):
-    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    assert_(is_lexicographically_complete(exponents))
+# --- is_complete()
+def test_is_complete(SpatialDimension, PolyDegree, LpDegree):
+    """Test if a multi-index set is complete."""
+    # --- A complete set
+    indices = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+    # Assertion: The function always returns complete set of multi-indices
+    assert is_complete(indices, PolyDegree, LpDegree)
 
-    # NOTE: Only applies for PolyDegree > 0 (== 0 has nothing to remove)
+    # --- Not a complete set
     if PolyDegree > 0:
-        # deleting the smallest vector destroys completeness
-        assert_(not is_lexicographically_complete(np.delete(exponents, 0, axis=0)))
+        # NOTE: Only applies for PolyDegree > 0 (== 0 has only 1 element)
+        # Remove the largest multi-index element
+        indices = np.delete(indices, -1, axis=0)
+        # Assertion: Completeness lost
+        assert not is_complete(indices, PolyDegree, LpDegree)
 
-        # deleting the first row of exponents of PolyDegree > 1
-        if PolyDegree > 1:
-            assert_(
-                not is_lexicographically_complete(
-                    np.delete(exponents, 1, axis=0)
-                )
-            )
 
-        # deleting the biggest vector maintains completeness
-        assert_(is_lexicographically_complete(np.delete(exponents, -1, axis=0)))
+# --- is_downward_closed()
+def test_is_downward_closed(SpatialDimension, PolyDegree, LpDegree):
+    """Test if a multi-index set is downward-closed."""
+    # --- A complete set is a downward-closed set
+    indices = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+    # Assertion
+    assert is_downward_closed(indices)
+
+    # --- Without the largest element, a set remains downward-closed
+    if PolyDegree > 0:
+        # NOTE: Only applies for PolyDegree > 0 (== 0 has only 1 element)
+        assert is_downward_closed(np.delete(indices, -1, axis=0))
+
+    # --- Not downward-closed
+    if PolyDegree > 0:
+        # NOTE: Only applies for PolyDegree > 0 (== 0 has only 1 element)
+        # Assertion: Without the lexicographically smallest element
+        assert not is_downward_closed(np.delete(indices, 0, axis=0))
+
+    if PolyDegree > 1:
+        # NOTE: Only applies for PolyDegree > 1 (== 1 has at least 2 elements)
+        # Assertion: Without the 2nd lexicographically smallest element
+        assert not is_downward_closed(np.delete(indices, 1, axis=0))
 
 
 def test_insert_indices(SpatialDimension, PolyDegree, LpDegree):
@@ -302,7 +325,7 @@ def test_insert_indices(SpatialDimension, PolyDegree, LpDegree):
 # --- make_complete()
 def test_make_complete(SpatialDimension, PolyDegree, LpDegree):
     exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    assert_(is_lexicographically_complete(exponents))
+    assert_(is_downward_closed(exponents))
 
     # Remove the first row and then make the exponents complete
     # NOTE: Only applies for PolyDegree > 0
@@ -314,8 +337,8 @@ def test_make_complete(SpatialDimension, PolyDegree, LpDegree):
         completed_exponents1 = make_derivable(incomplete_exponents)
         completed_exponents2 = make_complete(incomplete_exponents, LpDegree)
 
-        assert is_lexicographically_complete(completed_exponents1)
-        assert is_lexicographically_complete(completed_exponents2)
+        assert is_downward_closed(completed_exponents1)
+        assert is_downward_closed(completed_exponents2)
 
         assert_equal(exp_vect, completed_exponents1[0, :])
         assert_equal(exp_vect, completed_exponents2[0, :])
@@ -331,8 +354,8 @@ def test_make_complete(SpatialDimension, PolyDegree, LpDegree):
         completed_exponents1 = make_derivable(incomplete_exponents)
         completed_exponents2 = make_complete(incomplete_exponents, LpDegree)
 
-        assert is_lexicographically_complete(completed_exponents1)
-        assert is_lexicographically_complete(completed_exponents2)
+        assert is_downward_closed(completed_exponents1)
+        assert is_downward_closed(completed_exponents2)
 
         assert_equal(exp_vect, completed_exponents1[1, :])
         assert_equal(exp_vect, completed_exponents2[1, :])
@@ -343,13 +366,13 @@ def test_make_complete(SpatialDimension, PolyDegree, LpDegree):
         exponents, len(exponents), exponents[-1]+2, axis=0
     )
     # Make sure that the incomplete set is indeed incomplete
-    assert_(not is_lexicographically_complete(incomplete_exponents))
+    assert_(not is_downward_closed(incomplete_exponents))
     # Make the set complete
     completed_exponents = make_complete(incomplete_exponents, LpDegree)
     # Completed set must be lexicographically ordered
     assert_(is_lex_sorted(completed_exponents))
     # Completed set must be complete
-    assert_(is_lexicographically_complete(completed_exponents))
+    assert_(is_downward_closed(completed_exponents))
 
 
 def test_all_indices_are_contained(SpatialDimension, PolyDegree, LpDegree):
@@ -462,6 +485,26 @@ def test_expand_dim_new_values(SpatialDimension):
     assert np.all(xx_expanded[:, SpatialDimension:] == new_values)
 
 
+# --- is_index_contained()
+def test_is_index_contained(SpatialDimension, PolyDegree, LpDegree):
+    """Test checking whether an entry is contained in a multi-index set."""
+
+    # Create a complete multi-indices
+    indices = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+
+    # --- An index is contained in the set
+    idx_rnd = int(np.random.randint(0, len(indices), 1))  # must be int
+    index_rnd = indices[idx_rnd]
+    # Assertion
+    assert is_index_contained(indices, index_rnd)
+
+    # --- An index is not contained in the set
+    index_ref = indices[-1] + 10
+    idx = search_lex_sorted(indices, index_ref)
+    # Assertion: Use global indicator if an element is not found
+    assert not is_index_contained(indices, index_ref)
+
+
 # --- multiply_indices()
 def test_multiply_indices_same_dim(SpatialDimension):
     """Test the multiplication of MultiIndexSet instances with the same dim.
@@ -510,6 +553,13 @@ def test_multiply_indices_diff_dim(SpatialDimension, PolyDegree, LpDegree):
     assert np.all(
         np.unique(indices_2[:, -1]) == np.unique(indices_prod[:, -1])
     )
+    # Multiply the indices: Commutativity
+    indices_prod = multiply_indices(indices_2, indices_1)
+    # Assertion: The additional dimension in the product only has values
+    #            from the set with the higher dimension.
+    assert np.all(
+        np.unique(indices_2[:, -1]) == np.unique(indices_prod[:, -1])
+    )
 
     # --- Two dimensions difference
     dim_3 = SpatialDimension + 2
@@ -524,7 +574,16 @@ def test_multiply_indices_diff_dim(SpatialDimension, PolyDegree, LpDegree):
     assert np.all(
         np.unique(indices_3[:, -1]) == np.unique(indices_prod[:, -1])
     )
-
+    # Multiply the indices: Commutativity
+    indices_prod = multiply_indices(indices_3, indices_1)
+    # Assertions: the additional two dimensions only have values from the set
+    #             with the higher dimension.
+    assert np.all(
+        np.unique(indices_3[:, -2]) == np.unique(indices_prod[:, -2])
+    )
+    assert np.all(
+        np.unique(indices_3[:, -1]) == np.unique(indices_prod[:, -1])
+    )
 
 # --- gen_backward_neighbors()
 def test_gen_backward_neighbors(SpatialDimension, PolyDegree, LpDegree):

@@ -15,7 +15,8 @@ from minterpy.core.utils import (
     get_poly_degree,
     get_exponent_matrix,
     insert_lexicographically,
-    is_lexicographically_complete,
+    is_complete,
+    is_downward_closed,
     lex_sort,
     make_complete,
     multiply_indices,
@@ -37,9 +38,9 @@ class MultiIndexSet:
     Parameters
     ----------
     exponents : :class:`numpy:numpy.ndarray`
-        Set of exponents given as a two-dimensional ``N-by-M`` integer array,
-        where ``N`` is the number of multi-index elements (exponents) and
-        ``M`` is the number of spatial dimension.
+        Set of exponents given as a two-dimensional non-negative integer array
+        of shape ``(N, m)``, where ``N`` is the number of multi-index elements
+        (i.e., exponents) and ``m`` is the number of spatial dimension.
         Each row of the array indicates the vector of exponents.
     lp_degree : float
         :math:`p` of the :math:`l_p`-norm (i.e., the :math:`l_p`-degree)
@@ -69,7 +70,9 @@ class MultiIndexSet:
         # Compute the polynomial degree given the exponents and lp-degree
         self._poly_degree = get_poly_degree(exponents, self._lp_degree)
 
-        self._is_complete: Optional[bool] = None  # Lazy evaluation
+        # Lazy evaluations (evaluated when accessed)
+        self._is_complete: Optional[bool] = None
+        self._is_downward_closed: Optional[bool] = None
         # for avoiding to complete the exponents multiple times
         # TODO: Possibly remove this property
         self._exponents_completed: Optional[ARRAY] = None
@@ -133,19 +136,6 @@ class MultiIndexSet:
         return self._exponents_completed
 
     @property
-    def is_complete(self):
-        """Returns :class:`True` if the ``exponent`` array is complete.
-
-        :rtype: bool
-        """
-        # NOTE: exponents which are not complete ("with holes") cause problems with DDS, evaluation...
-        if self._is_complete is None:  # lazy evaluation
-            self._is_complete = is_lexicographically_complete(self.exponents)
-            if self._is_complete:
-                self._exponents_completed = self._exponents
-        return self._is_complete
-
-    @property
     def lp_degree(self) -> float:
         """:math:`p` of :math:`l_p`-norm used to define the multi-index set.
 
@@ -184,6 +174,55 @@ class MultiIndexSet:
             of multi-indices.
         """
         return self._exponents.shape[1]
+
+    @property
+    def is_complete(self) -> bool:
+        """Return ``True`` if the ``exponents`` array is complete.
+
+        Returns
+        -------
+        bool
+            ``True`` if the ``exponents`` array is complete and ``False``
+            otherwise.
+
+        Notes
+        -----
+        - For a definition of completeness, refer to the relevant
+          :doc:`section </how-to/multi-index-set/multi-index-set-complete>`
+          of the Minterpy Documentation.
+        """
+        if self._is_complete is None:
+            # Lazy evaluation
+            self._is_complete = is_complete(
+                self.exponents, self.poly_degree, self.lp_degree
+            )
+
+        return self._is_complete
+
+    @property
+    def is_downward_closed(self):
+        """Return ``True`` if the ``exponents`` array is downward-closed.
+
+        Returns
+        -------
+        bool
+            ``True`` if the ``exponents`` array is downward-closed and
+            ``False`` otherwise.
+
+        Notes
+        -----
+        - Many Minterpy routines like DDS, Newton-evaluation, etc. strictly
+          require a downward-closed exponent array (i.e., an array without
+          lexicographical "holes") to work.
+        - Refer to the Fundamentals section of the Minterpy Documentation
+          for the definition of
+          :doc:`multi-index sets </fundamentals/polynomial-bases>`.
+        """
+        if self._is_downward_closed is None:
+            # Lazy evaluation
+            self._is_downward_closed = is_downward_closed(self.exponents)
+
+        return self._is_downward_closed
 
     def __str__(self):
         return "\n".join(["MultiIndexSet", str(self._exponents)])
@@ -398,6 +437,8 @@ class MultiIndexSet:
             )
             # Can't guarantee the updated exponents are still complete
             self._is_complete = None
+            # nor downward-closed
+            self._is_downward_closed = None
         else:
             # Create a new instance
             new_instance = self.__class__(
@@ -461,9 +502,12 @@ class MultiIndexSet:
         # --- Updated exponents after expansion
         if inplace:
             self._exponents = expanded_exponents
-            # NOTE: Reset property (if exponents are only 0's,
-            #       it remains complete; otherwise, no)
+            # NOTE: Reset properties (if the exponent is only 0's,
+            #       it remains complete and downward-closed;
+            #       otherwise, no. None to be safe)
             self._is_complete = None
+            self._is_downward_closed = None
+
         else:
             # Create a new instance
             new_instance = self.__class__(
@@ -515,6 +559,8 @@ class MultiIndexSet:
             self._exponents = completed_exponents
             # By construction, the current instance is now complete
             self._is_complete = True
+            # A complete set is a downward-closed set
+            self._is_downward_closed = True
         else:
             # Create a new instance
             new_instance = self.__class__(
@@ -522,6 +568,8 @@ class MultiIndexSet:
             )
             # By construction, the new instance is complete
             new_instance._is_complete = True
+            # A complete set is a downward-closed set
+            new_instance._is_downward_closed = True
 
             return new_instance
 
