@@ -352,6 +352,13 @@ def gen_missing_backward_neighbors(
         (i.e., all the missing vectors of multi-indices "smaller by 1")
         of the array of multi-indices.
 
+    Notes
+    -----
+    - This function strictly requires a lexicographically sorted array of
+      multi-indices but, as a utility function, it does not check for them
+      for efficiency reason. Higher-level functions that call this function
+      must make sure that the array is sorted beforehand.
+
     Examples
     --------
     >>> my_missing_neighbors = gen_missing_backward_neighbors(np.array([[3]]))
@@ -660,6 +667,89 @@ def make_complete(exponents: np.ndarray, lp_degree: float) -> np.ndarray:
     return complete_exponents
 
 
+def make_downward_closed(indices: np.ndarray) -> np.ndarray:
+    """Make an array of multi-indices downward-closed.
+
+    Parameters
+    ----------
+    indices : :class:`numpy:numpy.ndarray`
+        Array of lexicographically sorted multi-indices, a two-dimensional
+        non-negative integer array of shape ``(N, m)``, where ``N`` is
+        the number of multi-indices and ``m`` is the number of spatial
+        dimensions.
+
+    Returns
+    -------
+    :class:`numpy:numpy.ndarray`
+        Array of downward-closed lexicographically sorted multi-indices,
+        a two-dimensional array of shape ``(N1, m)``, where ``N1`` is
+        the number of multi-indices in the downward-closed set and
+        ``m`` is the number of spatial dimensions.
+
+    Notes
+    -----
+    - This function strictly requires a lexicographically sorted array of
+      multi-indices but, as a utility function, it does not check for them
+      for efficiency reason. Higher-level functions that call this function
+      must make sure that the array is sorted beforehand.
+
+    Examples
+    --------
+    >>> my_indices = np.array([
+    ... [0, 0],
+    ... [2, 0],  # Jump from [1, 0]
+    ... [0, 3],  # Jump from [0, 1] and [0, 2]
+    ... ])
+    >>> make_downward_closed(my_indices)
+    array([[0, 0],
+           [1, 0],
+           [2, 0],
+           [0, 1],
+           [0, 2],
+           [0, 3]])
+    >>> my_indices = np.array([[1, 1, 1]])  # must be two-dimensional
+    >>> make_downward_closed(my_indices)
+    array([[0, 0, 0],
+           [1, 0, 0],
+           [0, 1, 0],
+           [1, 1, 0],
+           [0, 0, 1],
+           [1, 0, 1],
+           [0, 1, 1],
+           [1, 1, 1]])
+    """
+    # Set up a set to store final indices while avoiding duplications
+    indices_set = set([tuple(index) for index in indices])
+
+    # Initialize the primary iteration condition (input indices)
+    backward_neighbors = indices
+    # Set the early break parameter
+    break_length = -np.inf
+    while not is_downward_closed(backward_neighbors):
+        # All missing backward neighbors will eventually become
+        # downward-closed; this is a cheaper break condition
+        # than checking for the downward-closeness of the whole set
+        # everytime the set is updated with the missing backward neighbors.
+
+        # Backward neighbors of the current backward neighbors
+        backward_neighbors = _missing_backward_neighbors(backward_neighbors)
+
+        # Update the multi-index set
+        indices_tuple = [tuple(index) for index in backward_neighbors]
+        indices_set.update(indices_tuple)
+
+        # Early breaking: If the length of indices remains the same after
+        # two consecutive iterations.
+        if break_length == len(indices_set):
+            break
+        break_length = len(indices_set)
+
+    # Make sure the downward-indices are lexicographically sorted.
+    indices_out = lex_sort(np.array(list(indices_set)))
+
+    return indices_out
+
+
 def find_match_between(
     smaller_idx_set: np.ndarray, larger_idx_set: np.ndarray
 ) -> np.ndarray:
@@ -784,6 +874,33 @@ def multiply_indices(
     prod = lex_sort(prod)
 
     return prod
+
+
+def _missing_backward_neighbors(indices: np.ndarray) -> np.ndarray:
+    """Create a lexicographically sorted array of missing backward neighbors.
+
+    Parameters
+    ----------
+    indices : :class:`numpy:numpy.ndarray`
+        Array of lexicographically sorted multi-indices, a two-dimensional
+        non-negative integer array of shape ``(N, m)``, where ``N`` is
+        the number of multi-indices and ``m`` is the number of spatial
+        dimensions.
+
+    Returns
+    -------
+    :class:`numpy:numpy.ndarray`
+        Array of missing backward neighbors (i.e., all the missing vectors
+        of multi-indices "smaller by 1") of the array of multi-indices.
+        If ``indices`` has no backward neighbor, an empty array is returned.
+    """
+    backward_neighbors = gen_missing_backward_neighbors(indices)
+    # Convert generator to a NumPy array
+    backward_neighbors = np.array(list(backward_neighbors))
+    if len(backward_neighbors) > 0:
+        return lex_sort(backward_neighbors)
+
+    return backward_neighbors
 
 
 if __name__ == "__main__":
