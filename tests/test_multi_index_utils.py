@@ -23,6 +23,7 @@ from minterpy.core.utils import (
     is_complete,
     is_downward_closed,
     make_complete,
+    make_downward_closed,
     make_derivable,
     multiply_indices,
     lex_sort,
@@ -373,6 +374,56 @@ def test_make_complete(SpatialDimension, PolyDegree, LpDegree):
     assert_(is_lex_sorted(completed_exponents))
     # Completed set must be complete
     assert_(is_downward_closed(completed_exponents))
+
+
+# --- make_downward_closed()
+def test_make_downward_closed(SpatialDimension):
+    """Test the routine to make multi-indices downward-closed.
+
+    Notes
+    -----
+    - This test is related to Issue #123.
+    """
+    # Create a random multi-index set
+    if SpatialDimension > 1:
+        indices = build_rnd_exponents(SpatialDimension, 5)
+        indices = lex_sort(indices)
+    else:
+        # Make sure the elements are not downward-closed
+        indices = np.arange(100)[:, np.newaxis]
+        idx = np.random.choice(len(indices), len(indices)//2, replace=False)
+        indices = indices[np.sort(idx)]
+
+    assert not is_downward_closed(indices)
+
+    # Make downward-closed
+    downward_closed = make_downward_closed(indices)
+
+    # Assertion
+    assert is_downward_closed(downward_closed)
+
+
+def test_make_downward_closed_lp_degree_inf(SpatialDimension, PolyDegree):
+    """Test the routine to make multi-indices downward-closed with lp inf
+
+    Notes
+    -----
+    - In case the largest multi-index element has the same value across spatial
+      dimensions, the corresponding downward-closed set is the same as
+      the complete set with respect to the lp-degree inf and with
+      the aforementioned value as the polynomial degree.
+    - This test is related to Issue #123.
+    """
+    # Set the maximum element and make it downward-closed
+    indices = PolyDegree * np.ones(SpatialDimension, dtype=int)
+    indices = indices[np.newaxis, :]
+    indices = make_downward_closed(indices)
+
+    # Create the corresponding complete set
+    indices_ref = get_exponent_matrix(SpatialDimension, PolyDegree, np.inf)
+
+    # Assertion: downward-closed set is the complete set.
+    assert np.all(indices == indices_ref)
 
 
 def test_all_indices_are_contained(SpatialDimension, PolyDegree, LpDegree):

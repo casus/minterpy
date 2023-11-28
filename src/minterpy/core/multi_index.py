@@ -19,6 +19,7 @@ from minterpy.core.utils import (
     is_downward_closed,
     lex_sort,
     make_complete,
+    make_downward_closed,
     multiply_indices,
 )
 
@@ -545,12 +546,11 @@ class MultiIndexSet:
         """
         # --- Exponents already complete
         if self.is_complete:
-            # Already complete before
             if inplace:
                 return None
-            else:
-                # Create a shallow copy of the current instance
-                return copy(self)
+
+            # Otherwise, create a shallow copy of the current instance
+            return copy(self)
 
         # --- Exponents made complete
         completed_exponents = make_complete(self.exponents, self.lp_degree)
@@ -569,6 +569,61 @@ class MultiIndexSet:
             # By construction, the new instance is complete
             new_instance._is_complete = True
             # A complete set is a downward-closed set
+            new_instance._is_downward_closed = True
+
+            return new_instance
+
+    def make_downward_closed(
+        self,
+        inplace: bool = False,
+    ) -> Optional["MultiIndexSet"]:
+        """Create a downward-closed multi-index set from the current exponents.
+
+        Parameters
+        ----------
+        inplace : bool, optional
+            Flag to determine whether the current instance is modified
+            in-place with the downward-closed set of exponents.
+            If ``inplace`` is ``False``, a new :py:class:`.MultiIndexSet`
+            instance is created.
+            The default is ``False``.
+
+        Returns
+        -------
+        `MultiIndexSet`, optional
+            The multi-index set with the downward-closed set of exponents.
+            If ``inplace`` is set to ``True``, then the modification
+            is carried out in-place without an explicit output.
+
+        Notes
+        -----
+        - If the current :py:class:`.MultiIndexSet` exponents are already
+          complete, setting ``inplace`` to ``False`` (the default) creates
+          a shallow copy.
+        """
+        # --- Exponents are already downward-closed
+        if self.is_downward_closed:
+            if inplace:
+                return None
+
+            # Otherwise, create a shallow copy of the current instance
+            return copy(self)
+
+        # --- Exponents made downward-closed
+        downward_closed_exponents = make_downward_closed(self.exponents)
+        if inplace:
+            # Modify the current instance
+            self._exponents = downward_closed_exponents
+            # By construction, the current instance is now downward-closed
+            self._is_downward_closed = True
+            # ...but its completeness can't be guaranteed
+            self._is_complete = None
+        else:
+            # Create a new instance
+            new_instance = self.__class__(
+                exponents=downward_closed_exponents, lp_degree=self.lp_degree
+            )
+            # By construction, the new instance is downward-closed
             new_instance._is_downward_closed = True
 
             return new_instance

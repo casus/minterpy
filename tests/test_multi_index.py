@@ -308,12 +308,14 @@ def test_make_complete_inplace(SpatialDimension, PolyDegree, LpDegree):
         # Only test for polynomial degree of higher than 0 (0 always complete)
         return
 
+    # NOTE: By construction, 'from_degree()' returns a complete set
     mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+    assert mi.is_complete
 
     # --- Make complete of an already complete set
     exponents = mi.exponents
     mi.make_complete(inplace=True)
-    # Assertion: the exponents are identical
+    # Assertion: the exponents are identical object
     assert mi.exponents is exponents
 
     # --- Make complete of an incomplete set
@@ -348,6 +350,8 @@ def test_make_complete_outplace(SpatialDimension, PolyDegree, LpDegree):
     mi_complete = mi.make_complete(inplace=False)
     assert mi_complete.is_complete
     assert mi_complete is not mi
+    # NOTE: Shallow copy but due to lex_sort in the default constructor,
+    #       a new set of exponents are created.
     assert np.all(mi_complete.exponents == mi.exponents)
 
     # --- Incomplete set of exponents
@@ -374,6 +378,110 @@ def test_make_complete_outplace(SpatialDimension, PolyDegree, LpDegree):
     assert mi_complete.is_complete
     assert mi_complete is not mi_incomplete
     assert np.all(mi_complete.exponents == mi.exponents)
+
+
+# --- make_downward_closed()
+def test_make_downward_closed_inplace(SpatialDimension, PolyDegree, LpDegree):
+    """Test in-place make_downward_closed() on the MultiIndexSet instances.
+
+    Notes
+    ----
+    - This is test is also related to Issue #123.
+    """
+    if PolyDegree < 1:
+        # Only test for polynomial degree of higher than 0 (0 always complete)
+        return
+
+    # --- Already downward-closed set of exponents
+
+    # By construction, a complete set is a downward-closed set
+    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+    # Exclude the last element to break completeness
+    mi = MultiIndexSet(exponents[:-1], LpDegree)
+    assert mi.is_downward_closed
+
+    # Already downward-closed, but make it downward-closed anyway
+    mi.make_downward_closed(inplace=True)
+    # Assertion: the exponents are identical object
+    exponents = mi.exponents
+    assert mi.exponents is exponents
+
+    # ---  Non-downward-closed set of exponents
+
+    # Get the highest multi-index set element from a complete set
+    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+    exponent = np.atleast_2d(exponents[-1])
+    # Create a new instance with just a single exponent
+    mi = MultiIndexSet(exponent, LpDegree)
+    assert not mi.is_downward_closed
+
+    # Make downward-closed in-place
+    mi.make_downward_closed(inplace=True)
+    # Assertions
+    assert mi.is_downward_closed
+    if SpatialDimension > 1 and LpDegree != np.inf:
+        assert not mi.is_complete
+    else:
+        # if LpDegree == inf, a downward-closed set is complete
+        assert mi.is_complete
+
+
+def test_make_downward_closed_outplace(SpatialDimension, PolyDegree, LpDegree):
+    """Test out-place make_downward_closed() on the MultiIndexSet instances.
+
+    Notes
+    ----
+    - This is test is also related to Issue #123.
+    """
+    if PolyDegree < 1:
+        # Only test for polynomial degree of higher than 0 (0 always complete)
+        return
+
+    # --- Already downward-closed set of exponents
+
+    # By construction, a complete set is a downward-closed set
+    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+    # Exclude the last element to break completeness
+    mi = MultiIndexSet(exponents[:-1], LpDegree)
+    assert mi.is_downward_closed
+
+    # Already downward-closed, but make it downward-closed anyway
+    mi_downward_closed = mi.make_downward_closed(inplace=False)
+
+    # Assertions
+    assert mi_downward_closed.is_downward_closed
+    assert mi_downward_closed is not mi
+    # NOTE: Shallow copy but due to lex_sort in the default constructor,
+    #       a new set of exponents are created.
+    assert np.all(mi_downward_closed.exponents == mi.exponents)
+
+    # --- Non-downward-closed set of exponents
+
+    # Get the highest multi-index set element from a complete set
+    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+    exponent = np.atleast_2d(exponents[-1])
+    # Create a new instance with just a single exponent
+    mi_non_downward_closed = MultiIndexSet(exponent, LpDegree)
+    assert not mi_non_downward_closed.is_downward_closed
+
+    # Make complete out-place (with the default parameter)
+    mi_downward_closed = mi_non_downward_closed.make_downward_closed()
+    # Assertions
+    assert mi_downward_closed.is_downward_closed
+    assert mi_downward_closed is not mi_non_downward_closed
+
+    # Make complete out-place (with an explicit argument)
+    mi_downward_closed = mi_non_downward_closed.make_downward_closed(
+        inplace=False
+    )
+    # Assertions
+    assert mi_downward_closed.is_downward_closed
+    assert mi_downward_closed is not mi_non_downward_closed
+    if SpatialDimension > 1 and LpDegree != np.inf:
+        assert not mi_downward_closed.is_complete
+    else:
+        # if LpDegree == inf, a downward-closed set is complete
+        assert mi_downward_closed.is_complete
 
 
 # --- expand_dim()

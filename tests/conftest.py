@@ -17,7 +17,7 @@ SEED = 12345678
 
 # Global settings
 MIN_POLY_DEG = 0
-MAX_POLY_DEG = 10
+MAX_POLY_DEG = 20
 
 # asserts that a call runs as expected
 def assert_call(fct, *args, **kwargs):
@@ -153,7 +153,7 @@ def assert_interpolator_almost_equal(interpolator1, interpolator2):
 # assert if interpolants are equal
 def assert_interpolant_equal(interpolant1, interpolant2):
     try:
-        assert_(isinstance(interpolator1, type(interpolator2)))
+        assert_(isinstance(interpolant1, type(interpolant2)))
         assert_function_object_code_equal(interpolant1.fct, interpolant2.fct)
         assert_interpolator_equal(interpolant1.interpolator, interpolant2.interpolator)
     except AssertionError as a:
