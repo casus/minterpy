@@ -316,26 +316,105 @@ def check_domain_fit(points: np.ndarray):
             )
 
 
+def verify_spatial_dimension(spatial_dimension: int) -> int:
+    """Verify if the value of a given spatial dimension is valid.
+
+    Parameters
+    ----------
+    spatial_dimension : int
+        Spatial dimension to verify; the value of spatial dimension must be
+        strictly positive. ``spatial_dimension`` may not necessarily be
+        an `int` but it must be a single whole number.
+
+    Returns
+    -------
+    int
+        Verified spatial dimension. If the input is not an `int`,
+        the function does a type conversion to an `int` if possible.
+
+    Raises
+    ------
+    TypeError
+        If ``spatial_dimension`` is not of a correct type, i.e., its
+        strict-positiveness cannot be verified or the conversion to `int`
+        cannot be carried out.
+    ValueError
+        If ``spatial_dimension`` is, for example, not a positive
+        or a whole number.
+
+    Examples
+    --------
+    >>> verify_spatial_dimension(2)  # int
+    2
+    >>> verify_spatial_dimension(3.0)  # float but whole
+    3
+    >>> verify_spatial_dimension(np.array([1])[0])  # numpy.int64
+    1
+    """
+    try:
+        # Must be strictly positive
+        if spatial_dimension <= 0:
+            raise ValueError(
+            f"Spatial dimension must be strictly positive! "
+            f"Got instead {spatial_dimension}."
+        )
+
+        # Other type than int may be acceptable if it's a whole number
+        if spatial_dimension % 1 != 0:
+            raise ValueError(
+                f"Spatial dimension must be a whole number! "
+                f"Got instead {spatial_dimension}."
+            )
+
+        # Make sure that it's an int
+        spatial_dimension = int(spatial_dimension)
+
+    except TypeError as err:
+        custom_message = "Invalid type for spatial dimension!"
+        err.args = _add_custom_exception_message(err.args, custom_message)
+        raise err
+
+    except ValueError as err:
+        custom_message = "Invalid value for spatial dimension!"
+        err.args = _add_custom_exception_message(err.args, custom_message)
+        raise err
+
+    return spatial_dimension
+
+
 def verify_lp_degree(lp_degree: float) -> float:
     """Verify that the value of a given lp-degree is valid.
 
     Parameters
     ----------
     lp_degree : float
-        A given :math:`l_p` of the :math:`l_p`-norm (i.e., lp-degree).
+        A given :math:`p` of the :math:`l_p`-norm (i.e., lp-degree) to verify;
+        the value of an lp-degree must be strictly positive. ``lp_degree``
+        may not necessarily be a `float`.
 
     Returns
     -------
     float
-        A verified lp-degree value.
+        Verified lp-degree value. If the input is not a `float`, the function
+        does a type conversion to a `float` if possible.
 
     Raises
     ------
-    ValueError
-        If the given lp-degree is a non strictly positive value.
     TypeError
-        If the given lp-degree is not a valid number type
-        such that its strictly positiveness cannot be verified.
+        If ``lp_degree`` is not of correct type, i.e., its strict-positiveness
+        cannot be verified or the conversion to `float` cannot be carried
+        out.
+    ValueError
+        If ``lp-degree`` is, for example, a non strictly positive value.
+
+    Examples
+    --------
+    >>> verify_lp_degree(2.5)  # float
+    2.5
+    >>> verify_lp_degree(3)  # int
+    3.0
+    >>> verify_lp_degree(np.array([1])[0])  # numpy.int64
+    1.0
     """
     try:
         if lp_degree <= 0.0:
@@ -343,10 +422,17 @@ def verify_lp_degree(lp_degree: float) -> float:
                 "lp-degree must be strictly positive! "
                 f"Instead, {lp_degree} is given."
             )
+
+        # Make sure that it's a float
         lp_degree = float(lp_degree)
 
     except TypeError as err:
         custom_message = "Invalid type for lp-degree!"
+        err.args = _add_custom_exception_message(err.args, custom_message)
+        raise err
+
+    except ValueError as err:
+        custom_message = "Invalid value for lp-degree!"
         err.args = _add_custom_exception_message(err.args, custom_message)
         raise err
 
@@ -378,3 +464,8 @@ def _add_custom_exception_message(
     exception_args = (arg,) + exception_args[1:]
 
     return exception_args
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

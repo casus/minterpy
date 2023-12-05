@@ -23,7 +23,12 @@ from minterpy.core.utils import (
     multiply_indices,
 )
 
-from .verification import check_shape, check_values, verify_lp_degree
+from .verification import (
+    check_shape,
+    check_values,
+    verify_lp_degree,
+    verify_spatial_dimension,
+)
 
 __all__ = ["MultiIndexSet"]
 
@@ -88,8 +93,7 @@ class MultiIndexSet:
         """Create from given spatial dimension, poly. degree, and lp-degree."""
         if type(poly_degree) is not int:
             raise TypeError("only integer polynomial degrees are supported.")
-        if type(spatial_dimension) is not int:
-            raise TypeError("spatial dimension must be given as integer.")
+        spatial_dimension = verify_spatial_dimension(spatial_dimension)
         lp_degree = verify_lp_degree(lp_degree)
         exponents = get_exponent_matrix(
             spatial_dimension, poly_degree, lp_degree

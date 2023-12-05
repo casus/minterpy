@@ -20,6 +20,7 @@ from minterpy.core.utils import (
     find_match_between,
     multiply_indices,
     is_downward_closed,
+    is_complete,
 )
 
 
@@ -59,6 +60,7 @@ def test_init_fail_from_exponents():
     assert_raises(TypeError, MultiIndexSet, exponents, "1.0")
 
 
+# --- MultiIndexSet.from_degree()
 def test_init_from_degree(SpatialDimension, PolyDegree, LpDegree):
     """Test the constructor 'from_degree'."""
     # Lp-degree is optional
@@ -82,19 +84,173 @@ def test_init_from_degree(SpatialDimension, PolyDegree, LpDegree):
     assert multi_index.is_downward_closed
 
 
-def test_init_fail_from_degree():
-    assert_raises(TypeError, MultiIndexSet.from_degree, 1.0, 1)
+@pytest.mark.parametrize(
+    "spatial_dimension",
+    [1, 1.0, np.array([1])[0]]
+)
+def test_init_from_degree_spatial_dimension(spatial_dimension):
+    """Test the constructor 'from_degree()' with diff. types of spatial dim.
+
+    Notes
+    -----
+    - This test is related to Issue #77.
+    """
+    mi = MultiIndexSet.from_degree(spatial_dimension, 5, 1.0)
+
+    # Assertions: Type and Value
+    assert isinstance(mi.spatial_dimension, int)
+    assert mi.spatial_dimension == int(spatial_dimension)
+
+
+def test_init_fail_from_degree_invalid_spatial_dim(PolyDegree, LpDegree):
+    """Test failure of calling 'from_degree()' due to invalid spatial dim.
+
+    Notes
+    -----
+    - This test is related to Issue #77.
+    """
+    # TypeError (e.g., string)
+    assert_raises(
+        TypeError, MultiIndexSet.from_degree, "1", PolyDegree, LpDegree
+    )
+    # ValueError (e.g., non-whole number, NumPy array, negative number, zero)
+    spatial_dimensions = [1.5, np.array([1, 2]), -1, 0]
+    for m in spatial_dimensions:
+        assert_raises(
+            ValueError, MultiIndexSet.from_degree, m, PolyDegree, LpDegree
+        )
+
+
+def test_init_fail_from_degree_invalid_poly_degree():
+    """Test failure of calling 'from_degree()' due to invalid poly degree."""
     assert_raises(TypeError, MultiIndexSet.from_degree, 1, 1.0)
 
-    # --- Invalid lp-degree
-    # Zero
-    assert_raises(ValueError, MultiIndexSet.from_degree, 3, 2, 0.0)
-    # Negative
-    assert_raises(ValueError, MultiIndexSet.from_degree, 3, 2, -1.0)
+
+@pytest.mark.parametrize(
+    "lp_degree",
+    [1, 1.2, np.array([1])[0]]
+)
+def test_init_from_degree_lp_degree(lp_degree):
+    """Test the constructor 'from_degree()' with diff. types of lp-degree."""
+    mi = MultiIndexSet.from_degree(2, 5, lp_degree)
+
+    # Assertions: Type and Value
+    assert isinstance(mi.lp_degree, float)
+    assert mi.lp_degree == float(lp_degree)
 
 
-# Test methods
+def test_init_fail_from_degree_invalid_lp_degree(SpatialDimension, PolyDegree):
+    """Test failure of calling 'from_degree()' due to invalid lp-degree."""
+    # --- TypeError (e.g., string)
+    assert_raises(
+        TypeError,
+        MultiIndexSet.from_degree,
+        SpatialDimension,
+        PolyDegree,
+        "1.0",
+    )
 
+    # --- ValueError (e.g., zero, negative, NumPy array)
+    spatial_dimensions = [0, np.array([1, 2]), -1]
+    for m in spatial_dimensions:
+        assert_raises(
+            ValueError,
+            MultiIndexSet.from_degree,
+            SpatialDimension,
+            PolyDegree,
+            m,
+        )
+
+
+def test_attributes(SpatialDimension, PolyDegree, LpDegree):
+    """Test the attributes of MultiIndexSet instances."""
+
+    # Create a MultiIndexSet from a set of exponents
+    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+    multi_index = MultiIndexSet(exponents, lp_degree=LpDegree)
+
+    # Assertions
+    assert_(isinstance(multi_index, MultiIndexSet))
+    assert_equal(exponents, multi_index.exponents)
+    assert_(multi_index.lp_degree == LpDegree)
+    assert_(multi_index.poly_degree == PolyDegree)
+
+    number_of_monomials, dim = exponents.shape
+    assert_(len(multi_index) == number_of_monomials)
+    assert_(multi_index.spatial_dimension == dim)
+
+    # Assigning to read-only properties
+    with pytest.raises(AttributeError):
+        # This is related to Issue #98
+        multi_index.lp_degree = LpDegree
+        # This is related to Issue #100
+        multi_index.poly_degree = PolyDegree
+
+
+def test_attributes_incomplete_exponents(
+        SpatialDimension,
+        PolyDegree,
+        LpDegree
+):
+    """Test the attributes with an incomplete exponents for MultiIndexSet.
+
+    Notes
+    -----
+    - This is related to the fix for Issue #66.
+    """
+    # Create a complete set
+    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+
+    # Create an incomplete multi-index set
+    # by adding a new exponent of higher degree
+    exponents_incomplete = np.insert(
+        exponents, len(exponents), exponents[-1] + 2, axis=0)
+    multi_index_incomplete = MultiIndexSet(
+        exponents_incomplete, lp_degree=LpDegree)
+
+    # Make sure the incomplete exponents are indeed incomplete
+    assert_(not is_complete(exponents_incomplete, PolyDegree, LpDegree))
+    assert_(not multi_index_incomplete.is_complete)
+
+    # Compute the reference polynomial degree given the multi-index set
+    poly_degree = get_poly_degree(exponents_incomplete, LpDegree)
+
+    # Assertion of attributes
+    assert_(multi_index_incomplete.poly_degree == poly_degree)
+    assert_(multi_index_incomplete.lp_degree == LpDegree)
+    assert_(multi_index_incomplete.spatial_dimension == SpatialDimension)
+    assert_equal(exponents_incomplete, multi_index_incomplete.exponents)
+
+
+@pytest.mark.parametrize("spatial_dimension", [1, 2, 3, 7])
+@pytest.mark.parametrize("poly_degree", [1, 2, 3, 5])
+def test_attributes_from_degree(spatial_dimension, poly_degree, LpDegree):
+    """Test the resulting instances from from_degree() constructor.
+
+    Notes
+    -----
+    - This test is included due to Issue #97. The known breaking cases:
+      the spatial dimension 7 and polynomial degree 5
+      are explicitly tested and only for this test.
+      Otherwise, the test suite would be too time-consuming to run.
+    """
+    multi_index = MultiIndexSet.from_degree(
+        spatial_dimension, poly_degree, LpDegree
+    )
+
+    # Assertions
+    assert_(isinstance(multi_index, MultiIndexSet))
+    assert_(multi_index.lp_degree == LpDegree)
+    assert_(multi_index.poly_degree == poly_degree)
+
+    dim = multi_index.exponents.shape[1]
+    assert_(multi_index.spatial_dimension == spatial_dimension)
+    assert_(dim == spatial_dimension)
+
+
+# --- Instance Methods
+
+# --- MultiIndexSet.add_exponents()
 def test_add_exponents_outplace(SpatialDimension, PolyDegree, LpDegree):
     """Test the add_exponents method of a MultiIndex instance outplace.
     
@@ -212,93 +368,6 @@ def test_add_exponents_sparse():
     # Assertions
     assert mi_added.is_downward_closed
     assert mi_added.poly_degree == mi.poly_degree + 1
-
-
-def test_attributes(SpatialDimension, PolyDegree, LpDegree):
-    """Test the attributes of MultiIndexSet instances."""
-
-    # Create a MultiIndexSet from a set of exponents
-    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    multi_index = MultiIndexSet(exponents, lp_degree=LpDegree)
-
-    # Assertions
-    assert_(isinstance(multi_index, MultiIndexSet))
-    assert_equal(exponents, multi_index.exponents)
-    assert_(multi_index.lp_degree == LpDegree)
-    assert_(multi_index.poly_degree == PolyDegree)
-
-    number_of_monomials, dim = exponents.shape
-    assert_(len(multi_index) == number_of_monomials)
-    assert_(multi_index.spatial_dimension == dim)
-
-    # Assigning to read-only properties
-    with pytest.raises(AttributeError):
-        # This is related to Issue #98
-        multi_index.lp_degree = LpDegree
-        # This is related to Issue #100
-        multi_index.poly_degree = PolyDegree
-
-
-def test_attributes_incomplete_exponents(
-    SpatialDimension,
-    PolyDegree,
-    LpDegree
-):
-    """Test the attributes with an incomplete exponents for MultiIndexSet.
-    
-    Notes
-    -----
-    - This is related to the fix for Issue #66.
-    """
-    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-
-    # Create an incomplete multi-index set
-    # by adding a new exponent of higher degree
-    exponents_incomplete = np.insert(
-        exponents, len(exponents), exponents[-1]+2, axis=0)
-    multi_index_incomplete = MultiIndexSet(
-        exponents_incomplete, lp_degree=LpDegree)
-
-    # Make sure the incomplete exponents are indeed incomplete
-    assert_(not is_downward_closed(exponents_incomplete))
-
-    # Compute the reference polynomial degree given the multi-index set    
-    poly_degree = get_poly_degree(exponents_incomplete, LpDegree)
-
-    # Assertion of attributes
-    assert_equal(exponents_incomplete, multi_index_incomplete.exponents)
-    assert_(multi_index_incomplete.lp_degree == LpDegree)
-    assert_(multi_index_incomplete.poly_degree == poly_degree)
-
-    num_of_monomials_incomplete, dim_incomplete = exponents_incomplete.shape
-    assert_(len(multi_index_incomplete) == num_of_monomials_incomplete)
-    assert_(multi_index_incomplete.spatial_dimension == dim_incomplete)
-
-
-@pytest.mark.parametrize("spatial_dimension", [1, 2, 3, 7])
-@pytest.mark.parametrize("poly_degree", [1, 2, 3, 5])
-def test_attributes_from_degree(spatial_dimension, poly_degree, LpDegree):
-    """Test the resulting instances from from_degree() constructor.
-
-    Notes
-    -----
-    - This test is included due to Issue #97. The known breaking cases:
-      the spatial dimension 7 and polynomial degree 5
-      are explicitly tested and only for this test.
-      Otherwise, the test suite would be too time-consuming to run.
-    """
-    multi_index = MultiIndexSet.from_degree(
-        spatial_dimension, poly_degree, LpDegree
-    )
-
-    # Assertions
-    assert_(isinstance(multi_index, MultiIndexSet))
-    assert_(multi_index.lp_degree == LpDegree)
-    assert_(multi_index.poly_degree == poly_degree)
-
-    dim = multi_index.exponents.shape[1]
-    assert_(multi_index.spatial_dimension == spatial_dimension)
-    assert_(dim == spatial_dimension)
 
 
 # --- make_complete()
