@@ -88,14 +88,18 @@ def test_init_from_degree(SpatialDimension, PolyDegree, LpDegree):
     "spatial_dimension",
     [1, 1.0, np.array([1])[0]]
 )
-def test_init_from_degree_spatial_dimension(spatial_dimension):
+def test_init_from_degree_spatial_dimension(
+    spatial_dimension,
+    PolyDegree,
+    LpDegree
+):
     """Test the constructor 'from_degree()' with diff. types of spatial dim.
 
     Notes
     -----
     - This test is related to Issue #77.
     """
-    mi = MultiIndexSet.from_degree(spatial_dimension, 5, 1.0)
+    mi = MultiIndexSet.from_degree(spatial_dimension, PolyDegree, LpDegree)
 
     # Assertions: Type and Value
     assert isinstance(mi.spatial_dimension, int)
@@ -121,18 +125,54 @@ def test_init_fail_from_degree_invalid_spatial_dim(PolyDegree, LpDegree):
         )
 
 
-def test_init_fail_from_degree_invalid_poly_degree():
-    """Test failure of calling 'from_degree()' due to invalid poly degree."""
-    assert_raises(TypeError, MultiIndexSet.from_degree, 1, 1.0)
+@pytest.mark.parametrize(
+    "poly_degree",
+    [0, 0.0, 1, 1.0, np.array([1])[0]]
+)
+def test_init_from_degree_poly_degree(SpatialDimension, poly_degree, LpDegree):
+    """Test the constructor 'from_degree()' with diff. types of poly. degree.
+
+    Notes
+    -----
+    - This test is related to Issue #101.
+    """
+    mi = MultiIndexSet.from_degree(SpatialDimension, poly_degree, LpDegree)
+
+    # Assertions: Type and Value
+    assert isinstance(mi.poly_degree, int)
+    assert mi.poly_degree == int(poly_degree)
+
+
+def test_init_fail_from_degree_invalid_poly_degree(SpatialDimension, LpDegree):
+    """Test failure of calling 'from_degree()' due to invalid poly degree.
+
+    Notes
+    -----
+    - This test is related to Issue #101.
+    """
+    # TypeError (e.g., string)
+    assert_raises(
+        TypeError, MultiIndexSet.from_degree, SpatialDimension, "1", LpDegree
+    )
+    # ValueError (e.g., non-whole number, NumPy array, negative number)
+    poly_degrees = [1.5, np.array([1, 2]), -1]
+    for n in poly_degrees:
+        assert_raises(
+            ValueError,
+            MultiIndexSet.from_degree,
+            SpatialDimension,
+            n,
+            LpDegree,
+        )
 
 
 @pytest.mark.parametrize(
     "lp_degree",
     [1, 1.2, np.array([1])[0]]
 )
-def test_init_from_degree_lp_degree(lp_degree):
+def test_init_from_degree_lp_degree(SpatialDimension, PolyDegree, lp_degree):
     """Test the constructor 'from_degree()' with diff. types of lp-degree."""
-    mi = MultiIndexSet.from_degree(2, 5, lp_degree)
+    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, lp_degree)
 
     # Assertions: Type and Value
     assert isinstance(mi.lp_degree, float)

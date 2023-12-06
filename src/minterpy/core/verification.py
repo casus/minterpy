@@ -2,12 +2,13 @@
 """ functions for input verification
 """
 
-from typing import Optional, Sized, Tuple
+from typing import Optional, Sized, Tuple, TypeVar
 
 import numpy as np
 from _warnings import warn
 
 from minterpy.global_settings import DEBUG, DEFAULT_DOMAIN, FLOAT_DTYPE, INT_DTYPE
+
 
 def verify_domain(domain, spatial_dimension):
     """Building and verification of domains.
@@ -38,7 +39,7 @@ def verify_domain(domain, spatial_dimension):
 def rectify_query_points(x, m):
     """Rectify input arguments.
 
-    This function checks if a given input has the correct shape, or if the correct shape can be infered. For the latter it returns a version of the input with the correct shape. Correct shape means here ``(N,m)``, where ``N`` is the number of points and ``m`` the dimentsion of the domain space.
+    This function checks if a given input has the correct shape, or if the correct shape can be inferred. For the latter it returns a version of the input with the correct shape. Correct shape means here ``(N,m)``, where ``N`` is the number of points and ``m`` the dimension of the domain space.
 
     :param x: Array of arguemnts passed to a function.
     :type x: np.ndarray
@@ -322,8 +323,8 @@ def verify_spatial_dimension(spatial_dimension: int) -> int:
     Parameters
     ----------
     spatial_dimension : int
-        Spatial dimension to verify; the value of spatial dimension must be
-        strictly positive. ``spatial_dimension`` may not necessarily be
+        Spatial dimension to verify; the value of a spatial dimension must be
+        strictly positive (> 0). ``spatial_dimension`` may not necessarily be
         an `int` but it must be a single whole number.
 
     Returns
@@ -382,14 +383,80 @@ def verify_spatial_dimension(spatial_dimension: int) -> int:
     return spatial_dimension
 
 
+def verify_poly_degree(poly_degree: int) -> int:
+    """Verify if the value of a given polynomial degree is valid.
+
+    Parameters
+    ----------
+    poly_degree : int
+        Polynomial degree to verify; the value of a polynomial degree must be
+        non-negative (>= 0). ``poly_degree`` may not necessarily be
+        an `int` but it must be a single whole number.
+
+    Returns
+    -------
+    int
+        Verified polynomial degree. If the input is not an `int`,
+        the function does a type conversion to an `int` if possible.
+
+    Raises
+    ------
+    TypeError
+        If ``poly_degree`` is not of a correct type, i.e., its
+        non-negativeness cannot be verified or the conversion to `int`
+        cannot be carried out.
+    ValueError
+        If ``poly_degree`` is, for example, not a positive
+        or a whole number.
+
+    Examples
+    --------
+    >>> verify_poly_degree(0)  # int
+    0
+    >>> verify_poly_degree(1.0)  # float but whole
+    1
+    >>> verify_poly_degree(np.array([2])[0])  # numpy.int64
+    2
+    """
+    try:
+        # Must be non-negative
+        if poly_degree < 0:
+            raise ValueError(
+            f"Poly. degree must be non-negative! "
+            f"Got instead {poly_degree}."
+        )
+
+        # Other type than int may be acceptable if it's a whole number
+        if poly_degree % 1 != 0:
+            raise ValueError(
+                f"Poly. degree must be a whole number! "
+                f"Got instead {poly_degree}."
+            )
+
+        # Make sure that it's an int
+        poly_degree = int(poly_degree)
+
+    except TypeError as err:
+        custom_message = "Invalid type for poly. degree!"
+        err.args = _add_custom_exception_message(err.args, custom_message)
+        raise err
+
+    except ValueError as err:
+        custom_message = "Invalid value for poly. degree!"
+        err.args = _add_custom_exception_message(err.args, custom_message)
+        raise err
+
+    return poly_degree
+
+
 def verify_lp_degree(lp_degree: float) -> float:
     """Verify that the value of a given lp-degree is valid.
 
     Parameters
     ----------
     lp_degree : float
-        A given :math:`p` of the :math:`l_p`-norm (i.e., lp-degree) to verify;
-        the value of an lp-degree must be strictly positive. ``lp_degree``
+        A given :math:`p` of the :math:`l_p`-norm (i.e., :math:`l_p`-degree)
+        to verify. The value of an ``lp_degree`` must be strictly positive, but
         may not necessarily be a `float`.
 
     Returns
