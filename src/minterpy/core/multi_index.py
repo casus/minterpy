@@ -28,6 +28,7 @@ from .verification import (
     check_values,
     verify_lp_degree,
     verify_spatial_dimension,
+    verify_poly_degree,
 )
 
 __all__ = ["MultiIndexSet"]
@@ -50,7 +51,8 @@ class MultiIndexSet:
         Each row of the array indicates the vector of exponents.
     lp_degree : float
         :math:`p` of the :math:`l_p`-norm (i.e., the :math:`l_p`-degree)
-        that is used to define the multi-index set.
+        that is used to define the multi-index set. The value of
+        ``lp_degree`` must be a positive float (:math:`p > 0`).
 
     Notes
     -----
@@ -89,12 +91,37 @@ class MultiIndexSet:
         spatial_dimension: int,
         poly_degree: int,
         lp_degree: float = DEFAULT_LP_DEG,
-    ):
-        """Create from given spatial dimension, poly. degree, and lp-degree."""
-        if type(poly_degree) is not int:
-            raise TypeError("only integer polynomial degrees are supported.")
+    ) -> "MultiIndexSet":
+        """Create an instance from given spatial dim., poly., and lp-degrees.
+
+        Parameters
+        ----------
+        spatial_dimension : int
+            Spatial dimension of the multi-index set (:math:`m`); the value of
+            ``spatial_dimension`` must be a positive integer (:math:`m > 0`).
+        poly_degree : int
+            Polynomial degree of the multi-index set (:math:`n`); the value of
+            ``poly_degree`` must be a non-negative integer (:math:`n \geq 0`).
+        lp_degree : float, optional
+            :math:`p` of the :math:`l_p`-norm (i.e., the :math:`l_p`-degree)
+            that is used to define the multi-index set. The value of
+            ``lp_degree`` must be a positive float (:math:`p > 0`).
+            If not specified, ``lp_degree`` is assigned with the value of
+            :math:`2.0`.
+
+        Returns
+        -------
+        MultiIndexSet
+            An instance of :py:class:`.MultiIndexSet` in the given
+            ``spatial_dimension`` with a complete set of exponents with respect
+            to the given ``poly_degree`` and ``lp_degree``.
+        """
+        # Verify the parameters
+        poly_degree = verify_poly_degree(poly_degree)
         spatial_dimension = verify_spatial_dimension(spatial_dimension)
         lp_degree = verify_lp_degree(lp_degree)
+
+        # Construct a complete set of multi-indices as the exponents
         exponents = get_exponent_matrix(
             spatial_dimension, poly_degree, lp_degree
         )

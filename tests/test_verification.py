@@ -7,6 +7,7 @@ from conftest import assert_call
 
 from minterpy.core.verification import (
     verify_spatial_dimension,
+    verify_poly_degree,
     verify_lp_degree,
 )
 
@@ -86,3 +87,49 @@ def test_verify_spatial_dimension_value_error(spatial_dimension):
     - This test is related to Issue #77.
     """
     assert_raises(ValueError, verify_spatial_dimension, spatial_dimension)
+
+
+# --- verify_poly_degree()
+@pytest.mark.parametrize(
+    "poly_degree",
+    [0, 1, 1.0, np.array([1])[0], np.array([1.0])[0]]
+)
+def test_verify_poly_degree(poly_degree):
+    """Test the verification of a poly. degree value.
+
+    Notes
+    -----
+    - This test is related to Issue #101.
+    """
+    assert_call(verify_poly_degree, poly_degree)
+
+    verified_poly_degree = verify_poly_degree(poly_degree)
+
+    # Assertions
+    assert isinstance(verified_poly_degree, int)
+    assert verified_poly_degree == int(poly_degree)
+
+
+def test_verify_poly_degree_type_error():
+    """Test raising TypeError in the spatial dimension verification.
+
+    Notes
+    -----
+    - This test is related to Issue #101.
+    """
+    poly_degree = "1"
+    assert_raises(TypeError, verify_poly_degree, poly_degree)
+
+
+@pytest.mark.parametrize(
+    "poly_degree",
+    [1.1, -100, -100.0, np.array([-10])[0], np.array([1, 2, 3])]
+)
+def test_verify_poly_degree_value_error(poly_degree):
+    """Test raising ValueError in the poly_degree verification.
+
+    Notes
+    -----
+    - This test is related to Issue #101.
+    """
+    assert_raises(ValueError, verify_poly_degree, poly_degree)
