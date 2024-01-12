@@ -642,6 +642,71 @@ def test_expand_dim_outplace(SpatialDimension, PolyDegree, LpDegree):
     assert np.all(expanded_mi.exponents[:, SpatialDimension:] == 0)
 
 
+# --- __eq__()
+def test_equality(SpatialDimension, PolyDegree, LpDegree):
+    """Test the equality check between two instances of MultiIndexSet.
+
+    Notes
+    -----
+    - This test is related to Issue #107.
+    """
+    # Create two multi-index sets with the same parameters
+    mi_1 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+    mi_2 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+    # Assertions
+    assert mi_1 is not mi_2  # Instances are not identical
+    assert mi_1 == mi_2  # Instances are equal in value
+
+
+def test_inequality():
+    """Test the inequality check between MultiIndexSets.
+
+    Notes
+    -----
+    - This test is related to Issue #107.
+    """
+    # Create two different multi-index sets (both in exponents and lp-degree)
+    mi_1 = MultiIndexSet.from_degree(3, 2, 1)
+    mi_2 = MultiIndexSet.from_degree(4, 2, np.inf)
+
+    # Assertion
+    assert mi_1 != mi_2
+
+
+def test_inequality_lp_degree(SpatialDimension, PolyDegree):
+    """Test the inequality check between MultiIndexSets w/ diff. lp-degrees.
+
+    Notes
+    -----
+    - This test is related to Issue #107.
+    """
+    # Create two sets with the same exponents but different lp-degrees
+    exp = get_exponent_matrix(SpatialDimension, PolyDegree, np.inf)
+    mi_1 = MultiIndexSet(exp, lp_degree=1.0)
+    mi_2 = MultiIndexSet(exp, lp_degree=2.0)
+
+    # Assertion
+    assert mi_1 != mi_2
+
+
+def test_inequality_exponents(SpatialDimension, LpDegree):
+    """Test the inequality check between MultiIndexSets w/ diff. exponents.
+
+    Notes
+    -----
+    - This test is related to Issue #107.
+    """
+    # Create two sets with different exponents but the same lp-degree.
+    exp_1 = get_exponent_matrix(SpatialDimension, 2, np.inf)
+    mi_1 = MultiIndexSet(exp_1, lp_degree=np.inf)
+    exp_2 = get_exponent_matrix(SpatialDimension, 3, np.inf)
+    mi_2 = MultiIndexSet(exp_2, lp_degree=np.inf)
+
+    # Assertion
+    assert mi_1 != mi_2
+
+
 # --- __mul__()
 def test_multiplication_diff_deg(SpatialDimension, PolyDegree, LpDegree):
     """Test the multiplication of 2 MultiIndexSet instances with diff. deg."""

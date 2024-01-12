@@ -659,17 +659,37 @@ class MultiIndexSet:
 
             return new_instance
 
-    def __mul__(self, other: "MultiIndexSet") -> "MultiIndexSet":
-        """Multiply an instance of MultiIndexSet with another.
+    def __eq__(self, other: "MultiIndexSet") -> bool:
+        """Check the equality of `MultiIndexSet` instances.
 
         Parameters
         ----------
-        other : MultiIndexSet
+        other : `MultiIndexSet`
+            The second operand of the equality check.
+
+        Returns
+        -------
+        bool
+            ``True`` if the two instances are equal in value, i.e., have
+            the same underlying exponents and :math:`l_p`-degree value, and
+            ``False`` otherwise.
+        """
+        return (
+            self.lp_degree == other.lp_degree and
+            np.array_equal(self.exponents, other.exponents)
+        )
+
+    def __mul__(self, other: "MultiIndexSet") -> "MultiIndexSet":
+        """Multiply an instance of `MultiIndexSet` with another.
+
+        Parameters
+        ----------
+        other : `MultiIndexSet`
             The second operand of the multi-index set multiplication.
 
         Returns
         -------
-        MultiIndexSet
+        `MultiIndexSet`
             The product of two multi-index sets. If the :math:`l_p`-degrees
             of the operands are different, then the :math:`l_p`-degree of the
             product is the maximum of the two operands.
