@@ -10,6 +10,7 @@ multi-index sets.
 
    Create a Multi-Index Set <multi-index-set-create>
    Add Exponents to a Multi-Index Set <multi-index-set-add>
+   Check for Equality in Value <multi-index-set-equality>
    Check for Membership, Superset, or Subset <multi-index-set-membership>
    Make a Multi-Index Set Complete <multi-index-set-complete>
    Make a Multi-Index Set Downward-Closed <multi-index-set-downward-closed>
