@@ -9,6 +9,7 @@ from conftest import (
     SpatialDimension,
     assert_call,
     assert_multi_index_equal,
+    mi_pair,
 )
 from copy import copy
 from numpy.testing import assert_, assert_equal, assert_raises
@@ -21,6 +22,9 @@ from minterpy.core.utils import (
     multiply_indices,
     is_downward_closed,
     is_complete,
+    union_indices,
+    insert_lexicographically,
+    expand_dim,
 )
 
 
@@ -738,7 +742,7 @@ def test_multiplication_diff_dim(SpatialDimension, PolyDegree, LpDegree):
     d = PolyDegree
     p = LpDegree
     m_1 = SpatialDimension
-    m_2 = SpatialDimension + 1
+    m_2 = SpatialDimension + np.random.randint(1, 3)
     mi_1 = MultiIndexSet.from_degree(m_1, d, p)
     mi_2 = MultiIndexSet.from_degree(m_2, d, p)
 
@@ -769,3 +773,92 @@ def test_multiplication_diff_lp(SpatialDimension, PolyDegree):
 
     # Assertion
     assert_multi_index_equal(mi_prod, mi_prod_ref)
+
+
+class TestUnion:
+    """All tests related to taking the union of MultiIndexSet instances.
+
+    Notes
+    -----
+    - This series of tests is related to Issue #124.
+    """
+    def test_outplace_op(self, mi_pair):
+        """Take the union via the union operator."""
+        # Problem setup
+        mi_1, mi_2 = mi_pair
+
+        # Create a reference
+        mi_ref = _mi_union_ref(mi_1, mi_2)
+
+        # MultiIndexSet union via the operator
+        mi_union_1 = mi_1 | mi_2
+        mi_union_2 = mi_2 | mi_1  # commutativity check
+
+        # Assertions
+        assert mi_ref == mi_union_1
+        assert mi_union_1 == mi_union_2
+
+    def test_outplace_method(self, mi_pair):
+        """Take the union via the method call."""
+        # Problem setup
+        mi_1, mi_2 = mi_pair
+
+        # Create a reference
+        mi_ref = _mi_union_ref(mi_1, mi_2)
+
+        # MultiIndexSet union
+        mi_union_1 = mi_1.union(mi_2)  # method call, default
+        mi_union_2 = mi_1.union(mi_2, False)  # method call, positional
+        mi_union_3 = mi_1.union(mi_2, inplace=False)  # method call, keyword
+        mi_union_4 = mi_2.union(mi_1)  # commutativity check
+
+        # Assertions
+        assert mi_ref == mi_union_1
+        assert mi_union_1 == mi_union_2
+        assert mi_union_2 == mi_union_3
+        assert mi_union_3 == mi_union_4
+
+    def test_inplace_op(self, mi_pair):
+        """Take the union with the inplace operator."""
+        # Problem setup
+        mi_1, mi_2 = mi_pair
+
+        # Create a reference
+        id_mi_1 = id(mi_1)
+        mi_ref = _mi_union_ref(mi_1, mi_2)
+
+        # MultiIndexSet union
+        mi_1 |= mi_2
+
+        # Assertion
+        assert mi_ref == mi_1
+        assert id_mi_1 == id(mi_1)  # the same object
+
+    def test_inplace_method(self, mi_pair):
+        """Take the union via the inplace method call."""
+        # Problem setup
+        mi_1, mi_2 = mi_pair
+
+        # Create a reference
+        mi_ref = _mi_union_ref(mi_1, mi_2)
+
+        # MultiIndexSet union
+        mi_1.union(mi_2, inplace=True)
+
+        # Assertion
+        assert mi_ref == mi_1
+
+
+def _mi_union_ref(mi_1, mi_2):
+    """Compute the union of two MultiIndexSets with an alternative approach."""
+    exp_mi_1 = mi_1.exponents
+    exp_mi_2 = mi_2.exponents
+    if mi_1.spatial_dimension > mi_2.spatial_dimension:
+        exp_mi_2 = expand_dim(exp_mi_2, mi_1.spatial_dimension)
+    else:
+        exp_mi_1 = expand_dim(exp_mi_1, mi_2.spatial_dimension)
+    exp_union = insert_lexicographically(exp_mi_1, exp_mi_2)
+    lp_union = np.max([mi_1.lp_degree, mi_2.lp_degree])
+    mi_union = MultiIndexSet(exponents=exp_union, lp_degree=lp_union)
+
+    return mi_union

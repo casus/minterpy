@@ -27,6 +27,7 @@ from minterpy.core.utils import (
     make_derivable,
     multiply_indices,
     lex_sort,
+    union_indices,
 )
 from minterpy.global_settings import NOT_FOUND
 from minterpy.jit_compiled_utils import (
@@ -558,7 +559,7 @@ def test_is_index_contained(SpatialDimension, PolyDegree, LpDegree):
 
 # --- multiply_indices()
 def test_multiply_indices_same_dim(SpatialDimension):
-    """Test the multiplication of MultiIndexSet instances with the same dim.
+    """Test the multiplication of two multi-index sets with the same dimension.
 
     Notes
     -----
@@ -583,7 +584,7 @@ def test_multiply_indices_same_dim(SpatialDimension):
 
 
 def test_multiply_indices_diff_dim(SpatialDimension, PolyDegree, LpDegree):
-    """Test the multiplication of MultiIndexSet instances with different dims.
+    """Test the multiplication of two multi-index sets with different dim.
 
     With different dimension, the values of the last dimensions take the values
     from the indices of the higher dimension.
@@ -635,6 +636,56 @@ def test_multiply_indices_diff_dim(SpatialDimension, PolyDegree, LpDegree):
     assert np.all(
         np.unique(indices_3[:, -1]) == np.unique(indices_prod[:, -1])
     )
+
+
+class TestUnionIndices:
+    """All tests related to taking the union of multi-indices.
+
+    Notes
+    -----
+    - These tests are related to Issue #124.
+    """
+    def test_same_dimension(self, SpatialDimension):
+        """The union of two sets of multi-indices with the same dimension."""
+        # Create random multi-indices of the same dimension
+        indices_1 = build_rnd_exponents(SpatialDimension, 5)
+        indices_2 = build_rnd_exponents(SpatialDimension, 2)
+
+        # Create a reference
+        ref_union = np.concatenate((indices_1, indices_2), axis=0)
+        ref_union = lex_sort(ref_union)
+
+        # Union of the indices
+        indices_union_1 = union_indices(indices_1, indices_2)
+        # Check commutativity
+        indices_union_2 = union_indices(indices_2, indices_1)
+
+        # Assertions
+        assert np.all(ref_union == indices_union_1)
+        assert np.all(ref_union == indices_union_2)
+
+    def test_different_dimension(self, SpatialDimension, PolyDegree, LpDegree):
+        """The union of two sets of multi-indices with different dimension."""
+        # Randomly generate dimension difference
+        diff_dim = np.random.randint(low=1, high=3)
+        dim_1 = SpatialDimension
+        dim_2 = SpatialDimension + diff_dim
+        indices_1 = get_exponent_matrix(dim_1, PolyDegree, LpDegree)
+        indices_2 = get_exponent_matrix(dim_2, PolyDegree, LpDegree)
+
+        # Take the union of indices
+        indices_union_1 = union_indices(indices_1, indices_2)
+        # Check commutativity
+        indices_union_2 = union_indices(indices_2, indices_1)
+
+        # Assertions: The additional dimensions in the union only have values
+        # from the set with the higher dimension.
+        unique_values_1 = np.unique(indices_union_1[:, -diff_dim])
+        unique_values_2 = np.unique(indices_union_2[:, -diff_dim])
+
+        assert np.all(np.unique(indices_2[:, -diff_dim]) == unique_values_1)
+        assert np.all(np.unique(indices_2[:, -diff_dim]) == unique_values_2)
+
 
 # --- gen_backward_neighbors()
 def test_gen_backward_neighbors(SpatialDimension, PolyDegree, LpDegree):
