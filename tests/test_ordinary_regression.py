@@ -121,7 +121,7 @@ def test_ordinary_regression_init_multi_index(
 
     # Assert uninitialized attributes prior to fitting
     assert my_ordinary_regression.loocv_error is None
-    assert my_ordinary_regression.regfit_l1_error is None
+    assert my_ordinary_regression.regfit_linf_error is None
     assert my_ordinary_regression.regfit_l2_error is None
     assert my_ordinary_regression.coeffs is None
     assert my_ordinary_regression.eval_poly is None
@@ -155,7 +155,7 @@ def test_ordinary_regression_init_grid(
 
     # Assert uninitialized attributes prior to fitting
     assert my_ordinary_regression.loocv_error is None
-    assert my_ordinary_regression.regfit_l1_error is None
+    assert my_ordinary_regression.regfit_linf_error is None
     assert my_ordinary_regression.regfit_l2_error is None
     assert my_ordinary_regression.coeffs is None
     assert my_ordinary_regression.eval_poly is None
@@ -199,7 +199,7 @@ def test_ordinary_regression_init_grid_multi_index(
 
     # Assert uninitialized attributes prior to fitting
     assert my_ordinary_regression.loocv_error is None
-    assert my_ordinary_regression.regfit_l1_error is None
+    assert my_ordinary_regression.regfit_linf_error is None
     assert my_ordinary_regression.regfit_l2_error is None
     assert my_ordinary_regression.coeffs is None
     assert my_ordinary_regression.eval_poly is None
@@ -265,7 +265,7 @@ def test_ordinary_regression_fit(
 
     # Assert uninitialized attributes prior to fitting
     assert my_ordinary_regression.loocv_error is not None
-    assert my_ordinary_regression.regfit_l1_error is not None
+    assert my_ordinary_regression.regfit_linf_error is not None
     assert my_ordinary_regression.regfit_l2_error is not None
     assert my_ordinary_regression.coeffs is not None
     assert my_ordinary_regression.eval_poly is not None

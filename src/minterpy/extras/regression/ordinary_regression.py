@@ -87,7 +87,7 @@ class OrdinaryRegression(RegressionABC):
         self._regression_matrix = None
         self._coeffs = None
         self._loocv_error = None
-        self._regfit_l1_error = None
+        self._regfit_linf_error = None
         self._regfit_l2_error = None
         self._eval_poly = None
 
@@ -127,14 +127,14 @@ class OrdinaryRegression(RegressionABC):
         return self._loocv_error
 
     @property
-    def regfit_l1_error(self) -> Tuple[float, float]:
-        r""":math:`L_1` regression fit error (in abs. and norm. terms).
+    def regfit_linf_error(self) -> Tuple[float, float]:
+        r""":math:`L_{\infty}` regression fit error (in abs. and norm. terms).
 
-        The :math:`L_1` regression fit error is defined as follows:
+        The :math:`L_{\infty}` regression fit error is defined as follows:
 
         .. math::
 
-           \epsilon_{L_1} = \max_{i} \; \lvert y^{(i)} - \hat{f}\left(\boldsymbol{x}^{(i)}\right) \rvert
+           \epsilon_{L_{\infty}} = \max_{i} \; \lvert y^{(i)} - \hat{f}\left(\boldsymbol{x}^{(i)}\right) \rvert
 
         where:
 
@@ -142,16 +142,16 @@ class OrdinaryRegression(RegressionABC):
         - :math:`\boldsymbol{x}^{(i)}` is the :math:`i`-th input data point;
         - :math:`\hat{f}` is the fitted polynomial.
 
-        The normalized :math:`L_1` regression fit error is defined as follows:
+        The normalized :math:`L_{\infty}` regression fit error is defined as follows:
 
         .. math::
 
-           \epsilon_{L_1, \text{norm}} = \frac{\epsilon_{L_1}}{\mathbb{V}[\boldsymbol{y}]}
+           \epsilon_{L_{\infty}, \text{norm}} = \frac{\epsilon_{L_1}}{\sqrt{\mathbb{V}[\boldsymbol{y}]}}
 
         where :math:`\mathbb{V}[\boldsymbol{y}]` denotes the variance
         of the response data (:math:`\boldsymbol{y}`).
         """
-        return self._regfit_l1_error
+        return self._regfit_linf_error
 
     @property
     def regfit_l2_error(self) -> Tuple[float, float]:
@@ -329,7 +329,7 @@ class OrdinaryRegression(RegressionABC):
         )
 
         # Compute some error metrics
-        self._regfit_l1_error = compute_regfit_l1_error(
+        self._regfit_linf_error = compute_regfit_linf_error(
             self._regression_matrix, self._coeffs, yy
         )
         self._regfit_l2_error = compute_regfit_l2_error(
@@ -403,22 +403,21 @@ class OrdinaryRegression(RegressionABC):
             f"Lp-degree        : {self.multi_index.lp_degree}\n"
             f"Origin poly.     : {type(self.origin_poly)}\n"
         )
-        if self.regfit_l1_error is not None:
+        if self.regfit_linf_error is not None:
             output += (
-                f"{'Error':<19s}  {'Absolute':>10s}  {'Relative':>10s}\n"
-                f"L1 Regression Fit   {self.regfit_l1_error[0]:10.5e} "
-                f"{self.regfit_l1_error[1]:10.5e}\n"
-                f"L2 Regression Fit   {self.regfit_l2_error[0]:10.5e} "
+                f"{'Error':<21s} {'Absolute':>12s} {'Relative':>12s}\n"
+                f"{'L-inf Regression Fit':<21s}  {self.regfit_linf_error[0]:10.5e}  "
+                f"{self.regfit_linf_error[1]:10.5e}\n"
+                f"{'L2 Regression Fit':<21s}  {self.regfit_l2_error[0]:10.5e}  "
                 f"{self.regfit_l2_error[1]:10.5e}"
             )
             if self.loocv_error is not None:
                 output += (
-                    f"\nLOO CV              {self.loocv_error[0]:10.5e} "
+                    f"\n{'LOO CV':<21s}  {self.loocv_error[0]:10.5e}  "
                     f"{self.loocv_error[1]:10.5e}"
                 )
 
         print(output)
-
 
 def compute_regression_matrix(
     basis_poly: MultivariatePolynomialSingleABC, xx: np.ndarray
@@ -619,14 +618,14 @@ def compute_loocv_error(
     return loo_cv_error, loo_cv_error / np.var(yy)
 
 
-def compute_regfit_l1_error(
+def compute_regfit_linf_error(
     regression_matrix: np.ndarray,
     coeffs: np.ndarray,
     yy: np.ndarray,
 ) -> Tuple[float, float]:
-    """Calculate the absolute and normalized L1 regression fit error.
+    """Calculate the absolute and normalized L-inf regression fit error.
 
-    Calculate the absolute and normalized L2 regression fit error.
+    Calculate the absolute and normalized L-inf regression fit error.
 
     Parameters
     ----------
@@ -637,19 +636,18 @@ def compute_regfit_l1_error(
         Coefficients of the regression polynomial.
     yy : np.ndarray
         Function values that correspond to the training points.
-    weights: np.ndarray
-        Weights associated with the function values.
 
     Returns
     -------
     Tuple[float, float]
-        The L1 regression fit error (i.e., max. of absolute error), in absolute
-        and relative (normalized) terms. The normalization is with respect to
-        the function values sample standard deviation.
+        The L-inf regression fit error (i.e., max. of absolute error),
+        in absolute and relative (normalized) terms.
+        The normalization is with respect
+        to the function values sample standard deviation.
     """
-    l1_error = np.max(np.abs(yy - regression_matrix @ coeffs))
+    linf_error = np.max(np.abs(yy - regression_matrix @ coeffs))
 
-    return l1_error, l1_error / np.std(yy)
+    return linf_error, linf_error / np.std(yy)
 
 
 def compute_regfit_l2_error(
@@ -668,8 +666,6 @@ def compute_regfit_l2_error(
         Coefficients of the regression polynomial.
     yy : np.ndarray
         Function values that correspond to the training points.
-    weights: np.ndarray
-        Weights associated with the function values.
 
     Returns
     -------
