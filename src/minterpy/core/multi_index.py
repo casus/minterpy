@@ -21,6 +21,7 @@ from minterpy.core.utils import (
     make_complete,
     make_downward_closed,
     multiply_indices,
+    union_indices,
 )
 
 from .verification import (
@@ -273,14 +274,6 @@ class MultiIndexSet:
 
         """
         raise NotImplementedError("MultiIndexSet.__add__() is not implemented yet.")
-
-    def union(self):
-        """This function is not implemented yet.
-
-        :raise NotImplementedError: If this function is called.
-
-        """
-        raise NotImplementedError("MultiIndexSet.union() is not implemented yet.")
 
     def ordering(self, order):
         """This function is not implemented yet.
@@ -659,6 +652,71 @@ class MultiIndexSet:
 
             return new_instance
 
+    def union(
+        self,
+        other: "MultiIndexSet",
+        inplace: bool = False
+    ) -> Optional["MultiIndexSet"]:
+        """Take the union between two MultiIndexSet instances.
+
+        Parameters
+        ----------
+        other : `MultiIndexSet`
+            The second operand of the multi-index set union (i.e., ``other`` in
+            ``self | other``).
+        inplace : bool, optional
+            Flag to determine whether the current instance is modified
+            in-place with the union of the two multi-indices.
+            If ``inplace`` is ``False``, a new :py:class:`.MultiIndexSet`
+            instance is created.
+            The default is ``False``.
+
+        Returns
+        -------
+        `MultiIndexSet`, optional
+            The multi-index set having the union of the two sets of exponents.
+            If ``inplace`` is set to ``True``, then the modification
+            is carried out in-place without an explicit output.
+
+        Notes
+        -----
+        - If the operands are equal in value, setting ``inplace`` to ``False``
+          (the default) creates a shallow copy.
+        """
+        # If equal no need to make any union
+        if self == other:
+            if inplace:
+                # Do nothing
+                return None
+
+            return copy(self)
+
+        # Get the exponents of the operands
+        exponents_self = self.exponents
+        exponents_other = other.exponents
+
+        # Take the union of the exponents
+        exponents_union = union_indices(exponents_self, exponents_other)
+
+        # Decide the lp-degree of the product
+        lp_degree_union = max([self.lp_degree, other.lp_degree])
+
+        if inplace:
+            self._exponents = exponents_union
+            self._lp_degree = lp_degree_union
+            # The polynomial degree must be re-computed
+            self._poly_degree = get_poly_degree(
+                exponents=exponents_union, lp_degree=lp_degree_union
+            )
+            # Can't guarantee the updated exponents are still complete
+            self._is_complete = None
+            # nor downward-closed
+            self._is_downward_closed = None
+        else:
+            return self.__class__(
+                exponents=exponents_union, lp_degree=lp_degree_union,
+            )
+
     def __eq__(self, other: "MultiIndexSet") -> bool:
         """Check the equality of `MultiIndexSet` instances.
 
@@ -690,9 +748,12 @@ class MultiIndexSet:
         Returns
         -------
         `MultiIndexSet`
-            The product of two multi-index sets. If the :math:`l_p`-degrees
-            of the operands are different, then the :math:`l_p`-degree of the
-            product is the maximum of the two operands.
+            The product of two multi-index sets.
+            If the :math:`l_p`-degrees of the operands are different,
+            then the larger :math:`l_p`-degree becomes the :math:`l_p`-degree
+            of the product set.
+            If the dimension differs, the product set has the dimension
+            of the set with the larger dimension.
         """
         # Get the exponents of the operands
         exp_self = self.exponents
@@ -709,6 +770,48 @@ class MultiIndexSet:
         return self.__class__(
             exponents=exp_prod, lp_degree=lp_degree_prod,
         )
+
+    def __or__(self, other: "MultiIndexSet") -> "MultiIndexSet":
+        """Combine an instance of `MultiIndexSet` with another via op.
+
+        Parameters
+        ----------
+        other : `MultiIndexSet`
+            The second operand of the multi-index set union.
+
+        Returns
+        -------
+        `MultiIndexSet`
+            The union of two multi-index sets.
+            If the :math:`l_p`-degrees of the operands are different,
+            then the larger :math:`l_p`-degree becomes the :math:`l_p`-degree
+            of the union set.
+            If the dimension differs, the union set has the dimension
+            of the set with the larger dimension.
+        """
+        return self.union(other, inplace=False)
+
+    def __ior__(self, other: "MultiIndexSet") -> "MultiIndexSet":
+        """Combine an instance of `MultiIndexSet` with another inplace via op.
+
+        Parameters
+        ----------
+        other : `MultiIndexSet`
+            The second operand of the multi-index set union.
+
+        Returns
+        -------
+        `MultiIndexSet`
+            The union of two multi-index sets, updating the left-hand-side
+            operand. If the :math:`l_p`-degrees of the operands are different,
+            then the larger :math:`l_p`-degree becomes the :math:`l_p`-degree
+            of the union set.
+            If the dimension differs, the union set has the dimension
+            of the set with the larger dimension.
+        """
+        self.union(other, inplace=True)
+
+        return self
 
     # TODO make_derivable(): add (only) partial derivative exponent vectors,
     # NOTE: not meaningful since derivation requires complete index sets anyway?

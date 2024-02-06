@@ -251,6 +251,64 @@ batch_sizes = [1, 100, 1000]
 def BatchSizes(request):
     return request.param
 
+
+# Fixture for pair
+@pytest.fixture(
+    params=["equal", "dimensions", "poly-degrees", "lp-degrees", "all"]
+)
+def param_diff(request):
+    return request.param
+
+
+@pytest.fixture
+def mi_pair(SpatialDimension, PolyDegree, LpDegree, param_diff):
+    """Create a pair of MultiIndexSets with different parameters."""
+    if param_diff == "equal":
+        # A pair with equal parameter values
+        m = SpatialDimension
+        n = PolyDegree
+        p = LpDegree
+        mi_1 = MultiIndexSet.from_degree(m, n, p)
+        mi_2 = MultiIndexSet.from_degree(m, n, p)
+    elif param_diff == "dimensions":
+        # A pair with different spatial dimensions.
+        m_1 = SpatialDimension
+        m_2 = SpatialDimension + 1
+        n = PolyDegree
+        p = LpDegree
+        mi_1 = MultiIndexSet.from_degree(m_1, n, p)
+        mi_2 = MultiIndexSet.from_degree(m_2, n, p)
+    elif param_diff == "poly-degrees":
+        # A pair with different polynomial degrees.
+        m = SpatialDimension
+        n_1 = PolyDegree
+        n_2 = PolyDegree + np.random.randint(low=1, high=3)
+        p = LpDegree
+        mi_1 = MultiIndexSet.from_degree(m, n_1, p)
+        mi_2 = MultiIndexSet.from_degree(m, n_2, p)
+    elif param_diff == "lp-degrees":
+        # A pair with different lp-degrees.
+        m = SpatialDimension
+        d = PolyDegree
+        lp_degrees = [0.5, 1.0, 2.0, 3.0, np.inf]
+        p_1, p_2 = np.random.choice(lp_degrees, size=2, replace=False)
+        mi_1 = MultiIndexSet.from_degree(m, d, p_1)
+        mi_2 = MultiIndexSet.from_degree(m, d, p_2)
+    elif param_diff == "all":
+        # A pair with all three parameters differ
+        m_1 = np.random.randint(low=1, high=5)
+        m_2 = np.random.randint(low=1, high=5)
+        d_1 = np.random.randint(low=1, high=5)
+        d_2 = np.random.randint(low=1, high=5)
+        lp_degrees = [0.5, 1.0, 2.0, 3.0, np.inf]
+        p_1, p_2 = np.random.choice(lp_degrees, 2)
+        mi_1 = MultiIndexSet.from_degree(m_1, d_1, p_1)
+        mi_2 = MultiIndexSet.from_degree(m_2, d_2, p_2)
+    else:
+        return ValueError(f"'param-diff' = {param_diff} is not recognized!")
+
+    return mi_1, mi_2
+
 # some random builder
 
 
