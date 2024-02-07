@@ -29,181 +29,191 @@ from minterpy.core.utils import (
 
 
 # test initialization
-def test_init_from_exponents(SpatialDimension, PolyDegree, LpDegree):
-    """Test the default constructor of MultiIndexSet."""
-    # --- Complete exponents
-    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    # Assertion
-    assert_call(MultiIndexSet, exponents, lp_degree=LpDegree)
+class TestInitDefault:
+    """All tests related to the default initialization of MultiIndexSet."""
 
-    # --- Non-lexicographically sorted (but complete) exponents
-    idx = np.arange(len(exponents))
-    np.random.shuffle(idx)
-    exponents_shuffled = exponents[idx]
-    # Assertion
-    assert_call(MultiIndexSet, exponents_shuffled, lp_degree=LpDegree)
+    def test_complete_exps(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test the default constructor."""
+        # Create complete exponents
+        exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
 
-    # --- Non-lexicographically sorted and incomplete exponents
-    idx_size = int(np.ceil(0.5 * len(exponents)))
-    idx = np.random.choice(len(exponents), idx_size, replace=False)
-    exponents_random = exponents[idx]
-    # Assertion
-    assert_call(MultiIndexSet, exponents_random, lp_degree=LpDegree)
+        # Assertion
+        assert_call(MultiIndexSet, exponents, lp_degree=LpDegree)
 
+    def test_shuffled_exps(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test construction from lexicographically unsorted exponents."""
+        # Create and shuffle complete exponents
+        exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+        idx = np.arange(len(exponents))
+        np.random.shuffle(idx)
+        exponents_shuffled = exponents[idx]
 
-def test_init_fail_from_exponents():
-    """Test if invalid parameter values raise the expected errors."""
-    # --- Invalid lp-degree
-    # Create arbitrary complete exponents
-    exponents = get_exponent_matrix(3, 2, 2)
-    # Zero
-    assert_raises(ValueError, MultiIndexSet, exponents, 0.0)
-    # Negative value
-    assert_raises(ValueError, MultiIndexSet, exponents, -1.0)
-    # Invalid type (e.g., string)
-    assert_raises(TypeError, MultiIndexSet, exponents, "1.0")
+        # Assertion
+        assert_call(MultiIndexSet, exponents_shuffled, LpDegree)
 
+    def test_incomplete_exps(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test construction from incomplete and (lexic) unsorted exponents."""
+        # Create and shuffle incomplete exponents
+        exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+        idx_size = int(np.ceil(0.5 * len(exponents)))
+        idx = np.random.choice(len(exponents), idx_size, replace=False)
+        exponents_random = exponents[idx]
 
-# --- MultiIndexSet.from_degree()
-def test_init_from_degree(SpatialDimension, PolyDegree, LpDegree):
-    """Test the constructor 'from_degree'."""
-    # Lp-degree is optional
-    assert_call(MultiIndexSet.from_degree, SpatialDimension, PolyDegree)
-    # Lp-degree specified
-    assert_call(
-        MultiIndexSet.from_degree,
-        SpatialDimension,
-        PolyDegree,
-        lp_degree=LpDegree
+        # Assertion
+        assert_call(MultiIndexSet, exponents_random, lp_degree=LpDegree)
+
+    @pytest.mark.parametrize("dimensionality", [1, 3, 4, 5])
+    def test_invalid_exps_dimensionality(self, dimensionality):
+        """Test construction with exponents array of invalid dimension."""
+        # Generate random exponents and lp-degree
+        shape = np.random.randint(1, 10, size=dimensionality)
+        exponents = np.random.randint(low=1, high=10, size=tuple(shape))
+        lp_degree = 5 * np.random.rand()
+
+        # Assertion
+        with pytest.raises(ValueError):
+            MultiIndexSet(exponents, lp_degree=lp_degree)
+
+    @pytest.mark.parametrize(
+        "lp_degree, exception",
+        [(0, ValueError),  (-1, ValueError), ("1.0", TypeError)],
     )
+    def test_invalid_lp_degree(self, lp_degree, exception):
+        """Test construction with invalid lp-degree values."""
+        # Generate random dimension and poly. degree
+        spatial_dim, poly_degree = np.random.randint(low=1, high=5, size=2)
+        lp_degree_ = 5 * np.random.rand()
 
-    # Create a multi-index set
-    multi_index = MultiIndexSet.from_degree(
-        SpatialDimension,
-        PolyDegree,
-        LpDegree
+        # Create arbitrary complete exponents
+        exponents = get_exponent_matrix(spatial_dim, poly_degree, lp_degree_)
+
+        # Assertion
+        with pytest.raises(exception):
+            MultiIndexSet(exponents, lp_degree=lp_degree)
+
+
+class TestInitFromDegree:
+    """All tests related to 'from_degree()' constructor of MultiIndexSet."""
+    def test_default(self, SpatialDimension, PolyDegree):
+        """Test with the default lp-degree parameter."""
+        # Create a multi-index set
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree)
+
+        # Assertions: exponents are complete and downward-closed (Issue #105)
+        assert mi.is_complete
+        assert mi.is_downward_closed
+
+    def test_lp_degree(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test with (valid) lp-degree parameter."""
+        # Create a multi-index set
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Assertions: exponents are complete and downward-closed (Issue #105)
+        assert mi.is_complete
+        assert mi.is_downward_closed
+
+    @pytest.mark.parametrize("spatial_dimension", [1, 1.0, np.array([1])[0]])
+    def test_valid_dimension(self, spatial_dimension, PolyDegree, LpDegree):
+        """Test with different valid types/values of spatial dimension.
+
+        Notes
+        -----
+        - This test is related to Issue #77.
+        """
+        mi = MultiIndexSet.from_degree(spatial_dimension, PolyDegree, LpDegree)
+
+        # Assertions: Type and Value
+        assert isinstance(mi.spatial_dimension, int)
+        assert mi.spatial_dimension == int(spatial_dimension)
+
+    @pytest.mark.parametrize(
+        "spatial_dimension, exception",
+        [
+            ("1", TypeError),  # string
+            (1.5, ValueError),  # non-whole number
+            (0, ValueError),  # zero
+            (-1, ValueError),  # negative number
+            (np.array([1, 2]), ValueError),  # NumPy array
+        ],
     )
-    # Assertion: the exponents are complete and downward-closed (Issue #105)
-    assert multi_index.is_complete
-    assert multi_index.is_downward_closed
+    def test_invalid_dimension(self, spatial_dimension, exception):
+        """Test with different invalid types/values of spatial dimension.
 
+        Notes
+        -----
+        - This test is related to Issue #77.
+        """
+        # Generate poly_degree and lp-degree
+        poly_deg = np.random.randint(low=1, high=5)
+        lp_deg = 5 * np.random.rand()
 
-@pytest.mark.parametrize(
-    "spatial_dimension",
-    [1, 1.0, np.array([1])[0]]
-)
-def test_init_from_degree_spatial_dimension(
-    spatial_dimension,
-    PolyDegree,
-    LpDegree
-):
-    """Test the constructor 'from_degree()' with diff. types of spatial dim.
+        with pytest.raises(exception):
+            MultiIndexSet.from_degree(spatial_dimension, poly_deg, lp_deg)
 
-    Notes
-    -----
-    - This test is related to Issue #77.
-    """
-    mi = MultiIndexSet.from_degree(spatial_dimension, PolyDegree, LpDegree)
+    @pytest.mark.parametrize("poly_degree", [0, 0.0, 1, 1.0, np.array([1])[0]])
+    def test_valid_poly_degree(self, SpatialDimension, poly_degree, LpDegree):
+        """Test construction with different valid types/values of poly. degree.
 
-    # Assertions: Type and Value
-    assert isinstance(mi.spatial_dimension, int)
-    assert mi.spatial_dimension == int(spatial_dimension)
+        Notes
+        -----
+        - This test is related to Issue #101.
+        """
+        mi = MultiIndexSet.from_degree(SpatialDimension, poly_degree, LpDegree)
 
+        # Assertions: Type and Value
+        assert isinstance(mi.poly_degree, int)
+        assert mi.poly_degree == int(poly_degree)
 
-def test_init_fail_from_degree_invalid_spatial_dim(PolyDegree, LpDegree):
-    """Test failure of calling 'from_degree()' due to invalid spatial dim.
-
-    Notes
-    -----
-    - This test is related to Issue #77.
-    """
-    # TypeError (e.g., string)
-    assert_raises(
-        TypeError, MultiIndexSet.from_degree, "1", PolyDegree, LpDegree
+    @pytest.mark.parametrize(
+        "poly_degree, exception",
+        [
+            ("1", TypeError),  # string
+            (1.5, ValueError),  # non-whole number
+            (-1, ValueError),  # negative number
+            (np.array([1, 2]), ValueError),  # NumPy array
+        ],
     )
-    # ValueError (e.g., non-whole number, NumPy array, negative number, zero)
-    spatial_dimensions = [1.5, np.array([1, 2]), -1, 0]
-    for m in spatial_dimensions:
-        assert_raises(
-            ValueError, MultiIndexSet.from_degree, m, PolyDegree, LpDegree
-        )
+    def test_invalid_poly_degree(self, poly_degree, exception):
+        """Test failure due to invalid types/values of poly. degree.
 
+        Notes
+        -----
+        - This test is related to Issue #101.
+        """
+        # Generate random dimension and lp-degree
+        spatial_dim = np.random.randint(low=1, high=5)
+        lp_degree = 5 * np.random.rand()
 
-@pytest.mark.parametrize(
-    "poly_degree",
-    [0, 0.0, 1, 1.0, np.array([1])[0]]
-)
-def test_init_from_degree_poly_degree(SpatialDimension, poly_degree, LpDegree):
-    """Test the constructor 'from_degree()' with diff. types of poly. degree.
+        # Assertion
+        with pytest.raises(exception):
+            MultiIndexSet.from_degree(spatial_dim, poly_degree, lp_degree)
 
-    Notes
-    -----
-    - This test is related to Issue #101.
-    """
-    mi = MultiIndexSet.from_degree(SpatialDimension, poly_degree, LpDegree)
+    @pytest.mark.parametrize("lp_degree", [1, 1.2, np.array([1])[0]])
+    def test_valid_lp_degree(self, SpatialDimension, PolyDegree, lp_degree):
+        """Test construction with different types/values of lp-degree."""
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, lp_degree)
 
-    # Assertions: Type and Value
-    assert isinstance(mi.poly_degree, int)
-    assert mi.poly_degree == int(poly_degree)
+        # Assertions: Type and Value
+        assert isinstance(mi.lp_degree, float)
+        assert mi.lp_degree == float(lp_degree)
 
-
-def test_init_fail_from_degree_invalid_poly_degree(SpatialDimension, LpDegree):
-    """Test failure of calling 'from_degree()' due to invalid poly degree.
-
-    Notes
-    -----
-    - This test is related to Issue #101.
-    """
-    # TypeError (e.g., string)
-    assert_raises(
-        TypeError, MultiIndexSet.from_degree, SpatialDimension, "1", LpDegree
+    @pytest.mark.parametrize(
+        "lp_degree, exception",
+        [
+            ("1", TypeError),  # string
+            (0, ValueError),  # zero
+            (-1, ValueError),  # negative number
+            (np.array([1, 2]), ValueError),  # NumPy array
+        ],
     )
-    # ValueError (e.g., non-whole number, NumPy array, negative number)
-    poly_degrees = [1.5, np.array([1, 2]), -1]
-    for n in poly_degrees:
-        assert_raises(
-            ValueError,
-            MultiIndexSet.from_degree,
-            SpatialDimension,
-            n,
-            LpDegree,
-        )
+    def test_from_degree_invalid_lp_deg(self, lp_degree, exception):
+        """Test failure of calling 'from_degree()' due to invalid lp-degree."""
+        # Generate random dimension and poly. degree
+        spatial_dim, poly_deg = np.random.randint(low=1, high=5, size=2)
 
-
-@pytest.mark.parametrize(
-    "lp_degree",
-    [1, 1.2, np.array([1])[0]]
-)
-def test_init_from_degree_lp_degree(SpatialDimension, PolyDegree, lp_degree):
-    """Test the constructor 'from_degree()' with diff. types of lp-degree."""
-    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, lp_degree)
-
-    # Assertions: Type and Value
-    assert isinstance(mi.lp_degree, float)
-    assert mi.lp_degree == float(lp_degree)
-
-
-def test_init_fail_from_degree_invalid_lp_degree(SpatialDimension, PolyDegree):
-    """Test failure of calling 'from_degree()' due to invalid lp-degree."""
-    # --- TypeError (e.g., string)
-    assert_raises(
-        TypeError,
-        MultiIndexSet.from_degree,
-        SpatialDimension,
-        PolyDegree,
-        "1.0",
-    )
-
-    # --- ValueError (e.g., zero, negative, NumPy array)
-    spatial_dimensions = [0, np.array([1, 2]), -1]
-    for m in spatial_dimensions:
-        assert_raises(
-            ValueError,
-            MultiIndexSet.from_degree,
-            SpatialDimension,
-            PolyDegree,
-            m,
-        )
+        # Assertion
+        with pytest.raises(exception):
+            MultiIndexSet.from_degree(spatial_dim, poly_deg, lp_degree)
 
 
 def test_attributes(SpatialDimension, PolyDegree, LpDegree):

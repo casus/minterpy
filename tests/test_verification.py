@@ -2,134 +2,176 @@
 """
 import numpy as np
 import pytest
-from numpy.testing import assert_raises
-from conftest import assert_call
 
 from minterpy.core.verification import (
     verify_spatial_dimension,
     verify_poly_degree,
     verify_lp_degree,
+    check_dimensionality,
+    check_shape,
 )
 
 
-# --- verify_lp_degree()
-@pytest.mark.parametrize(
-    "lp_degree",
-    [1, 1.0, np.array([1])[0], np.array([1.0])[0]]
-)
-def test_verify_lp_degree(lp_degree):
-    """Test the verification of an lp-degree value."""
-    assert_call(verify_lp_degree, lp_degree)
+class TestVerifyLpDegree:
+    """All tests related to the verification of lp-degree parameter."""
 
-    verified_lp_degree = verify_lp_degree(lp_degree)
+    @pytest.mark.parametrize(
+        "lp_degree",
+        [1, 1.0, np.array([1])[0], np.array([1.0])[0]],
+    )
+    def test_valid_lp_degree(self, lp_degree):
+        """Test for valid lp-degree values (i.e., can be verified)."""
+        # Verify lp-degree
+        verified_lp_degree = verify_lp_degree(lp_degree)
 
-    # Assertions
-    assert isinstance(verified_lp_degree, float)
-    assert verified_lp_degree == float(lp_degree)
+        # Assertions
+        assert isinstance(verified_lp_degree, float)
+        assert verified_lp_degree == float(lp_degree)
+
+    @pytest.mark.parametrize(
+        "lp_degree",
+        ["2.0", {2.0}, (2.0, ), [2.0]],  # string, set, tuple, list
+    )
+    def test_invalid_type_lp_degree(self, lp_degree):
+        """Test raising TypeError in the lp-degree verification."""
+        with pytest.raises(TypeError):
+            verify_lp_degree(lp_degree)
+
+    @pytest.mark.parametrize(
+        "lp_degree",
+        [0, 0.0, -100, -100.0, np.array([-10])[0], np.array([1, 2, 3])],
+    )
+    def test_invalid_value_lp_degree(self, lp_degree):
+        """Test raising ValueError in the lp-degree verification."""
+        with pytest.raises(ValueError):
+            verify_spatial_dimension(lp_degree)
 
 
-def test_verify_lp_degree_type_error():
-    """Test raising TypeError in the lp-degree verification."""
-    lp_degree = "2.0"
-    assert_raises(TypeError, verify_lp_degree, lp_degree)
-
-
-@pytest.mark.parametrize(
-    "lp_degree",
-    [0, 0.0, -100, -100.0, np.array([-10])[0], np.array([1, 2, 3])]
-)
-def test_verify_spatial_dimension_value_error(spatial_dimension):
-    """Test raising ValueError in the lp-degree verification."""
-    assert_raises(ValueError, verify_spatial_dimension, spatial_dimension)
-
-
-# --- verify_spatial_dimension()
-@pytest.mark.parametrize(
-    "spatial_dimension",
-    [1, 1.0, np.array([1])[0], np.array([1.0])[0]]
-)
-def test_verify_spatial_dimension(spatial_dimension):
-    """Test the verification of a spatial dimension value.
+class TestVerifySpatialDimension:
+    """All tests related to the verification of spatial dimension parameter.
 
     Notes
     -----
     - This test is related to Issue #77.
     """
-    assert_call(verify_spatial_dimension, spatial_dimension)
+    @pytest.mark.parametrize(
+        "spatial_dimension",
+        [1, 1.0, np.array([1])[0], np.array([1.0])[0]],
+    )
+    def test_valid_spatial_dimension(self, spatial_dimension):
+        """Test for valid spatial dimension values (i.e., can be verified)."""
+        # Verify spatial dimension
+        verified_spatial_dimension = verify_spatial_dimension(
+            spatial_dimension
+        )
+    
+        # Assertions
+        assert isinstance(verified_spatial_dimension, int)
+        assert verified_spatial_dimension == int(spatial_dimension)
 
-    verified_spatial_dimension = verify_spatial_dimension(spatial_dimension)
+    @pytest.mark.parametrize(
+        "spatial_dimension",
+        ["1", {1}, (1, ), [1]],  # string, set, tuple, list
+    )
+    def test_invalid_type_spatial_dimension(self, spatial_dimension):
+        """Test raising TypeError in the spatial dimension verification."""
+        with pytest.raises(TypeError):
+            verify_spatial_dimension(spatial_dimension)
 
-    # Assertions
-    assert isinstance(verified_spatial_dimension, int)
-    assert verified_spatial_dimension == int(spatial_dimension)
-
-
-def test_verify_spatial_dimension_type_error():
-    """Test raising TypeError in the spatial dimension verification.
-
-    Notes
-    -----
-    - This test is related to Issue #77.
-    """
-    spatial_dimension = "1"
-    assert_raises(TypeError, verify_spatial_dimension, spatial_dimension)
-
-
-@pytest.mark.parametrize(
-    "spatial_dimension",
-    [0, 0.0, 1.1, -100, -100.0, np.array([-10])[0], np.array([1, 2, 3])]
-)
-def test_verify_spatial_dimension_value_error(spatial_dimension):
-    """Test raising ValueError in the spatial dimension verification.
-
-    Notes
-    -----
-    - This test is related to Issue #77.
-    """
-    assert_raises(ValueError, verify_spatial_dimension, spatial_dimension)
+    @pytest.mark.parametrize(
+        "spatial_dimension",
+        [0, 0.0, 1.1, -100, -100.0, np.array([-10])[0], np.array([1, 2, 3])],
+    )
+    def test_invalid_value_spatial_dimension(self, spatial_dimension):
+        """Test raising ValueError in the spatial dimension verification."""
+        with pytest.raises(ValueError):
+            verify_spatial_dimension(spatial_dimension)
 
 
-# --- verify_poly_degree()
-@pytest.mark.parametrize(
-    "poly_degree",
-    [0, 1, 1.0, np.array([1])[0], np.array([1.0])[0]]
-)
-def test_verify_poly_degree(poly_degree):
-    """Test the verification of a poly. degree value.
+class TestVerifyPolyDegree:
+    """All tests related to the verification of polynomial degree parameter.
 
     Notes
     -----
     - This test is related to Issue #101.
     """
-    assert_call(verify_poly_degree, poly_degree)
 
-    verified_poly_degree = verify_poly_degree(poly_degree)
+    @pytest.mark.parametrize(
+        "poly_degree",
+        [0, 1, 1.0, np.array([1])[0], np.array([1.0])[0]],
+    )
+    def test_valid_poly_degree(self, poly_degree):
+        """Test for valid polynomial degree values (i.e., can be verified)."""
+        # Verify poly. degree
+        verified_poly_degree = verify_poly_degree(poly_degree)
 
-    # Assertions
-    assert isinstance(verified_poly_degree, int)
-    assert verified_poly_degree == int(poly_degree)
+        # Assertions
+        assert isinstance(verified_poly_degree, int)
+        assert verified_poly_degree == int(poly_degree)
+
+    @pytest.mark.parametrize(
+        "poly_degree",
+        ["1", {1}, (1,), [1]],  # string, set, tuple, list
+    )
+    def test_invalid_type_poly_degree(self, poly_degree):
+        """Test raising TypeError in the polynomial degree verification."""
+        with pytest.raises(TypeError):
+            verify_poly_degree(poly_degree)
+
+    @pytest.mark.parametrize(
+        "poly_degree",
+        [1.1, -100, -100.0, np.array([-10])[0], np.array([1, 2, 3])],
+    )
+    def test_verify_poly_degree_value_error(self, poly_degree):
+        """Test raising ValueError in the polynomial degree verification."""
+        with pytest.raises(ValueError):
+            verify_poly_degree(poly_degree)
 
 
-def test_verify_poly_degree_type_error():
-    """Test raising TypeError in the spatial dimension verification.
+def test_check_dimensionality():
+    """Test raising ValueError due to wrong dimensionality.
 
     Notes
     -----
-    - This test is related to Issue #101.
+    - This test is related to Issue #130.
     """
-    poly_degree = "1"
-    assert_raises(TypeError, verify_poly_degree, poly_degree)
+    # Repeat the test due to random nature of it
+    for _ in range(5):
+        # Problem setup
+        dim_1, dim_2 = np.random.choice(np.arange(1, 8), size=2, replace=False)
+        shape = tuple(np.random.randint(low=1, high=5, size=dim_1))
+        xx = np.zeros(shape)
+
+        # No error should be raised
+        check_dimensionality(xx, dim_1)
+
+        # Assertion
+        with pytest.raises(ValueError):
+            check_dimensionality(xx, dimensionality=dim_2)
 
 
-@pytest.mark.parametrize(
-    "poly_degree",
-    [1.1, -100, -100.0, np.array([-10])[0], np.array([1, 2, 3])]
-)
-def test_verify_poly_degree_value_error(poly_degree):
-    """Test raising ValueError in the poly_degree verification.
+def test_check_shape():
+    """Test raising ValueError due to wrong shape.
 
     Notes
     -----
-    - This test is related to Issue #101.
+    - This test is related to Issue #130.
     """
-    assert_raises(ValueError, verify_poly_degree, poly_degree)
+    # Repeat the test due to random nature of it
+    for _ in range(5):
+        # Problem setup
+        ndim = np.random.randint(low=1, high=8)
+        shape_1 = tuple(np.random.randint(low=1, high=5, size=ndim))
+        shape_2 = tuple(np.array(shape_1) + 1)
+        shape_3 = tuple(np.random.randint(low=1, high=5, size=ndim+1))
+        xx = np.zeros(shape_1)
+
+        # No error should be raised
+        check_shape(xx, shape_1)
+
+        # Assertion
+        with pytest.raises(ValueError):
+            # Wrong shape
+            check_shape(xx, shape=shape_2)
+            # Wrong dimension
+            check_shape(xx, shape=shape_3)

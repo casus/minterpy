@@ -16,6 +16,7 @@ from ..grid import Grid
 from ..multi_index import MultiIndexSet
 from ..utils import expand_dim, find_match_between
 from ..verification import (
+    check_dimensionality,
     check_shape,
     check_type_n_values,
     verify_domain,
@@ -229,7 +230,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         else:
             # TODO should passing multi indices as ndarray be supported?
             check_type_n_values(multi_index)  # expected ARRAY
-            check_shape(multi_index, dimensionality=2)
+            check_dimensionality(multi_index, dimensionality=2)
             self.multi_index = MultiIndexSet(multi_index)
 
         nr_monomials, spatial_dimension = self.multi_index.exponents.shape
@@ -237,14 +238,14 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
 
         if internal_domain is not None:
             check_type_n_values(internal_domain)
-            check_shape(internal_domain, (spatial_dimension, 2))
+            check_shape(internal_domain, shape=(spatial_dimension, 2))
         self.internal_domain = self.generate_internal_domain(
             internal_domain, self.multi_index.spatial_dimension
         )
 
         if user_domain is not None:  # TODO not better "external domain"?!
             check_type_n_values(user_domain)
-            check_shape(user_domain, (spatial_dimension, 2))
+            check_shape(user_domain, shape=(spatial_dimension, 2))
         self.user_domain = self.generate_user_domain(
             user_domain, self.multi_index.spatial_dimension
         )
