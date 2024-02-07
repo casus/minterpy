@@ -876,6 +876,75 @@ def multiply_indices(
     return prod
 
 
+def union_indices(
+    indices_1: np.ndarray,
+    indices_2: np.ndarray,
+) -> np.ndarray:
+    """Create a union between two arrays of multi-indices.
+
+    Parameters
+    ----------
+    indices_1 : :class:`numpy:numpy.ndarray`
+        Two-dimensional array of multi-indices of shape ``(N1, m2)`` where
+        ``N1`` is the number of multi-indices and ``m2`` is the number of
+        dimensions of the first array.
+    indices_2 : :class:`numpy:numpy.ndarray`
+        Another two-dimensional array of multi-indices of shape ``(N2, m2)``
+        where ``N2`` is the number of multi-indices and ``m2`` is the number
+        of dimensions of the second array.
+
+    Returns
+    -------
+    :class:`numpy:numpy.ndarray`
+        The union of ``indices_1`` and ``indices_2`` of shape ``(N3, m3)``
+        where ``m3`` is the maximum between ``m1`` and ``m2``.
+        The union is lexicographically sorted.
+
+    Examples
+    --------
+    >>> my_indices_1 = np.array([
+    ... [0, 0],
+    ... [1, 0],
+    ... [0, 1],
+    ... [1, 1],
+    ... ])
+    >>> my_indices_2 = np.array([
+    ... [0, 0],
+    ... [1, 0],
+    ... [0, 1],
+    ... ])
+    >>> union_indices(my_indices_1, my_indices_2)
+    array([[0, 0],
+           [1, 0],
+           [0, 1],
+           [1, 1]])
+    >>> my_indices_3 = np.array([
+    ... [0],
+    ... [1],
+    ... [2],
+    ... ])
+    >>> union_indices(my_indices_1, my_indices_3)  # Different dimension
+    array([[0, 0],
+           [1, 0],
+           [2, 0],
+           [0, 1],
+           [1, 1]])
+    """
+    # --- Adjust the dimension
+    m_1 = indices_1.shape[1]
+    m_2 = indices_2.shape[1]
+    if m_1 < m_2:
+        indices_1 = expand_dim(indices_1, m_2)
+    if m_1 > m_2:
+        indices_2 = expand_dim(indices_2, m_1)
+
+    # --- Take the union between the two indices then lexicographically sort it
+    union = np.concatenate((indices_1, indices_2), axis=0)
+    union = lex_sort(union)
+
+    return union
+
+
 def _missing_backward_neighbors(indices: np.ndarray) -> np.ndarray:
     """Create a lexicographically sorted array of missing backward neighbors.
 

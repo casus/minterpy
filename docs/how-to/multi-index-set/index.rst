@@ -14,4 +14,5 @@ multi-index sets.
    Check for Membership, Superset, or Subset <multi-index-set-membership>
    Make a Multi-Index Set Complete <multi-index-set-complete>
    Make a Multi-Index Set Downward-Closed <multi-index-set-downward-closed>
+   Create the Union of Multi-Index Sets <multi-index-set-union>
    Multiply Multi-Index Sets <multi-index-set-multiply>
