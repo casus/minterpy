@@ -11,7 +11,11 @@ from minterpy.utils import gen_chebychev_2nd_order_leja_ordered
 
 from .multi_index import MultiIndexSet
 from .tree import MultiIndexTree
-from .verification import check_domain_fit, check_shape, check_type_n_values
+from .verification import (
+    check_dimensionality,
+    check_domain_fit,
+    check_type_n_values,
+)
 
 __all__ = ["Grid"]
 
@@ -80,7 +84,7 @@ class Grid:
         )
 
         check_type_n_values(generating_points)
-        check_shape(generating_points, dimensionality=2)
+        check_dimensionality(generating_points, dimensionality=2)
         check_domain_fit(generating_points)
         self.generating_points: ARRAY = generating_points
         # TODO check if values and points fit together

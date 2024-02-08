@@ -25,7 +25,7 @@ from minterpy.core.utils import (
 )
 
 from .verification import (
-    check_shape,
+    check_dimensionality,
     check_values,
     verify_lp_degree,
     verify_spatial_dimension,
@@ -68,7 +68,7 @@ class MultiIndexSet:
 
         # Check and assign the exponents
         exponents = np.require(exponents, dtype=INT_DTYPE)
-        check_shape(exponents, dimensionality=2)
+        check_dimensionality(exponents, dimensionality=2)
 
         # Keep only unique entries and sort lexicographically
         self._exponents = lex_sort(exponents)

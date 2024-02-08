@@ -232,38 +232,83 @@ def check_type_n_values(a: np.ndarray, *args, **kwargs):
     check_values(a, *args, **kwargs)
 
 
-def check_shape(
-    a: np.ndarray, shape: Optional[Sized] = None, dimensionality: int = None
-):
-    """Verify the shape of an input array.
+def check_dimensionality(xx: np.ndarray, dimensionality: int) -> None:
+    """Verify the dimensionality of a given array.
 
+    Use this verification function when its expected dimensionality is known.
 
-    :param a: array to be checked.
-    :type a: np.ndarray
-    :param shape: the expected shape.Note, non integer values will be interpreted as variable size in the respective dimension. Default is :class:`None`.
-    :type shape: {None,tuple,list}
-    :param dimensionality: dimension of the domain space (right?). Default is :class:`None`
-    :type dimensionality: {None,int}
+    Parameters
+    ----------
+    xx : np.ndarray
+        A given array to verify.
+    dimensionality : int
+        The expected dimensionality (i.e., the number of dimensions)
+        of the array.
 
-    :raise ValueError: If input array hasn't the expected dimensionality.
-    :raise ValueError: If input array hasn't the expected size.
-
+    Raises
+    ------
+    ValueError
+        If the input array is not of the expected dimension.
+    >>> check_dimensionality(np.array([1, 2, 3]), dimensionality=1)
+    >>> yy = np.array([
+    ...     [1, 2, 3, 4],
+    ...     [5, 6, 7, 8],
+    ... ])
+    >>> check_dimensionality(yy, dimensionality=2)
+    >>> check_dimensionality(yy, dimensionality=1)  # Wrong dimensionality
+    Traceback (most recent call last):
+    ...
+    ValueError: 1D array is expected; got instead 2D!
     """
-    if shape is None:
-        return
-    if dimensionality is None:  # check for the dimensionality by the given shape:
-        dimensionality = len(shape)
-    if a.ndim != dimensionality:
+    if xx.ndim != dimensionality:
         raise ValueError(
-            f"expected {dimensionality}D array, but encountered array of dimensionality {len(a.shape)}"
+            f"{dimensionality}D array is expected; got instead {xx.ndim}D!"
         )
 
-    for dim, (true_size, expected_size) in enumerate(zip(a.shape, shape)):  # type: ignore
-        if isinstance(expected_size, int) and true_size != expected_size:
-            raise ValueError(
-                f"expected array of size {expected_size} in dimension {dim},"
-                f" but encountered size {true_size}"
-            )
+
+def check_shape(xx: np.ndarray, shape: Tuple[int, ...]):
+    """Verify the shape of a given array.
+
+    Use this verification function when its expected shape (given as a tuple)
+    is known.
+
+    Parameters
+    ----------
+    xx : np.ndarray
+        A given array to verify.
+    shape : Tuple[int, ...]
+        The expected shape of the array.
+
+    Raises
+    ------
+    ValueError
+        If the input array is not of the expected shape.
+
+    Examples
+    --------
+    >>> check_shape(np.array([1, 2, 3]), shape=(3, ))
+    >>> yy = np.array([
+    ...     [1, 2, 3, 4],
+    ...     [5, 6, 7, 8],
+    ... ])
+    >>> check_shape(yy, shape=(2, 4))
+    >>> check_shape(yy, shape=(1, 5))  # Wrong shape
+    Traceback (most recent call last):
+    ...
+    ValueError: Array of shape (1, 5) is expected; got instead (2, 4)!
+    >>> check_shape(yy, shape=(2, 4, 1))  # Wrong dimensionality
+    Traceback (most recent call last):
+    ...
+    ValueError: 3D array is expected; got instead 2D!
+    """
+    # Check dimensionality
+    check_dimensionality(xx, dimensionality=len(shape))
+
+    # Check shape
+    if xx.shape != shape:
+        raise ValueError(
+            f"Array of shape {shape} is expected; got instead {xx.shape}!"
+        )
 
 
 DOMAIN_WARN_MSG2 = "the grid points must fit the interpolation domain [-1;1]^m."
@@ -295,7 +340,7 @@ def check_domain_fit(points: np.ndarray):
     sample_min = np.min(points, axis=1)
     if not np.allclose(np.minimum(sample_min, -1.0), -1.0):
         raise ValueError(DOMAIN_WARN_MSG2 + f"violated min: {sample_min}")
-    check_shape(points, dimensionality=2)
+    check_dimensionality(points, dimensionality=2)
     nr_of_points, m = points.shape
     if nr_of_points == 0:
         raise ValueError("at least one point must be given")
@@ -487,7 +532,7 @@ def verify_lp_degree(lp_degree: float) -> float:
         if lp_degree <= 0.0:
             raise ValueError(
                 "lp-degree must be strictly positive! "
-                f"Instead, {lp_degree} is given."
+                f"Instead, {lp_degree} is given"
             )
 
         # Make sure that it's a float
