@@ -721,68 +721,76 @@ def test_inequality_exponents(SpatialDimension, LpDegree):
     assert mi_1 != mi_2
 
 
-# --- __mul__()
-def test_multiplication_diff_deg(SpatialDimension, PolyDegree, LpDegree):
-    """Test the multiplication of 2 MultiIndexSet instances with diff. deg."""
-    # Problem setup
-    m = SpatialDimension
-    d_1 = PolyDegree
-    d_2 = PolyDegree + np.random.randint(1, 3)
-    p = LpDegree
-    mi_1 = MultiIndexSet.from_degree(m, d_1, p)
-    mi_2 = MultiIndexSet.from_degree(m, d_2, p)
+class TestMultiplication:
+    """All tests related to the multiplication of MultiIndexSet instances.
 
-    # MultiIndexSet product
-    mi_prod = mi_1 * mi_2
-    if p == 1.0:
-        # This reference only applies if lp-degree is 1.0
-        total_degree = d_1 + d_2  # the sum of degrees
-        mi_prod_ref = MultiIndexSet.from_degree(m, total_degree, p)
-    else:
-        exp_prod = multiply_indices(mi_1.exponents, mi_2.exponents)
-        mi_prod_ref = MultiIndexSet(exponents=exp_prod, lp_degree=p)
+    Notes
+    -----
+    - These tests are related to Issue #119 and #125.
+    """
+    def test_operator_outplace(self, mi_pair):
+        """Multiply two instances via (outplace) operator."""
+        # Problem setup
+        mi_1, mi_2 = mi_pair
 
-    # Assertion
-    assert_multi_index_equal(mi_prod, mi_prod_ref)
+        # Create a reference product
+        mi_prod_ref = _create_mi_prod_ref(mi_1, mi_2)
 
+        # Multiply via an operator
+        mi_prod_1 = mi_1 * mi_2
+        mi_prod_2 = mi_2 * mi_1  # commutativity check
 
-def test_multiplication_diff_dim(SpatialDimension, PolyDegree, LpDegree):
-    """Test the multiplication of 2 MultiIndexSet instances with diff. dim."""
-    # Problem setup
-    d = PolyDegree
-    p = LpDegree
-    m_1 = SpatialDimension
-    m_2 = SpatialDimension + np.random.randint(1, 3)
-    mi_1 = MultiIndexSet.from_degree(m_1, d, p)
-    mi_2 = MultiIndexSet.from_degree(m_2, d, p)
+        # Assertions
+        assert mi_prod_1 == mi_prod_ref
+        assert mi_prod_2 == mi_prod_ref
 
-    # MultiIndexSet product
-    mi_prod = mi_1 * mi_2
-    exp_prod = multiply_indices(mi_1.exponents, mi_2.exponents)
-    mi_prod_ref = MultiIndexSet(exponents=exp_prod, lp_degree=p)
+    def test_operator_inplace(self, mi_pair):
+        """Multiply two instances via inplace operator."""
+        # Problem setup
+        mi_1, mi_2 = mi_pair
 
-    # Assertion
-    assert_multi_index_equal(mi_prod, mi_prod_ref)
+        # Create a reference product
+        mi_prod_ref = _create_mi_prod_ref(mi_1, mi_2)
 
+        # Multiply via an inplace operator method call
+        mi_1 *= mi_2
 
-def test_multiplication_diff_lp(SpatialDimension, PolyDegree):
-    """Test the multiplication of 2 MultiIndexSet instances with diff. lp."""
-    # Problem setup
-    m = SpatialDimension
-    d = PolyDegree
-    lp_degrees = [0.5, 1.0, 2.0, 3.0, np.inf]
-    p_1, p_2 = np.random.choice(lp_degrees, 2)
-    mi_1 = MultiIndexSet.from_degree(m, d, p_1)
-    mi_2 = MultiIndexSet.from_degree(m, d, p_2)
+        # Assertion
+        assert mi_1 == mi_prod_ref
 
-    # MultiIndexSet product
-    mi_prod = mi_1 * mi_2
-    exp_prod = multiply_indices(mi_1.exponents, mi_2.exponents)
-    lp_prod = max([p_1, p_2])
-    mi_prod_ref = MultiIndexSet(exponents=exp_prod, lp_degree=lp_prod)
+    def test_method_outplace(self, mi_pair):
+        """Multiply two instances via outplace method."""
+        # Problem setup
+        mi_1, mi_2 = mi_pair
 
-    # Assertion
-    assert_multi_index_equal(mi_prod, mi_prod_ref)
+        # Create a reference product
+        mi_prod_ref = _create_mi_prod_ref(mi_1, mi_2)
+
+        # Multiply via a method call
+        mi_prod_1 = mi_1.multiply(mi_2)  # default parameter
+        mi_prod_2 = mi_1.multiply(mi_2, False)  # positional argument
+        mi_prod_3 = mi_1.multiply(mi_2, inplace=False)  # explicit name
+        mi_prod_4 = mi_2.multiply(mi_1)  # commutativity check
+
+        # Assertions
+        assert mi_prod_1 == mi_prod_ref
+        assert mi_prod_2 == mi_prod_ref
+        assert mi_prod_3 == mi_prod_ref
+        assert mi_prod_4 == mi_prod_ref
+
+    def test_method_inplace(self, mi_pair):
+        """Multiply two instances via inplace method."""
+        # Problem setup
+        mi_1, mi_2 = mi_pair
+
+        # Create a reference product
+        mi_prod_ref = _create_mi_prod_ref(mi_1, mi_2)
+
+        # Multiply via an inplace method call
+        mi_1.multiply(mi_2, inplace=True)
+
+        # Assertion
+        assert mi_1 == mi_prod_ref
 
 
 class TestUnion:
@@ -792,13 +800,13 @@ class TestUnion:
     -----
     - This series of tests is related to Issue #124.
     """
-    def test_outplace_op(self, mi_pair):
+    def test_outplace_operator(self, mi_pair):
         """Take the union via the union operator."""
         # Problem setup
         mi_1, mi_2 = mi_pair
 
         # Create a reference
-        mi_ref = _mi_union_ref(mi_1, mi_2)
+        mi_ref = _create_mi_union_ref(mi_1, mi_2)
 
         # MultiIndexSet union via the operator
         mi_union_1 = mi_1 | mi_2
@@ -814,7 +822,7 @@ class TestUnion:
         mi_1, mi_2 = mi_pair
 
         # Create a reference
-        mi_ref = _mi_union_ref(mi_1, mi_2)
+        mi_ref = _create_mi_union_ref(mi_1, mi_2)
 
         # MultiIndexSet union
         mi_union_1 = mi_1.union(mi_2)  # method call, default
@@ -835,7 +843,7 @@ class TestUnion:
 
         # Create a reference
         id_mi_1 = id(mi_1)
-        mi_ref = _mi_union_ref(mi_1, mi_2)
+        mi_ref = _create_mi_union_ref(mi_1, mi_2)
 
         # MultiIndexSet union
         mi_1 |= mi_2
@@ -850,7 +858,7 @@ class TestUnion:
         mi_1, mi_2 = mi_pair
 
         # Create a reference
-        mi_ref = _mi_union_ref(mi_1, mi_2)
+        mi_ref = _create_mi_union_ref(mi_1, mi_2)
 
         # MultiIndexSet union
         mi_1.union(mi_2, inplace=True)
@@ -859,8 +867,21 @@ class TestUnion:
         assert mi_ref == mi_1
 
 
-def _mi_union_ref(mi_1, mi_2):
-    """Compute the union of two MultiIndexSets with an alternative approach."""
+def _create_mi_union_ref(mi_1: MultiIndexSet, mi_2: MultiIndexSet):
+    """Create a reference of the union of two MultiIndexSets.
+
+    Parameters
+    ----------
+    mi_1 : MultiIndexSet
+        The first operand in the multiplication.
+    mi_2 : MultiIndexSet
+        The second operand in the multiplication.
+
+    Returns
+    -------
+    MultiIndexSet
+        The reference of two MultiIndexSets product.
+    """
     exp_mi_1 = mi_1.exponents
     exp_mi_2 = mi_2.exponents
     if mi_1.spatial_dimension > mi_2.spatial_dimension:
@@ -872,3 +893,42 @@ def _mi_union_ref(mi_1, mi_2):
     mi_union = MultiIndexSet(exponents=exp_union, lp_degree=lp_union)
 
     return mi_union
+
+
+def _create_mi_prod_ref(mi_1: MultiIndexSet, mi_2: MultiIndexSet):
+    """Create a reference of two MultiIndexSets product.
+
+    Parameters
+    ----------
+    mi_1 : MultiIndexSet
+        The first operand in the multiplication.
+    mi_2 : MultiIndexSet
+        The second operand in the multiplication.
+
+    Returns
+    -------
+    MultiIndexSet
+        The reference of two MultiIndexSets product.
+    """
+    m_1 = mi_1.spatial_dimension
+    m_2 = mi_2.spatial_dimension
+    d_1 = mi_1.poly_degree
+    d_2 = mi_2.poly_degree
+    lp_1 = mi_1.lp_degree
+    lp_2 = mi_2.lp_degree
+    exponents_1 = mi_1.exponents
+    exponents_2 = mi_2.exponents
+
+    if (m_1 == m_2) and (lp_1 == lp_2 == 1.0):
+        # This reference only applies if lp-degree is 1.0 with the same dim.
+        total_degree = d_1 + d_2  # the sum of degrees
+        m = np.max([m_1, m_2])
+        mi_prod_ref = MultiIndexSet.from_degree(m, total_degree, lp_1)
+
+        return mi_prod_ref
+
+    exponents_prod = multiply_indices(exponents_1, exponents_2)
+    lp_prod = max([lp_1, lp_2])
+    mi_prod_ref = MultiIndexSet(exponents=exponents_prod, lp_degree=lp_prod)
+
+    return mi_prod_ref

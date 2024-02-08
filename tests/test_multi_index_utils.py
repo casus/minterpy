@@ -557,85 +557,56 @@ def test_is_index_contained(SpatialDimension, PolyDegree, LpDegree):
     assert not is_index_contained(indices, index_ref)
 
 
-# --- multiply_indices()
-def test_multiply_indices_same_dim(SpatialDimension):
-    """Test the multiplication of two multi-index sets with the same dimension.
+class TestMultiplyIndices:
+    """All tests related to the multiplication of array of multi-indices.
 
     Notes
     -----
-    - This test is related to Issue #119.
+    - These tests are related to Issue #119.
     """
-    # Create random multi-indices of the same dimension
-    indices_1 = build_rnd_exponents(SpatialDimension, 5)
-    indices_2 = build_rnd_exponents(SpatialDimension, 2)
+    def test_same_dimension(self, SpatialDimension):
+        """Multiplication of arrays of the same dimension."""
+        # Create random multi-indices of the same dimension
+        indices_1 = build_rnd_exponents(SpatialDimension, 5)
+        indices_2 = build_rnd_exponents(SpatialDimension, 2)
 
-    # Create a reference from a naive implementation (only for the same dim.)
-    ref_prod = []
-    for index_1 in indices_1:
-        for index_2 in indices_2:
-            ref_prod.append(index_1 + index_2)
-    ref_prod = lex_sort(np.array(ref_prod))
+        # Create a ref. from a naive implementation (only for the same dim.)
+        ref_prod = []
+        for index_1 in indices_1:
+            for index_2 in indices_2:
+                ref_prod.append(index_1 + index_2)
+        ref_prod = lex_sort(np.array(ref_prod))
 
-    # Multiply the indices
-    indices_prod = multiply_indices(indices_1, indices_2)
+        # Multiply the indices
+        indices_prod_1 = multiply_indices(indices_1, indices_2)
+        # Commutativity check
+        indices_prod_2 = multiply_indices(indices_2, indices_1)
 
-    # Assertion
-    assert np.all(ref_prod == indices_prod)
+        # Assertions
+        assert np.array_equal(ref_prod, indices_prod_1)
+        assert np.array_equal(ref_prod, indices_prod_2)
 
+    def test_different_dimension(self, SpatialDimension, PolyDegree, LpDegree):
+        """Multiplication of arrays of different dimensions."""
+        # Randomly generate dimension difference
+        diff_dim = np.random.randint(low=1, high=3)
+        dim_1 = SpatialDimension
+        dim_2 = SpatialDimension + diff_dim
+        indices_1 = get_exponent_matrix(dim_1, PolyDegree, LpDegree)
+        indices_2 = get_exponent_matrix(dim_2, PolyDegree, LpDegree)
 
-def test_multiply_indices_diff_dim(SpatialDimension, PolyDegree, LpDegree):
-    """Test the multiplication of two multi-index sets with different dim.
+        # Multiply indices
+        indices_prod_1 = multiply_indices(indices_1, indices_2)
+        # Check commutativity
+        indices_prod_2 = multiply_indices(indices_2, indices_1)
 
-    With different dimension, the values of the last dimensions take the values
-    from the indices of the higher dimension.
+        # Assertions: The additional dimensions in the product only have values
+        # from the set with the higher dimension.
+        unique_values_1 = np.unique(indices_prod_1[:, -diff_dim])
+        unique_values_2 = np.unique(indices_prod_2[:, -diff_dim])
 
-    Notes
-    -----
-    - This is related to Issue #119.
-    """
-    # --- One dimension difference
-    dim_1 = SpatialDimension
-    dim_2 = SpatialDimension + 1
-    indices_1 = get_exponent_matrix(dim_1, PolyDegree, LpDegree)
-    indices_2 = get_exponent_matrix(dim_2, PolyDegree, LpDegree)
-    # Multiply the indices
-    indices_prod = multiply_indices(indices_1, indices_2)
-    # Assertion: The additional dimension in the product only has values
-    #            from the set with the higher dimension.
-    assert np.all(
-        np.unique(indices_2[:, -1]) == np.unique(indices_prod[:, -1])
-    )
-    # Multiply the indices: Commutativity
-    indices_prod = multiply_indices(indices_2, indices_1)
-    # Assertion: The additional dimension in the product only has values
-    #            from the set with the higher dimension.
-    assert np.all(
-        np.unique(indices_2[:, -1]) == np.unique(indices_prod[:, -1])
-    )
-
-    # --- Two dimensions difference
-    dim_3 = SpatialDimension + 2
-    indices_3 = get_exponent_matrix(dim_3, PolyDegree, LpDegree)
-    # Multiply the indices
-    indices_prod = multiply_indices(indices_1, indices_3)
-    # Assertions: the additional two dimensions only have values from the set
-    #             with the higher dimension.
-    assert np.all(
-        np.unique(indices_3[:, -2]) == np.unique(indices_prod[:, -2])
-    )
-    assert np.all(
-        np.unique(indices_3[:, -1]) == np.unique(indices_prod[:, -1])
-    )
-    # Multiply the indices: Commutativity
-    indices_prod = multiply_indices(indices_3, indices_1)
-    # Assertions: the additional two dimensions only have values from the set
-    #             with the higher dimension.
-    assert np.all(
-        np.unique(indices_3[:, -2]) == np.unique(indices_prod[:, -2])
-    )
-    assert np.all(
-        np.unique(indices_3[:, -1]) == np.unique(indices_prod[:, -1])
-    )
+        assert np.all(np.unique(indices_2[:, -diff_dim]) == unique_values_1)
+        assert np.all(np.unique(indices_2[:, -diff_dim]) == unique_values_2)
 
 
 class TestUnionIndices:
