@@ -714,7 +714,34 @@ class MultiIndexSet:
             self._is_downward_closed = None
         else:
             return self.__class__(
-                exponents=exponents_union, lp_degree=lp_degree_union,
+                exponents=exponents_union, lp_degree=lp_degree_union
+            )
+
+    def multiply(self, other: "MultiIndexSet", inplace: bool = False) -> Optional["MultiIndexSet"]:
+        """Multiply an instance of `MultiIndexSet` with another.
+        """
+        # Get the exponents of the operands
+        exp_self = self.exponents
+        exp_other = other.exponents
+
+        # Decide the lp-degree of the product
+        lp_degree_self = self.lp_degree
+        lp_degree_other = other.lp_degree
+        lp_degree_prod = max([lp_degree_self, lp_degree_other])
+
+        # Take the product of the exponents (multi-indices multiplication)
+        exp_prod = multiply_indices(exp_self, exp_other)
+
+        if inplace:
+            self._exponents = exp_prod
+            self._lp_degree = lp_degree_prod
+            # NOTE: Reset properties
+            self._is_complete = None
+            self._is_downward_closed = None
+
+        else:
+            return self.__class__(
+                exponents=exp_prod, lp_degree=lp_degree_prod,
             )
 
     def __eq__(self, other: "MultiIndexSet") -> bool:
@@ -755,21 +782,21 @@ class MultiIndexSet:
             If the dimension differs, the product set has the dimension
             of the set with the larger dimension.
         """
-        # Get the exponents of the operands
-        exp_self = self.exponents
-        exp_other = other.exponents
+        return self.multiply(other, inplace=False)
 
-        # Decide the lp-degree of the product
-        lp_degree_self = self.lp_degree
-        lp_degree_other = other.lp_degree
-        lp_degree_prod = max([lp_degree_self, lp_degree_other])
+    def __imul__(self, other: "MultiIndexSet") -> "MultiIndexSet":
+        """Multiply inplace an instance of `MultiIndexSet` with another.
 
-        # Take the product of the exponents (multi-indices multiplication)
-        exp_prod = multiply_indices(exp_self, exp_other)
+        Parameters
+        ----------
 
-        return self.__class__(
-            exponents=exp_prod, lp_degree=lp_degree_prod,
-        )
+        Returns
+        -------
+        """
+        # Multiply and modify the instance
+        self.multiply(other, inplace=True)
+
+        return self
 
     def __or__(self, other: "MultiIndexSet") -> "MultiIndexSet":
         """Combine an instance of `MultiIndexSet` with another via op.
