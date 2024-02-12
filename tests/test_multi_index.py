@@ -62,6 +62,17 @@ class TestInitDefault:
         # Assertion
         assert_call(MultiIndexSet, exponents_random, lp_degree=LpDegree)
 
+    @pytest.mark.parametrize("invalid_value", [np.inf, -10, np.nan])
+    def test_invalid_exps(self, invalid_value):
+        """Test construction from invalid exponents."""
+        # Generate exponent with a single invalid value
+        exponents = np.random.rand(100, 3)
+        exponents[2, 2] = invalid_value
+
+        # Assertion
+        with pytest.raises(ValueError):
+            MultiIndexSet(exponents, lp_degree=1.0)
+
     @pytest.mark.parametrize("dimensionality", [1, 3, 4, 5])
     def test_invalid_exps_dimensionality(self, dimensionality):
         """Test construction with exponents array of invalid dimension."""
@@ -203,7 +214,7 @@ class TestInitFromDegree:
             ("1", TypeError),  # string
             (0, ValueError),  # zero
             (-1, ValueError),  # negative number
-            (np.array([1, 2]), ValueError),  # NumPy array
+            (np.array([1, 2]), TypeError),  # NumPy array
         ],
     )
     def test_from_degree_invalid_lp_deg(self, lp_degree, exception):

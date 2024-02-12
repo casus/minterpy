@@ -2,7 +2,7 @@
 """ functions for input verification
 """
 
-from typing import Optional, Sized, Tuple, TypeVar
+from typing import Optional, Sized, Tuple, TypeVar, Union
 
 import numpy as np
 from _warnings import warn
@@ -196,23 +196,6 @@ def check_dtype(a: np.ndarray, expected_dtype):
         )
 
 
-def check_values(xx: np.ndarray):
-    """Verify that the input array has neither ``NaN`` nor ``inf`` values.
-
-    Parameters
-    ----------
-    xx : :class:`numpy:numpy.ndarray`
-        The array to be checked.
-
-    Raises
-    ------
-    ValueError
-        If the input array contains either ``NaN`` or ``inf``.
-    """
-    if np.any(np.isnan(xx)) or np.any(np.isinf(xx)):
-        raise ValueError("values must not be NaN or infinity!")
-
-
 def check_type_n_values(a: np.ndarray, *args, **kwargs):
     """Verify that the input array has correct type and does neither contain ``NaN`` nor ``inf`` values.
 
@@ -249,6 +232,9 @@ def check_dimensionality(xx: np.ndarray, dimensionality: int) -> None:
     ------
     ValueError
         If the input array is not of the expected dimension.
+
+    Examples
+    --------
     >>> check_dimensionality(np.array([1, 2, 3]), dimensionality=1)
     >>> yy = np.array([
     ...     [1, 2, 3, 4],
@@ -362,6 +348,68 @@ def check_domain_fit(points: np.ndarray):
             )
 
 
+def check_values(xx: Union[int, float, np.ndarray], **kwargs):
+    """Verify that the input array has neither ``NaN`` nor ``inf`` values.
+
+    Parameters
+    ----------
+    xx : Union[int, float, :class:`numpy:numpy.ndarray`]
+        The scalar or array to be checked.
+    **kwargs
+        Keyword arguments with Boolean as values, if ``True`` then the invalid
+        value is allowed. The keys are ``nan`` (check for ``NaN`` values),
+        ``inf`` (check for ``inf`` values), ``zero`` (check for 0 values),
+        and ``negative`` (check for negative values).
+        If any of those set to ``True``,
+        the given value will raise an exception.
+        The default is ``NaN`` and ``inf`` values are not allowed, while
+        zero or negative values are allowed.
+
+    Raises
+    ------
+    ValueError
+        If the scalar value or the given array contains any of the specified
+        invalid values(e.g., ``NaN``, ``inf``, zero, or negative).
+
+    Examples
+    --------
+    >>> check_values(10)  # valid
+    >>> check_values(np.nan)  # Default, no nan
+    Traceback (most recent call last):
+    ...
+    ValueError: Invalid value(s) (NaN, inf, negative, zero)!
+    >>> check_values(np.inf)  # Default, no inf
+    Traceback (most recent call last):
+    ...
+    ValueError: Invalid value(s) (NaN, inf, negative, zero)!
+    >>> check_values(np.zeros((3, 2)), zero=False)  # No zero value is allowed
+    Traceback (most recent call last):
+    ...
+    ValueError: Invalid value(s) (NaN, inf, negative, zero)!
+    >>> check_values(-10, negative=False)  # No negative value is allowed
+    Traceback (most recent call last):
+    ...
+    ValueError: Invalid value(s) (NaN, inf, negative, zero)!
+    """
+    # Parse keyword arguments
+    kwargs = dict((key.lower(), val) for key, val in kwargs.items())
+    nan = kwargs.get("nan", False)
+    inf = kwargs.get("inf", False)
+    zero = kwargs.get("zero", True)
+    negative = kwargs.get("negative", True)
+
+    # Check values
+    is_nan = False if nan else np.any(np.isnan(xx))
+    is_inf = False if inf else np.any(np.isinf(xx))
+    is_zero = False if zero else np.any(xx == 0)
+    is_negative = False if negative else np.any(xx < 0)
+
+    if is_nan or is_inf or is_zero or is_negative:
+        raise ValueError(
+            "Invalid value(s) (NaN, inf, negative, zero)!"
+        )
+
+
 def verify_spatial_dimension(spatial_dimension: int) -> int:
     """Verify if the value of a given spatial dimension is valid.
 
@@ -399,20 +447,13 @@ def verify_spatial_dimension(spatial_dimension: int) -> int:
     """
     try:
         # Must be strictly positive
-        if spatial_dimension <= 0:
-            raise ValueError(
-            f"Spatial dimension must be strictly positive! "
-            f"Got instead {spatial_dimension}."
-        )
+        check_values(spatial_dimension, negative=False, zero=False)
 
         # Other type than int may be acceptable if it's a whole number
         if spatial_dimension % 1 != 0:
-            raise ValueError(
-                f"Spatial dimension must be a whole number! "
-                f"Got instead {spatial_dimension}."
-            )
+            raise ValueError("Spatial dimension must be a whole number!")
 
-        # Make sure that it's an int
+        # Make sure that it's an int (whole number checked must come first!)
         spatial_dimension = int(spatial_dimension)
 
     except TypeError as err:
@@ -421,7 +462,9 @@ def verify_spatial_dimension(spatial_dimension: int) -> int:
         raise err
 
     except ValueError as err:
-        custom_message = "Invalid value for spatial dimension!"
+        custom_message = (
+            f"{spatial_dimension} is invalid for spatial dimension!"
+        )
         err.args = _add_custom_exception_message(err.args, custom_message)
         raise err
 
@@ -465,20 +508,13 @@ def verify_poly_degree(poly_degree: int) -> int:
     """
     try:
         # Must be non-negative
-        if poly_degree < 0:
-            raise ValueError(
-            f"Poly. degree must be non-negative! "
-            f"Got instead {poly_degree}."
-        )
+        check_values(poly_degree, negative=False)
 
         # Other type than int may be acceptable if it's a whole number
         if poly_degree % 1 != 0:
-            raise ValueError(
-                f"Poly. degree must be a whole number! "
-                f"Got instead {poly_degree}."
-            )
+            raise ValueError("Poly. degree must be a whole number!")
 
-        # Make sure that it's an int
+        # Make sure that it's an int (whole number checked must come first!)
         poly_degree = int(poly_degree)
 
     except TypeError as err:
@@ -487,7 +523,7 @@ def verify_poly_degree(poly_degree: int) -> int:
         raise err
 
     except ValueError as err:
-        custom_message = "Invalid value for poly. degree!"
+        custom_message = f"{poly_degree} is invalid for poly. degree! "
         err.args = _add_custom_exception_message(err.args, custom_message)
         raise err
 
@@ -529,11 +565,8 @@ def verify_lp_degree(lp_degree: float) -> float:
     1.0
     """
     try:
-        if lp_degree <= 0.0:
-            raise ValueError(
-                "lp-degree must be strictly positive! "
-                f"Instead, {lp_degree} is given"
-            )
+        # Must be strictly positive, infinity is allowed
+        check_values(lp_degree, inf=True, negative=False, zero=False)
 
         # Make sure that it's a float
         lp_degree = float(lp_degree)
@@ -544,7 +577,9 @@ def verify_lp_degree(lp_degree: float) -> float:
         raise err
 
     except ValueError as err:
-        custom_message = "Invalid value for lp-degree!"
+        custom_message = (
+            f"{lp_degree} is invalid for lp-degree (must be > 0)!"
+        )
         err.args = _add_custom_exception_message(err.args, custom_message)
         raise err
 
@@ -572,7 +607,7 @@ def _add_custom_exception_message(
     if not exception_args:
         arg = custom_message
     else:
-        arg = f"{custom_message} {exception_args[0]}."
+        arg = f"{exception_args[0]} {custom_message}"
     exception_args = (arg,) + exception_args[1:]
 
     return exception_args

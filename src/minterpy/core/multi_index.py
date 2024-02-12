@@ -66,9 +66,13 @@ class MultiIndexSet:
 
     def __init__(self, exponents: np.ndarray, lp_degree: float):
 
-        # Check and assign the exponents
-        exponents = np.require(exponents, dtype=INT_DTYPE)
+        # Check values
+        # Must be non-negative
+        check_values(exponents, negative=False)
+        # Must be two-dimensional
         check_dimensionality(exponents, dimensionality=2)
+        # Must be integer
+        exponents = np.require(exponents, dtype=INT_DTYPE)
 
         # Keep only unique entries and sort lexicographically
         self._exponents = lex_sort(exponents)
@@ -435,10 +439,12 @@ class MultiIndexSet:
           to ``False`` (the default) a shallow copy is created.
         """
         # --- Pre-process the input exponents
-        exponents = np.require(exponents, dtype=INT_DTYPE)
-        check_values(exponents)
+        # Check values, must be non-negative
+        check_values(exponents, negative=False)
         # convert input to 2D in expected shape
         exponents = exponents.reshape(-1, self.spatial_dimension)
+        # Must be integer
+        exponents = np.require(exponents, dtype=INT_DTYPE)
 
         #  NOTE: If all added exponents are already contained, identical array
         #        is returned.
