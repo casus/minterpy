@@ -9,7 +9,68 @@ from minterpy.core.verification import (
     verify_lp_degree,
     check_dimensionality,
     check_shape,
+    check_values,
 )
+
+
+class TestCheckValues:
+    """All tests related to value (scalar or array) checking.
+
+    Notes
+    -----
+    - These tests are related to Issue #131.
+    """
+    @pytest.mark.parametrize(
+        "invalid_value, parameter",
+        [(np.nan, "nan"), (np.inf, "inf"), (0, "zero"), (-1, "negative")],
+    )
+    def test_array_single_flag(self, invalid_value, parameter):
+        """Test an array whether it contains invalid values."""
+        # Create an array
+        xx = np.empty((3, 2))
+        xx[0, 0] = invalid_value
+
+        # No exception raised
+        param = {parameter: True}
+        check_values(xx, **param)
+
+        # Assertions
+        param = {parameter: False}
+        with pytest.raises(ValueError):
+            check_values(xx, **param)
+
+    @pytest.mark.parametrize(
+        "invalid_value, parameter",
+        [(np.nan, "nan"), (np.inf, "inf"), (0, "zero"), (-1, "negative")],
+    )
+    def test_scalar_single_flag(self, invalid_value, parameter):
+        """Test a scalar whether it is invalid."""
+        # No exception raised
+        param = {parameter: True}
+        check_values(invalid_value, **param)
+
+        # Assertions
+        param = {parameter: False}
+        with pytest.raises(ValueError):
+            check_values(invalid_value, **param)
+
+    def test_array_multiple_flags(self):
+        """Test an array whether it contains all invalid values."""
+        # Create an array
+        xx = np.empty((4, 4))
+        xx[0, 0] = np.nan
+        xx[1, 1] = np.inf
+        xx[2, 2] = 0.0
+        xx[3, 3] = -1
+
+        # No exception raised
+        params = {"nan": True, "inf": True, "negative": True, "zero": True}
+        check_values(xx, **params)
+
+        # Assertions
+        params = {"nan": False, "inf": False, "negative": False, "zero": False}
+        with pytest.raises(ValueError):
+            check_values(xx, **params)
 
 
 class TestVerifyLpDegree:
