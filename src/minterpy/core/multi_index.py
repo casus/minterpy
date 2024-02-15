@@ -50,6 +50,7 @@ class MultiIndexSet:
         of shape ``(N, m)``, where ``N`` is the number of multi-index elements
         (i.e., exponents) and ``m`` is the number of spatial dimension.
         Each row of the array indicates the vector of exponents.
+        To create an empty set, an empty two-dimensional array may be passed.
     lp_degree : float
         :math:`p` of the :math:`l_p`-norm (i.e., the :math:`l_p`-degree)
         that is used to define the multi-index set. The value of
@@ -66,7 +67,10 @@ class MultiIndexSet:
 
     def __init__(self, exponents: np.ndarray, lp_degree: float):
 
-        # Check values
+        # Verify the given lp_degree
+        self._lp_degree = verify_lp_degree(lp_degree)
+
+        # Check exponent values
         # Must be non-negative
         check_values(exponents, negative=False)
         # Must be two-dimensional
@@ -74,11 +78,21 @@ class MultiIndexSet:
         # Must be integer
         exponents = np.require(exponents, dtype=INT_DTYPE)
 
+        # Empty set
+        if exponents.size == 0:
+            self._poly_degree = None
+            if exponents.shape[1] == 0:
+                self._exponents = np.empty((0, 0), dtype=INT_DTYPE)
+            else:
+                self._exponents = exponents
+            self._is_complete = False
+            self._is_downward_closed = False
+            self._exponents_completed = None
+
+            return
+
         # Keep only unique entries and sort lexicographically
         self._exponents = lex_sort(exponents)
-
-        # Verify the given lp_degree
-        self._lp_degree = verify_lp_degree(lp_degree)
 
         # Compute the polynomial degree given the exponents and lp-degree
         self._poly_degree = get_poly_degree(exponents, self._lp_degree)
@@ -268,7 +282,7 @@ class MultiIndexSet:
         return self.__str__()
 
     def __len__(self):
-        # returns the number of multi_indices
+        """Return the cardinality of the multi-index set."""
         return self._exponents.shape[0]
 
     def __add__(self):
@@ -362,6 +376,13 @@ class MultiIndexSet:
         .. todo::
             - use comparison hooks for this functionality
         """
+        if len(self) == 0:
+            # The empty set is a subset of every set.
+            return True
+        if len(super_set) == 0:
+            # Any set, except the empty set, is not a subset of the empty set
+            return False
+
         return super_set.contains_these_exponents(self.exponents)
 
     def is_super_index_set_of(self, sub_set: "MultiIndexSet") -> bool:
@@ -373,6 +394,13 @@ class MultiIndexSet:
         .. todo::
             - use comparison hooks for this functionality
         """
+        if len(sub_set) == 0:
+            # Every set is a superset of the empty set
+            return True
+        if len(self) == 0:
+            # The empty set is not a superset of any set except the empty set
+            return False
+
         return self.contains_these_exponents(sub_set.exponents)
 
     def _new_instance_if_necessary(self, new_exponents: ARRAY) -> "MultiIndexSet":
@@ -441,14 +469,21 @@ class MultiIndexSet:
         # --- Pre-process the input exponents
         # Check values, must be non-negative
         check_values(exponents, negative=False)
-        # convert input to 2D in expected shape
-        exponents = exponents.reshape(-1, self.spatial_dimension)
         # Must be integer
         exponents = np.require(exponents, dtype=INT_DTYPE)
 
-        #  NOTE: If all added exponents are already contained, identical array
-        #        is returned.
-        new_exponents = insert_lexicographically(self._exponents, exponents)
+        #  NOTE: If all added exponents are already contained,
+        #        identical array is returned.
+        if len(self) == 0:
+            new_exponents = np.atleast_2d(exponents)
+            check_dimensionality(new_exponents, dimensionality=2)
+        else:
+            # convert input to 2D in expected shape
+            exponents = exponents.reshape(-1, self.spatial_dimension)
+            new_exponents = insert_lexicographically(
+                self._exponents,
+                exponents
+            )
 
         # --- Identical exponents after addition
         if new_exponents is self._exponents:
@@ -574,6 +609,12 @@ class MultiIndexSet:
           complete, setting ``inplace`` to ``False`` (the default) creates
           a shallow copy.
         """
+        # --- Empty set
+        if len(self) == 0:
+            raise ValueError(
+                "An empty multi-index set cannot be made complete!"
+            )
+
         # --- Exponents already complete
         if self.is_complete:
             if inplace:
@@ -631,6 +672,12 @@ class MultiIndexSet:
           complete, setting ``inplace`` to ``False`` (the default) creates
           a shallow copy.
         """
+        # --- Empty set
+        if len(self) == 0:
+            raise ValueError(
+                "An empty multi-index set cannot be made downward-closed!"
+            )
+
         # --- Exponents are already downward-closed
         if self.is_downward_closed:
             if inplace:
@@ -723,20 +770,23 @@ class MultiIndexSet:
                 exponents=exponents_union, lp_degree=lp_degree_union
             )
 
-    def multiply(self, other: "MultiIndexSet", inplace: bool = False) -> Optional["MultiIndexSet"]:
-        """Multiply an instance of `MultiIndexSet` with another.
-        """
+    def multiply(
+        self,
+        other: "MultiIndexSet",
+        inplace: bool = False,
+    ) -> Optional["MultiIndexSet"]:
+        """Multiply an instance of `MultiIndexSet` with another."""
         # Get the exponents of the operands
         exp_self = self.exponents
         exp_other = other.exponents
+
+        # Take the product of the exponents (multi-indices multiplication)
+        exp_prod = multiply_indices(exp_self, exp_other)
 
         # Decide the lp-degree of the product
         lp_degree_self = self.lp_degree
         lp_degree_other = other.lp_degree
         lp_degree_prod = max([lp_degree_self, lp_degree_other])
-
-        # Take the product of the exponents (multi-indices multiplication)
-        exp_prod = multiply_indices(exp_self, exp_other)
 
         if inplace:
             self._exponents = exp_prod

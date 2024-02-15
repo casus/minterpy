@@ -254,7 +254,14 @@ def BatchSizes(request):
 
 # Fixture for pair
 @pytest.fixture(
-    params=["equal", "dimensions", "poly-degrees", "lp-degrees", "all"]
+    params=[
+        "equal",
+        "dimensions",
+        "poly-degrees",
+        "lp-degrees",
+        "empty",
+        "all",
+    ]
 )
 def param_diff(request):
     return request.param
@@ -304,6 +311,15 @@ def mi_pair(SpatialDimension, PolyDegree, LpDegree, param_diff):
         p_1, p_2 = np.random.choice(lp_degrees, 2)
         mi_1 = MultiIndexSet.from_degree(m_1, d_1, p_1)
         mi_2 = MultiIndexSet.from_degree(m_2, d_2, p_2)
+    elif param_diff == "empty":
+        # A pair with one of them is empty
+        m_1 = np.random.randint(low=1, high=5)
+        m_2 = np.random.randint(low=1, high=5)
+        d_1 = np.random.randint(low=1, high=5)
+        lp_degrees = [0.5, 1.0, 2.0, 3.0, np.inf]
+        p_1, p_2 = np.random.choice(lp_degrees, 2)
+        mi_1 = MultiIndexSet.from_degree(m_1, d_1, p_1)
+        mi_2 = MultiIndexSet(np.empty((0, m_2)), p_2)
     else:
         return ValueError(f"'param-diff' = {param_diff} is not recognized!")
 
@@ -419,3 +435,14 @@ def build_random_newton_polynom(
         rnd_coeffs = np.random.uniform(-1, 1, size=(len(mi), n_poly))
 
     return NewtonPolynomial(mi, rnd_coeffs)
+
+
+def build_random_multi_index():
+    """Build random complete multi-index set."""
+    m = np.random.randint(1, 5)
+    n = np.random.randint(1, 5)
+    p = np.random.choice([1.0, 2.0, np.inf])
+
+    mi = MultiIndexSet.from_degree(m, n, p)
+
+    return mi

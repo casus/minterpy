@@ -512,6 +512,17 @@ def test_compute_errors():
         my_ordinary_regression.fit(xx_train, yy_train, compute_loocv=100)
 
 
+@pytest.mark.parametrize("spatial_dimension", [0, 1, 5])
+def test_empty_set(spatial_dimension, LpDegree):
+    """Test construction with an empty set."""
+    # Create an empty set
+    mi = mp.MultiIndexSet(np.empty((0, spatial_dimension)), LpDegree)
+
+    # Assertion
+    with pytest.raises(ValueError):
+        OrdinaryRegression(mi)
+
+
 class _EmptyClass:
     def __init__(self, multi_index, grid):
         self.multi_index = multi_index

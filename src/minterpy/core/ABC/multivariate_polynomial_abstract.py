@@ -226,6 +226,8 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
     ):
 
         if multi_index.__class__ is MultiIndexSet:
+            if len(multi_index) == 0:
+                raise ValueError("MultiIndexSet must not be empty!")
             self.multi_index = multi_index
         else:
             # TODO should passing multi indices as ndarray be supported?

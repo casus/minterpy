@@ -73,6 +73,8 @@ class OrdinaryRegression(RegressionABC):
         if multi_index is None:
             self._multi_index = grid.multi_index
         else:
+            if len(multi_index) == 0:
+                raise ValueError("MultiIndexSet must not be empty!")
             # Verify the multi-index set and its relation with the grid
             _verify_multi_index(multi_index)
             _verify_grid(self.grid, multi_index)
