@@ -293,6 +293,42 @@ class MultiIndexSet:
         """
         raise NotImplementedError("MultiIndexSet.__add__() is not implemented yet.")
 
+    def __deepcopy__(self, memo):
+        """Create of a deepcopy.
+
+        This function is called, if one uses the top-level function
+        ``deepcopy()`` on an instance of this class.
+
+        Returns
+        -------
+        `MultiIndexSet`
+            A deep copy of the current instance.
+
+        Notes
+        -----
+        - Some properties of :class:`MultiIndexSet` are lazily evaluated,
+          this custom implementation of `copy()` allows the values of
+          already computed properties to be copied.
+        - A deep copy contains a deep copy of the property exponents.
+
+        See Also
+        --------
+        copy.deepcopy
+            copy operator form the python standard library.
+        """
+        # Create a new empty instance
+        exponent = np.empty(shape=(0, self.spatial_dimension), dtype=INT_DTYPE)
+        new_instance = self.__class__(exponent, self._lp_degree)
+
+        # Some properties are lazily evaluated, copy to avoid re-computation
+        new_instance._exponents = self._exponents.copy()
+        new_instance._lp_degree = self._lp_degree
+        new_instance._poly_degree = self._poly_degree
+        new_instance._is_complete = self._is_complete
+        new_instance._is_downward_closed = self._is_downward_closed
+
+        return new_instance
+
     def ordering(self, order):
         """This function is not implemented yet.
 
@@ -300,63 +336,6 @@ class MultiIndexSet:
 
         """
         raise NotImplementedError("MultiIndexSet.ordering() is not implemented yet.")
-
-    # def complete(self, order):
-    #     raise NotImplementedError("MultiIndexSet.complete() is not implemented yet.")
-
-    def copy_private_attributes(self, new_instance):
-        """Copys the private attributes to another instance of :class:`MultiIndexSet`
-
-        .. todo::
-            - use the ``__copy__`` hook instead!
-
-        """
-        new_instance._is_complete = self._is_complete
-        new_instance._exponents_completed = self._exponents_completed
-
-    # copying
-    def __copy__(self):
-        """Creates of a shallow copy.
-
-        This function is called, if one uses the top-level function ``copy()`` on an instance of this class.
-
-        :return: The copy of the current instance.
-        :rtype: MultiIndexSet
-
-        See Also
-        --------
-        copy.copy
-            copy operator form the python standard library.
-        """
-        # TODO also copy tree if available
-        # TODO maybe use always deepcopy since exponents will be always nested?!
-        new_instance = self.__class__(
-            self._exponents, self._lp_degree
-        )
-        self.copy_private_attributes(new_instance)
-
-        return new_instance
-
-    def __deepcopy__(self, memo):
-        """Creates of a deepcopy.
-
-        This function is called, if one uses the top-level function ``deepcopy()`` on an instance of this class.
-
-        :return: The deepcopy of the current instance.
-        :rtype: MultiIndexSet
-
-        See Also
-        --------
-        copy.deepcopy
-            copy operator form the python standard library.
-        """
-        new_instance = self.__class__(
-            deepcopy(self.exponents),
-            deepcopy(self._lp_degree),
-        )
-        self.copy_private_attributes(new_instance)
-
-        return new_instance
 
     def contains_these_exponents(self, vectors: ARRAY) -> bool:
         """Checks if this instance contains a given set of exponents.
