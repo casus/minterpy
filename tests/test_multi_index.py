@@ -1,6 +1,7 @@
 """
 Test suite for multi_index.py
 """
+import copy
 import numpy as np
 import pytest
 from conftest import (
@@ -340,6 +341,40 @@ class TestAttributes:
         assert len(multi_index) == 0
         assert not multi_index.is_complete
         assert not multi_index.is_downward_closed
+
+
+class TestCopy:
+    """All tests related to copy and deepcopy of MultiIndexSet instances.
+
+    Notes
+    -----
+    - These tests are related to Issue #106.
+    """
+    def test_copy(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test creating a shallow copy."""
+        # Create a multi-index set
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Create a shallow copy
+        mi_copy = copy.copy(mi)
+
+        # Assertions
+        assert mi_copy == mi
+        assert mi_copy is not mi
+        assert np.shares_memory(mi.exponents, mi_copy.exponents)
+
+    def test_deepcopy(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test creating a deep copy."""
+        # Create a multi-index set
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Create a deep copy
+        mi_deepcopy = copy.deepcopy(mi)
+
+        # Assertions
+        assert mi_deepcopy == mi
+        assert mi_deepcopy is not mi
+        assert not np.shares_memory(mi.exponents, mi_deepcopy.exponents)
 
 
 # --- Instance Methods
@@ -1135,7 +1170,7 @@ class TestUnion:
 
 
 class TestSubset:
-    """"""
+    """All tests related to checking the subset of MultiIndexSet's."""
     def test_empty_set(self, SpatialDimension, PolyDegree, LpDegree):
         """Test that an empty set is a subset of any set.
 
@@ -1155,7 +1190,7 @@ class TestSubset:
 
 
 class TestSuperset:
-    """"""
+    """All tests related to checking the superset of MultiIndexSet's."""
     def test_empty_set(self, SpatialDimension, PolyDegree, LpDegree):
         """Test that any set is a superset of the empty set.
 
