@@ -8,11 +8,9 @@ from conftest import (
     PolyDegree,
     SpatialDimension,
     assert_call,
-    assert_multi_index_equal,
     mi_pair,
 )
-from copy import copy
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_raises
 
 from minterpy import MultiIndexSet
 from minterpy.core.utils import (
@@ -227,509 +225,767 @@ class TestInitFromDegree:
             MultiIndexSet.from_degree(spatial_dim, poly_deg, lp_degree)
 
 
-def test_attributes(SpatialDimension, PolyDegree, LpDegree):
-    """Test the attributes of MultiIndexSet instances."""
+class TestAttributes:
+    """All tests related to attributes of 'MultiIndexSet' instances."""
+    def test_complete_exps(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test the attributes of MultiIndexSet from complete exponents."""
+        # Create a MultiIndexSet from a complete set of exponents
+        exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+        multi_index = MultiIndexSet(exponents, lp_degree=LpDegree)
 
-    # Create a MultiIndexSet from a set of exponents
-    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    multi_index = MultiIndexSet(exponents, lp_degree=LpDegree)
+        # Assertions
+        assert isinstance(multi_index, MultiIndexSet)
+        assert np.array_equal(exponents, multi_index.exponents)
+        assert multi_index.lp_degree == LpDegree
+        assert multi_index.poly_degree == PolyDegree
+        assert multi_index.spatial_dimension == SpatialDimension
+        assert len(multi_index) == len(exponents)
+        assert multi_index.is_complete
+        assert multi_index.is_downward_closed
 
-    # Assertions
-    assert_(isinstance(multi_index, MultiIndexSet))
-    assert_equal(exponents, multi_index.exponents)
-    assert_(multi_index.lp_degree == LpDegree)
-    assert_(multi_index.poly_degree == PolyDegree)
+        # Assigning to read-only properties
+        with pytest.raises(AttributeError):
+            # This is related to Issue #98
+            multi_index.lp_degree = LpDegree
+            # This is related to Issue #100
+            multi_index.poly_degree = PolyDegree
 
-    number_of_monomials, dim = exponents.shape
-    assert_(len(multi_index) == number_of_monomials)
-    assert_(multi_index.spatial_dimension == dim)
+    def test_incomplete_exps(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test the attributes of MultiIndexSet from incomplete exponents.
 
-    # Assigning to read-only properties
-    with pytest.raises(AttributeError):
-        # This is related to Issue #98
-        multi_index.lp_degree = LpDegree
-        # This is related to Issue #100
-        multi_index.poly_degree = PolyDegree
+        Notes
+        -----
+        - This is related to the fix for Issue #66.
+        """
+        # Create a complete set and make it incomplete
+        exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+        # Add a new exponent of a higher degree
+        exponents_incomplete = np.insert(
+            exponents,
+            len(exponents),
+            exponents[-1] + 2,
+            axis=0,
+        )
+        mi_incomplete = MultiIndexSet(exponents_incomplete, LpDegree)
 
+        # Assertions
+        assert not mi_incomplete.is_complete
+        assert mi_incomplete.lp_degree == LpDegree
+        assert mi_incomplete.spatial_dimension == SpatialDimension
+        assert np.array_equal(mi_incomplete.exponents, exponents_incomplete)
 
-def test_attributes_incomplete_exponents(
-        SpatialDimension,
-        PolyDegree,
-        LpDegree
-):
-    """Test the attributes with an incomplete exponents for MultiIndexSet.
+    @pytest.mark.parametrize("spatial_dimension", [1, 2, 3, 7])
+    @pytest.mark.parametrize("poly_degree", [1, 2, 3, 5])
+    def test_from_degree(self, spatial_dimension, poly_degree, LpDegree):
+        """Test the attributes of MultiIndexSet from from_degree() constructor.
 
-    Notes
-    -----
-    - This is related to the fix for Issue #66.
-    """
-    # Create a complete set
-    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+        Notes
+        -----
+        - This test is included due to Issue #97. The known breaking cases:
+          the spatial dimension 7 and polynomial degree 5 are explicitly tested
+          and only for this test. Otherwise, the test suite would be
+          too time-consuming to run.
+        """
+        # Create an instance from 'from_degree()' constructor
+        multi_index = MultiIndexSet.from_degree(
+            spatial_dimension,
+            poly_degree,
+            LpDegree,
+        )
 
-    # Create an incomplete multi-index set
-    # by adding a new exponent of higher degree
-    exponents_incomplete = np.insert(
-        exponents, len(exponents), exponents[-1] + 2, axis=0)
-    multi_index_incomplete = MultiIndexSet(
-        exponents_incomplete, lp_degree=LpDegree)
+        # Assertions
+        assert isinstance(multi_index, MultiIndexSet)
+        assert multi_index.lp_degree == LpDegree
+        assert multi_index.spatial_dimension == spatial_dimension
+        assert multi_index.poly_degree == poly_degree
 
-    # Make sure the incomplete exponents are indeed incomplete
-    assert_(not is_complete(exponents_incomplete, PolyDegree, LpDegree))
-    assert_(not multi_index_incomplete.is_complete)
+    def test_empty_set(self, LpDegree):
+        """Test the attributes of empty MultiIndexSet.
 
-    # Compute the reference polynomial degree given the multi-index set
-    poly_degree = get_poly_degree(exponents_incomplete, LpDegree)
+        Notes
+        -----
+        - This test is related to Issue #132.
+        """
+        # Create an empty set
+        exponents = np.array([[]])
+        multi_index = MultiIndexSet(exponents, LpDegree)
 
-    # Assertion of attributes
-    assert_(multi_index_incomplete.poly_degree == poly_degree)
-    assert_(multi_index_incomplete.lp_degree == LpDegree)
-    assert_(multi_index_incomplete.spatial_dimension == SpatialDimension)
-    assert_equal(exponents_incomplete, multi_index_incomplete.exponents)
+        # Assertions
+        assert isinstance(multi_index, MultiIndexSet)
+        assert multi_index.lp_degree == LpDegree
+        assert multi_index.poly_degree is None
+        assert multi_index.spatial_dimension == 0
+        assert len(multi_index) == 0
+        assert not multi_index.is_complete
+        assert not multi_index.is_downward_closed
 
+    @pytest.mark.parametrize("spatial_dimension", [0, 1, 5])
+    def test_empty_set_dims(self, spatial_dimension, LpDegree):
+        """Test the attributes of empty MultiIndexSet with various dimensions.
 
-@pytest.mark.parametrize("spatial_dimension", [1, 2, 3, 7])
-@pytest.mark.parametrize("poly_degree", [1, 2, 3, 5])
-def test_attributes_from_degree(spatial_dimension, poly_degree, LpDegree):
-    """Test the resulting instances from from_degree() constructor.
+        Notes
+        -----
+        - This test is related to Issue #132.
+        """
+        # Create an empty set
+        exponents = np.empty(shape=(0, spatial_dimension), dtype=int)
+        multi_index = MultiIndexSet(exponents, LpDegree)
 
-    Notes
-    -----
-    - This test is included due to Issue #97. The known breaking cases:
-      the spatial dimension 7 and polynomial degree 5
-      are explicitly tested and only for this test.
-      Otherwise, the test suite would be too time-consuming to run.
-    """
-    multi_index = MultiIndexSet.from_degree(
-        spatial_dimension, poly_degree, LpDegree
-    )
-
-    # Assertions
-    assert_(isinstance(multi_index, MultiIndexSet))
-    assert_(multi_index.lp_degree == LpDegree)
-    assert_(multi_index.poly_degree == poly_degree)
-
-    dim = multi_index.exponents.shape[1]
-    assert_(multi_index.spatial_dimension == spatial_dimension)
-    assert_(dim == spatial_dimension)
+        # Assertions
+        assert isinstance(multi_index, MultiIndexSet)
+        assert np.array_equal(multi_index.exponents, exponents)
+        assert multi_index.lp_degree == LpDegree
+        assert multi_index.poly_degree is None
+        assert multi_index.spatial_dimension == spatial_dimension
+        assert len(multi_index) == 0
+        assert not multi_index.is_complete
+        assert not multi_index.is_downward_closed
 
 
 # --- Instance Methods
 
-# --- MultiIndexSet.add_exponents()
-def test_add_exponents_outplace(SpatialDimension, PolyDegree, LpDegree):
-    """Test the add_exponents method of a MultiIndex instance outplace.
+class TestAddExponents:
+    """All tests related to add_exponents() method."""
+    def test_outplace_identical(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test adding identical exponents of a MultiIndex instance outplace.
     
-    Notes
-    -----
-    - This is related to the fix for Issue #75
-      and the refactoring of Issue #117.
-    """
+        Notes
+        -----
+        - This is related to the fix for Issue #75
+          and the refactoring of Issue #117.
+        """
+        # Create a set of exponents
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
 
-    # --- Already contained exponents (should return identical exponents)
+        # Add the same set of exponents with default parameter value
+        exponents = mi.exponents
+        mi_added = mi.add_exponents(exponents)
+        # Assertion
+        assert mi_added == mi
 
-    # Create a set of exponents
-    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+        # Add the same set of exponents with parameter
+        mi_added = mi.add_exponents(exponents, inplace=False)
+        # Assertion
+        assert mi_added == mi
 
-    # Add the same set of exponents with default parameter value
-    exponents = mi.exponents
-    mi_added = mi.add_exponents(exponents)
-    # Assertions
-    assert_multi_index_equal(mi_added, mi)
+    def test_outplace(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test adding exponents of a MultiIndex instance outplace.
 
-    # Add the same set of exponents with parameter
-    mi_added = mi.add_exponents(exponents, inplace=False)
-    # Assertions
-    assert_multi_index_equal(mi_added, mi)
+        Notes
+        -----
+        - This is related to the fix for Issue #75
+          and the refactoring of Issue #117.
+        """
+        # Create 2 exponents, one twice the polynomial degree of the other
+        exponents_1 = get_exponent_matrix(
+            SpatialDimension, PolyDegree, LpDegree
+        )
+        exponents_2 = get_exponent_matrix(
+            SpatialDimension, 2 * PolyDegree, LpDegree
+        )
 
-    # --- A new set of exponents
-    
-    # Create 2 exponents, one twice the polynomial degree of the other
-    exponents_1 = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    exponents_2 = get_exponent_matrix(SpatialDimension, 2*PolyDegree, LpDegree)
+        # Compute the set difference between the larger set and the smaller set
+        exponents_diff = np.array(
+            list(set(map(tuple, exponents_2)) - set(map(tuple, exponents_1)))
+        )
 
-    # Compute the set difference between the larger set and the smaller set
-    exponents_diff = np.array(
-        list(set(map(tuple, exponents_2)) - set(map(tuple, exponents_1)))
-    )
+        # Create the multi-index sets
+        mi_1 = MultiIndexSet(exponents_1, lp_degree=LpDegree)
+        mi_2 = MultiIndexSet(exponents_2, lp_degree=LpDegree)
 
-    # Create the multi-index sets
-    mi_1 = MultiIndexSet(exponents_1, lp_degree=LpDegree)
-    mi_2 = MultiIndexSet(exponents_2, lp_degree=LpDegree)
+        # Add the exponents difference with default parameter value
+        mi_added = mi_1.add_exponents(exponents_diff)
+        # Assertion: The added multi-index must be the same as the big one
+        assert mi_added == mi_2
 
-    # Add the exponents difference with default parameter value
-    mi_added = mi_1.add_exponents(exponents_diff)
-    # Assertion: The added multi-index must be the same as the big one
-    assert_multi_index_equal(mi_added, mi_2)
+        # Add the exponents difference with parameter
+        mi_added = mi_1.add_exponents(exponents_diff, inplace=False)
+        # Assertion: The added multi-index must be the same as the big one
+        assert mi_added == mi_2
 
-    # Add the exponents difference with parameter
-    mi_added = mi_1.add_exponents(exponents_diff, inplace=False)
-    # Assertion: The added multi-index must be the same as the big one
-    assert_multi_index_equal(mi_added, mi_2)
+    def test_inplace_identical(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test adding identical exponents of a MultiIndex instance in-place.
 
+        Notes
+        -----
+        - This test is related to the refactoring of Issue #117.
+        """
+        # Create a set of exponents
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+        poly_degree = mi.poly_degree
+        exponents = mi.exponents
 
-def test_add_exponents_inplace(SpatialDimension, PolyDegree, LpDegree):
-    """Test in-place add_exponents() on the MultiIndexSet instances.
+        # Add the same set of exponents in-place
+        mi.add_exponents(exponents, inplace=True)
+        # Assertions
+        assert mi.exponents is exponents
+        assert mi.poly_degree == poly_degree
 
-    Notes
-    -----
-    - This test is related to the refactoring of Issue #117.
-    """
+    def test_inplace(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test adding exponents of a MultiIndex instance in-place.
 
-    # --- Already contained exponents (should return identical exponents)
+        Notes
+        -----
+        - This test is related to the refactoring of Issue #117.
+        """
+        # Create 2 exponents, one twice the polynomial degree of the other
+        exponents_1 = get_exponent_matrix(
+            SpatialDimension, PolyDegree, LpDegree
+        )
+        exponents_2 = get_exponent_matrix(
+            SpatialDimension, 2 * PolyDegree, LpDegree
+        )
 
-    # Create a set of exponents
-    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
-    poly_degree = mi.poly_degree
-    exponents = mi.exponents
+        # Compute the set difference between the larger set and the smaller set
+        exponents_diff = np.array(
+            list(set(map(tuple, exponents_2)) - set(map(tuple, exponents_1)))
+        )
 
-    # Add the same set of exponents in-place
-    mi.add_exponents(exponents, inplace=True)
-    # Assertions
-    assert mi.exponents is exponents
-    assert mi.poly_degree == poly_degree
+        # Create the multi-index sets
+        mi_1 = MultiIndexSet(exponents_1, lp_degree=LpDegree)
+        mi_2 = MultiIndexSet(exponents_2, lp_degree=LpDegree)
 
-    # --- New set of exponents
+        # Add the exponents difference in-place
+        mi_1.add_exponents(exponents_diff, inplace=True)
+        # Assertion: The added multi-index must be the same as the big one
+        assert mi_1 == mi_2
 
-    # Create 2 exponents, one twice the polynomial degree of the other
-    exponents_1 = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    exponents_2 = get_exponent_matrix(SpatialDimension, 2*PolyDegree, LpDegree)
+    def test_sparse(self):
+        """Test adding exponents to a high-dimensional sparse MultiIndexSet.
 
-    # Compute the set difference between the larger set and the smaller set
-    exponents_diff = np.array(
-        list(set(map(tuple, exponents_2)) - set(map(tuple, exponents_1)))
-    )
+        Notes
+        -----
+        - This test is related to Issue #81.
+        """
+        # Create a 20-dimensional but sparse exponents
+        m = 20
+        exponents = np.zeros((m, m), dtype=int)
+        exponents[:, 0] = np.arange(m)
+        mi = MultiIndexSet(exponents, lp_degree=1.0)
 
-    # Create the multi-index sets
-    mi_1 = MultiIndexSet(exponents_1, lp_degree=LpDegree)
-    mi_2 = MultiIndexSet(exponents_2, lp_degree=LpDegree)
+        # Assertion
+        assert mi.is_downward_closed
 
-    # Add the exponents difference in-place
-    mi_1.add_exponents(exponents_diff, inplace=True)
-    # Assertion: The added multi-index must be the same as the big one
-    assert_multi_index_equal(mi_1, mi_2)
+        # Add a new (sparse) element
+        new_element = np.zeros(m)
+        new_element[0] = m
+        mi_added = mi.add_exponents(new_element)
 
+        # Assertions
+        assert mi_added.is_downward_closed
+        assert mi_added.poly_degree == mi.poly_degree + 1
 
-def test_add_exponents_sparse():
-    """Test adding exponents to a high-dimensional sparse multi-index set.
+    def test_empty_set_outplace(self, SpatialDimension):
+        """Test adding exponents to an empty MultiIndexSet out-place.
 
-    Notes
-    -----
-    - This test is related to Issue #81.
-    """
-    # Create a 20-dimensional but sparse exponents
-    m = 20
-    exponents = np.zeros((m, m), dtype=int)
-    exponents[:, 0] = np.arange(m)
-    mi = MultiIndexSet(exponents, lp_degree=1.0)
+        Notes
+        -----
+        - This test is related to Issue #132.
+        """
+        # Create an empty set
+        exponents = np.empty(shape=(0, SpatialDimension), dtype=int)
+        mi = MultiIndexSet(exponents, lp_degree=1.0)
 
-    # Assertion
-    assert mi.is_downward_closed
+        # Add an exponent
+        new_exponent = np.ones(shape=(SpatialDimension,))
+        mi_added = mi.add_exponents(new_exponent)
 
-    # Add a new (sparse) element
-    new_element = np.zeros(m)
-    new_element[0] = m
-    mi_added = mi.add_exponents(new_element)
+        # Assertions
+        assert len(mi_added) == 1
+        assert np.array_equal(mi_added.exponents[0], new_exponent)
 
-    # Assertions
-    assert mi_added.is_downward_closed
-    assert mi_added.poly_degree == mi.poly_degree + 1
+        # Add several exponents
+        new_exponents = np.eye(SpatialDimension, dtype=int)
+        mi_added = mi.add_exponents(new_exponents)
 
+        # Assertions
+        assert len(mi_added) == SpatialDimension
+        assert np.array_equal(mi_added.exponents, new_exponents)
 
-# --- make_complete()
-def test_make_complete_inplace(SpatialDimension, PolyDegree, LpDegree):
-    """Test in-place make_complete() on the MultiIndexSet instances."""
-    if PolyDegree < 1:
-        # Only test for polynomial degree of higher than 0 (0 always complete)
-        return
+    def test_empty_set_inplace(self, SpatialDimension):
+        """Test adding exponents to an empty MultiIndexSet in-place.
 
-    # NOTE: By construction, 'from_degree()' returns a complete set
-    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
-    assert mi.is_complete
+        Notes
+        -----
+        - This test is related to Issue #132.
+        """
+        # Create an empty set
+        exponents = np.empty(shape=(0, SpatialDimension), dtype=int)
+        mi = MultiIndexSet(exponents, lp_degree=1.0)
 
-    # --- Make complete of an already complete set
-    exponents = mi.exponents
-    mi.make_complete(inplace=True)
-    # Assertion: the exponents are identical object
-    assert mi.exponents is exponents
+        # Add an exponent
+        new_exponent = 5 * np.ones(shape=(SpatialDimension,))
+        mi.add_exponents(new_exponent, inplace=True)
 
-    # --- Make complete of an incomplete set
-    # Get the highest multi-index set element
-    exponent = np.atleast_2d(mi.exponents[-1])
-    # Create a new instance with just a single exponent (incomplete exponent)
-    mi_incomplete = MultiIndexSet(exponent, LpDegree)
-    assert not mi_incomplete.is_complete
-    # Make complete in-place
-    mi_incomplete.make_complete(inplace=True)
-    # Assertions
-    assert mi_incomplete.is_complete
-    assert np.all(mi.exponents == mi_incomplete.exponents)
+        # Assertions
+        assert len(mi) == 1
+        assert np.array_equal(mi.exponents[0], new_exponent)
 
+        # Add several exponents
+        new_exponents = np.eye(SpatialDimension, dtype=int)
+        mi.add_exponents(new_exponents, inplace=True)
 
-def test_make_complete_outplace(SpatialDimension, PolyDegree, LpDegree):
-    """Test out-place make_complete() on the MultiIndexSet instances.
-
-    Notes
-    ----
-    - This is test is also related to Issue #115; by default, the 'inplace' 
-      parameter is set to False and a new MultiIndexSet instance is created.
-    """
-    if PolyDegree < 1:
-        # Only test for polynomial degree of higher than 0 (0 always complete)
-        return
-
-    # NOTE: By construction, 'from_degree()' returns a complete set
-    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
-
-    # --- Already complete set of exponents (a shallow copy is created)
-    mi_complete = mi.make_complete(inplace=False)
-    assert mi_complete.is_complete
-    assert mi_complete is not mi
-    # NOTE: Shallow copy but due to lex_sort in the default constructor,
-    #       a new set of exponents are created.
-    assert np.all(mi_complete.exponents == mi.exponents)
-
-    # --- Incomplete set of exponents
-
-    # Get the highest multi-index set element
-    exponent = np.atleast_2d(mi.exponents[-1])
-
-    # Create a new instance with just a single exponent
-    mi_incomplete = MultiIndexSet(exponent, LpDegree)
-    assert not mi_incomplete.is_complete
-
-    # Make complete out-place (with the default parameter)
-    mi_complete = mi_incomplete.make_complete()
-
-    # Assertions
-    assert mi_complete.is_complete
-    assert mi_complete is not mi_incomplete
-    assert np.all(mi_complete.exponents == mi.exponents)
-
-    # Make complete out-place (with an explicit argument)
-    mi_complete = mi_incomplete.make_complete(inplace=False)
-
-    # Assertions
-    assert mi_complete.is_complete
-    assert mi_complete is not mi_incomplete
-    assert np.all(mi_complete.exponents == mi.exponents)
+        # Assertions
+        assert len(mi) == SpatialDimension + 1
+        assert np.array_equal(mi.exponents[:-1], new_exponents)
 
 
-# --- make_downward_closed()
-def test_make_downward_closed_inplace(SpatialDimension, PolyDegree, LpDegree):
-    """Test in-place make_downward_closed() on the MultiIndexSet instances.
+class TestMakeComplete:
+    """All tests related to the 'make_complete()' method."""
+    def test_complete_inplace(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test in-place make_complete() on complete MultiIndexSet's."""
+        if PolyDegree < 1:
+            # Only test for polynomial degree > 0 (0 always complete)
+            return
 
-    Notes
-    ----
-    - This is test is also related to Issue #123.
-    """
-    if PolyDegree < 1:
-        # Only test for polynomial degree of higher than 0 (0 always complete)
-        return
-
-    # --- Already downward-closed set of exponents
-
-    # By construction, a complete set is a downward-closed set
-    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    # Exclude the last element to break completeness
-    mi = MultiIndexSet(exponents[:-1], LpDegree)
-    assert mi.is_downward_closed
-
-    # Already downward-closed, but make it downward-closed anyway
-    mi.make_downward_closed(inplace=True)
-    # Assertion: the exponents are identical object
-    exponents = mi.exponents
-    assert mi.exponents is exponents
-
-    # ---  Non-downward-closed set of exponents
-
-    # Get the highest multi-index set element from a complete set
-    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    exponent = np.atleast_2d(exponents[-1])
-    # Create a new instance with just a single exponent
-    mi = MultiIndexSet(exponent, LpDegree)
-    assert not mi.is_downward_closed
-
-    # Make downward-closed in-place
-    mi.make_downward_closed(inplace=True)
-    # Assertions
-    assert mi.is_downward_closed
-    if SpatialDimension > 1 and LpDegree != np.inf:
-        assert not mi.is_complete
-    else:
-        # if LpDegree == inf, a downward-closed set is complete
+        # NOTE: By construction, 'from_degree()' returns a complete set
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
         assert mi.is_complete
 
+        # --- Make complete of an already complete set
+        exponents = mi.exponents
+        mi.make_complete(inplace=True)
+        # Assertion: the exponents are identical object
+        assert mi.exponents is exponents
 
-def test_make_downward_closed_outplace(SpatialDimension, PolyDegree, LpDegree):
-    """Test out-place make_downward_closed() on the MultiIndexSet instances.
+    def test_incomplete_inplace(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test in-place make_complete() on incomplete MultiIndexSet's."""
+        if PolyDegree < 1:
+            # Only test for polynomial degree > 0 (0 always complete)
+            return
+
+        # Create a complete multi-index set
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # --- Make complete of an incomplete set
+        # Get the highest multi-index set element
+        exponent = np.atleast_2d(mi.exponents[-1])
+        # Create a new instance with just one exponent (incomplete exponent)
+        mi_incomplete = MultiIndexSet(exponent, LpDegree)
+        assert not mi_incomplete.is_complete
+        # Make complete in-place
+        mi_incomplete.make_complete(inplace=True)
+        # Assertions
+        assert mi_incomplete.is_complete
+        assert mi_incomplete == mi
+
+    def test_complete_outplace(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test out-place make_complete() on complete MultiIndexSet's.
+
+        Notes
+        ----
+        - This test is also related to Issue #115; by default, the 'inplace'
+          parameter is set to False and a new instance is created.
+        """
+        if PolyDegree < 1:
+            # Only test for polynomial degree of > 0 (0 always complete)
+            return
+
+        # NOTE: By construction, 'from_degree()' returns a complete set
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # --- Already complete set of exponents (a shallow copy is created)
+        mi_complete = mi.make_complete(inplace=False)
+        assert mi_complete.is_complete
+        assert mi_complete is not mi
+        # NOTE: Shallow copy but due to lex_sort in the default constructor,
+        #       a new set of exponents are created.
+        assert mi_complete == mi
+
+    def test_incomplete_outplace(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test out-place make_complete() on incomplete MultiIndexSet's.
+
+        Notes
+        ----
+        - This test is also related to Issue #115; by default, the 'inplace'
+          parameter is set to False and a new instance is created.
+        """
+        if PolyDegree < 1:
+            # Only test for polynomial degree of > 0 (0 always complete)
+            return
+
+        # Create a complete multi-index set
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # --- Incomplete set of exponents
+        # Get the highest multi-index set element
+        exponent = np.atleast_2d(mi.exponents[-1])
+
+        # Create a new instance with just a single exponent
+        mi_incomplete = MultiIndexSet(exponent, LpDegree)
+        assert not mi_incomplete.is_complete
+
+        # Make complete out-place (with the default parameter)
+        mi_complete = mi_incomplete.make_complete()
+
+        # Assertions
+        assert mi_complete.is_complete
+        assert mi_complete is not mi_incomplete
+        assert mi_complete == mi
+
+        # Make complete out-place (with an explicit argument)
+        mi_complete = mi_incomplete.make_complete(inplace=False)
+
+        # Assertions
+        assert mi_complete.is_complete
+        assert mi_complete is not mi_incomplete
+        assert mi_complete == mi
+
+    @pytest.mark.parametrize("spatial_dimension", [0, 1, 5])
+    def test_empty_set_inplace(self, spatial_dimension, LpDegree):
+        """Test in-place 'make_complete()' on empty MultiIndexSet's.
+
+        Notes
+        -----
+        - This test is related to Issue #132.
+        """
+        # Create an empty set
+        exponent = np.empty((0, spatial_dimension))
+        mi = MultiIndexSet(exponent, LpDegree)
+
+        # Assertion
+        with pytest.raises(ValueError):
+            mi.make_complete(inplace=True)
+
+    @pytest.mark.parametrize("spatial_dimension", [0, 1, 5])
+    def test_empty_set_outplace(self, spatial_dimension, LpDegree):
+        """Test out-place 'make_complete()' on empty MultiIndexSet's.
+
+        Notes
+        -----
+        - This test is related to Issue #132.
+        """
+        # Create an empty set
+        exponent = np.empty((0, spatial_dimension))
+        mi = MultiIndexSet(exponent, LpDegree)
+
+        # Assertion
+        with pytest.raises(ValueError):
+            # with default parameter
+            mi.make_complete()
+        with pytest.raises(ValueError):
+            # with parameter
+            mi.make_complete(inplace=False)
+
+
+class TestMakeDownwardClosed:
+    """All tests related to 'make_downward_closed()' MultiIndexSet's.
 
     Notes
-    ----
-    - This is test is also related to Issue #123.
+    -----
+    - These tests are related to Issue #123.
     """
-    if PolyDegree < 1:
+    def test_already_inplace(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test on already downward-closed MultiIndexSet's in-place."""
         # Only test for polynomial degree of higher than 0 (0 always complete)
-        return
+        if PolyDegree < 1:
+            return
 
-    # --- Already downward-closed set of exponents
+        # By construction, a complete set is a downward-closed set
+        exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+        mi = MultiIndexSet(exponents, LpDegree)
 
-    # By construction, a complete set is a downward-closed set
-    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    # Exclude the last element to break completeness
-    mi = MultiIndexSet(exponents[:-1], LpDegree)
-    assert mi.is_downward_closed
+        # Already downward-closed, but make it downward-closed anyway
+        mi.make_downward_closed(inplace=True)
 
-    # Already downward-closed, but make it downward-closed anyway
-    mi_downward_closed = mi.make_downward_closed(inplace=False)
+        # Assertions: the exponents are identical object
+        exponents = mi.exponents
+        assert mi.exponents is exponents
+        assert mi.is_downward_closed
 
-    # Assertions
-    assert mi_downward_closed.is_downward_closed
-    assert mi_downward_closed is not mi
-    # NOTE: Shallow copy but due to lex_sort in the default constructor,
-    #       a new set of exponents are created.
-    assert np.all(mi_downward_closed.exponents == mi.exponents)
+    def test_non_inplace(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test on non downward-closed MultiIndexSet's out-place."""
+        # Only test for polynomial degree of higher than 0 (0 always complete)
+        if PolyDegree < 1:
+            return
 
-    # --- Non-downward-closed set of exponents
+        # Get the highest multi-index set element from a complete set
+        exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+        exponent = np.atleast_2d(exponents[-1])
+        # Create a new instance with just a single exponent
+        mi = MultiIndexSet(exponent, LpDegree)
+        assert not mi.is_downward_closed
 
-    # Get the highest multi-index set element from a complete set
-    exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
-    exponent = np.atleast_2d(exponents[-1])
-    # Create a new instance with just a single exponent
-    mi_non_downward_closed = MultiIndexSet(exponent, LpDegree)
-    assert not mi_non_downward_closed.is_downward_closed
+        # Make downward-closed in-place
+        mi.make_downward_closed(inplace=True)
+        # Assertions
+        assert mi.is_downward_closed
+        if SpatialDimension > 1 and LpDegree != np.inf:
+            assert not mi.is_complete
+        else:
+            # if LpDegree == inf, a downward-closed set is complete
+            assert mi.is_complete
 
-    # Make complete out-place (with the default parameter)
-    mi_downward_closed = mi_non_downward_closed.make_downward_closed()
-    # Assertions
-    assert mi_downward_closed.is_downward_closed
-    assert mi_downward_closed is not mi_non_downward_closed
+    def test_already_outplace(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test on already downward closed MultiIndexSet's out-place."""
+        # Only test for polynomial degree of higher than 0 (0 always complete)
+        if PolyDegree < 1:
+            return
 
-    # Make complete out-place (with an explicit argument)
-    mi_downward_closed = mi_non_downward_closed.make_downward_closed(
-        inplace=False
-    )
-    # Assertions
-    assert mi_downward_closed.is_downward_closed
-    assert mi_downward_closed is not mi_non_downward_closed
-    if SpatialDimension > 1 and LpDegree != np.inf:
-        assert not mi_downward_closed.is_complete
-    else:
-        # if LpDegree == inf, a downward-closed set is complete
-        assert mi_downward_closed.is_complete
+        # By construction, a complete set is a downward-closed set
+        exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+        # Exclude the last element to break completeness
+        mi = MultiIndexSet(exponents[:-1], LpDegree)
+        assert mi.is_downward_closed
+
+        # Already downward-closed, but make it downward-closed anyway
+        mi_downward_closed = mi.make_downward_closed(inplace=False)
+
+        # Assertions
+        assert mi_downward_closed.is_downward_closed
+        assert mi_downward_closed is not mi
+        # NOTE: Shallow copy but due to lex_sort in the default constructor,
+        #       a new set of exponents are created.
+        assert mi_downward_closed == mi
+
+    def test_non_outplace(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test on non downward-closed MultiIndexSet's out-place."""
+        # Only test for polynomial degree of higher than 0 (0 always complete)
+        if PolyDegree < 1:
+            return
+
+        # Get the highest multi-index set element from a complete set
+        exponents = get_exponent_matrix(SpatialDimension, PolyDegree, LpDegree)
+        exponent = np.atleast_2d(exponents[-1])
+        # Create a new instance with just a single exponent
+        mi_non_downward_closed = MultiIndexSet(exponent, LpDegree)
+        assert not mi_non_downward_closed.is_downward_closed
+
+        # Make complete out-place (with the default parameter)
+        mi_downward_closed_1 = mi_non_downward_closed.make_downward_closed()
+        # Make complete out-place (with an explicit argument)
+        mi_downward_closed_2 = mi_non_downward_closed.make_downward_closed(
+            inplace=False
+        )
+
+        # Assertions
+        assert mi_downward_closed_1.is_downward_closed
+        assert mi_downward_closed_2.is_downward_closed
+        assert mi_downward_closed_1 is not mi_non_downward_closed
+        assert mi_downward_closed_2 is not mi_non_downward_closed
+        if SpatialDimension > 1 and LpDegree != np.inf:
+            assert not mi_downward_closed_1.is_complete
+            assert not mi_downward_closed_2.is_complete
+        else:
+            # if LpDegree == inf, a downward-closed set is complete
+            assert mi_downward_closed_1.is_complete
+            assert mi_downward_closed_2.is_complete
+
+    @pytest.mark.parametrize("spatial_dimension", [0, 1, 5])
+    def test_empty_set_inplace(self, spatial_dimension, LpDegree):
+        """Test in-place 'make_downward_closed()' on empty MultiIndexSet's.
+
+        Notes
+        -----
+        - This test is related to Issue #132.
+        """
+        # Create an empty set
+        exponent = np.empty((0, spatial_dimension))
+        mi = MultiIndexSet(exponent, LpDegree)
+
+        # Assertion
+        with pytest.raises(ValueError):
+            mi.make_downward_closed(inplace=True)
+
+    @pytest.mark.parametrize("spatial_dimension", [0, 1, 5])
+    def test_empty_set_outplace(self, spatial_dimension, LpDegree):
+        """Test in-place 'make_downward_closed()' on empty MultiIndexSet's.
+
+        Notes
+        -----
+        - This test is related to Issue #132.
+        """
+        # Create an empty set
+        exponent = np.empty((0, spatial_dimension))
+        mi = MultiIndexSet(exponent, LpDegree)
+
+        # Assertion
+        with pytest.raises(ValueError):
+            # with default parameter
+            mi.make_downward_closed()
+        with pytest.raises(ValueError):
+            # with parameter
+            mi.make_downward_closed(inplace=False)
 
 
-# --- expand_dim()
-def test_expand_dim_invalid(SpatialDimension, PolyDegree, LpDegree):
-    """Test invalid dimension expansion (i.e., contraction)."""
-    # Create a multi-index set instance
-    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+class TestExpandDim:
+    """All tests related to the expand_dim() method."""
+    def test_invalid(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test invalid dimension expansion (i.e., contraction)."""
+        # Create a multi-index set instance
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
 
-    # Expand the dimension
-    new_dimension = SpatialDimension - 1
-    # Assertion: Contraction raises an exception
-    assert_raises(ValueError, mi.expand_dim, new_dimension)
+        # Expand the dimension
+        new_dimension = SpatialDimension - 1
+        # Assertion: Contraction raises an exception
+        assert_raises(ValueError, mi.expand_dim, new_dimension)
+
+    def test_inplace(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test in-place multi-index set dimension expansion."""
+        # Create a multi-index set instance
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Expand the dimension in-place (same dimension)
+        new_dimension = SpatialDimension
+        exponents = mi.exponents
+        mi.expand_dim(new_dimension, inplace=True)
+        # Assertion: identical exponents after expansion
+        assert exponents is mi.exponents
+
+        # Expand the dimension in-place (twice the dimension)
+        new_dimension = SpatialDimension * 2
+        mi.expand_dim(new_dimension, inplace=True)
+        # Assertion: new columns are added to the exponents with 0 values
+        assert np.all(mi.exponents[:, SpatialDimension:] == 0)
+
+    def test_outplace(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test out-place multi-index set dimension expansion."""
+        # Create a multi-index set instance
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Expand the dimension in-place (same dimension)
+        new_dimension = SpatialDimension
+        exponents = mi.exponents
+        mi.expand_dim(new_dimension, inplace=True)
+        # Assertion: identical exponents after expansion
+        assert exponents is mi.exponents
+
+        # Expand the dimension in-place (twice the dimension)
+        new_dimension = SpatialDimension * 2
+        mi.expand_dim(new_dimension, inplace=True)
+        # Assertion: new columns are added to the exponents with 0 values
+        assert np.all(mi.exponents[:, SpatialDimension:] == 0)
+
+    @pytest.mark.parametrize("spatial_dimension", [0, 1, 5])
+    def test_empty_set_inplace(self, spatial_dimension, LpDegree):
+        """Test in-place dimension expansion of empty sets."""
+        # Create an empty set
+        exponents = np.empty(shape=(0, spatial_dimension), dtype=int)
+        mi = MultiIndexSet(exponents, LpDegree)
+
+        # Expand the dimension in-place (same dimension)
+        new_dimension = spatial_dimension
+        exponents = mi.exponents
+        mi.expand_dim(new_dimension, inplace=True)
+        # Assertions
+        assert exponents is mi.exponents  # identical exponents after expansion
+        assert mi.spatial_dimension == new_dimension
+
+        # Expand the dimension in-place (twice the dimension)
+        new_dimension = spatial_dimension * 2
+        mi.expand_dim(new_dimension, inplace=True)
+        # Assertion
+        assert mi.spatial_dimension == new_dimension
+
+    @pytest.mark.parametrize("spatial_dimension", [0, 1, 5])
+    def test_empty_set_outplace(self, spatial_dimension, LpDegree):
+        """Test out-place dimension expansion of empty sets."""
+        # Create an empty sets
+        exponents = np.empty(shape=(0, spatial_dimension), dtype=int)
+        mi = MultiIndexSet(exponents, LpDegree)
+
+        # Expand the dimension out-place (same dimension)
+        new_dimension = spatial_dimension
+        expanded_mi = mi.expand_dim(new_dimension)
+        # Assertions: exponents after expansion have the same value
+        assert np.array_equal(mi.exponents, expanded_mi.exponents)
+        assert expanded_mi.spatial_dimension == new_dimension
+
+        # Expand the dimension out-place (twice the dimension)
+        new_dimension = spatial_dimension * 2
+        expanded_mi = mi.expand_dim(new_dimension)
+        assert expanded_mi.spatial_dimension == new_dimension
 
 
-def test_expand_dim_inplace(SpatialDimension, PolyDegree, LpDegree):
-    """Test in-place multi-index set dimension expansion."""
-    # Create a multi-index set instance
-    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
-
-    # Expand the dimension in-place (same dimension)
-    new_dimension = SpatialDimension
-    exponents = mi.exponents
-    mi.expand_dim(new_dimension, inplace=True)
-    # Assertion: identical exponents after expansion
-    assert exponents is mi.exponents
-
-    # Expand the dimension in-place (twice the dimension)
-    new_dimension = SpatialDimension * 2
-    mi.expand_dim(new_dimension, inplace=True)
-    # Assertion: new columns are added to the exponents with 0 values
-    assert np.all(mi.exponents[:, SpatialDimension:] == 0)
-
-
-def test_expand_dim_outplace(SpatialDimension, PolyDegree, LpDegree):
-    """Test out-place multi-index set dimension expansion."""
-    # Create a multi-index set instance
-    mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
-
-    # Expand the dimension out-place (same dimension)
-    new_dimension = SpatialDimension
-    expanded_mi = mi.expand_dim(new_dimension)
-    # Assertion: exponents after expansion have the same value
-    assert np.all(mi.exponents == expanded_mi.exponents)
-
-    # Expand the dimension out-place (twice the dimension)
-    new_dimension = SpatialDimension * 2
-    expanded_mi = mi.expand_dim(new_dimension)
-    # Assertion: new columns are added to the expanded index set with 0 values
-    assert np.all(expanded_mi.exponents[:, SpatialDimension:] == 0)
-
-
-# --- __eq__()
-def test_equality(SpatialDimension, PolyDegree, LpDegree):
-    """Test the equality check between two instances of MultiIndexSet.
+class TestEquality:
+    """All tests related to equality check.
 
     Notes
     -----
-    - This test is related to Issue #107.
+    - These tests are related to Issue #107.
     """
-    # Create two multi-index sets with the same parameters
-    mi_1 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
-    mi_2 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+    def test_non_empty_set(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test the equality check between two instances of non-empty sets."""
+        # Create two multi-index sets with the same parameters
+        mi1 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+        mi2 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
 
-    # Assertions
-    assert mi_1 is not mi_2  # Instances are not identical
-    assert mi_1 == mi_2  # Instances are equal in value
+        # Assertions: not identical but equal in value
+        assert mi1 is not mi2
+        assert mi1 == mi2
+
+    @pytest.mark.parametrize("spatial_dimension", [0, 1, 5])
+    def test_empty_set(self, spatial_dimension, LpDegree):
+        """Test the equality check between two instances of empty sets.
+
+        Notes
+        -----
+        - This test is related to Issue #132.
+        """
+        # Create an empty set
+        exponent = np.empty((0, spatial_dimension))
+        mi_1 = MultiIndexSet(exponent, LpDegree)
+        mi_2 = MultiIndexSet(exponent, LpDegree)
+
+        # Assertions: not identical but equal in value
+        assert mi_1 is not mi_2
+        assert mi_1 == mi_2
 
 
-def test_inequality():
-    """Test the inequality check between MultiIndexSets.
+class TestInequality:
+    """All tests related to inequality check.
 
     Notes
     -----
-    - This test is related to Issue #107.
+    - These tests are related to Issue #107.
     """
-    # Create two different multi-index sets (both in exponents and lp-degree)
-    mi_1 = MultiIndexSet.from_degree(3, 2, 1)
-    mi_2 = MultiIndexSet.from_degree(4, 2, np.inf)
+    def test_inequality(self):
+        """Test the inequality check between MultiIndexSets."""
+        # Create two different multi-index sets (both in exponents and lp-degree)
+        mi_1 = MultiIndexSet.from_degree(3, 2, 1)
+        mi_2 = MultiIndexSet.from_degree(4, 2, np.inf)
 
-    # Assertion
-    assert mi_1 != mi_2
+        # Assertion
+        assert mi_1 != mi_2
 
+    def test_lp_degree(self, SpatialDimension, PolyDegree):
+        """Test the inequality check between MultiIndexSets w/ diff. lp-degrees.
+        """
+        # Create two sets with the same exponents but different lp-degrees
+        exp = get_exponent_matrix(SpatialDimension, PolyDegree, np.inf)
+        mi_1 = MultiIndexSet(exp, lp_degree=1.0)
+        mi_2 = MultiIndexSet(exp, lp_degree=2.0)
 
-def test_inequality_lp_degree(SpatialDimension, PolyDegree):
-    """Test the inequality check between MultiIndexSets w/ diff. lp-degrees.
+        # Assertion
+        assert mi_1 != mi_2
 
-    Notes
-    -----
-    - This test is related to Issue #107.
-    """
-    # Create two sets with the same exponents but different lp-degrees
-    exp = get_exponent_matrix(SpatialDimension, PolyDegree, np.inf)
-    mi_1 = MultiIndexSet(exp, lp_degree=1.0)
-    mi_2 = MultiIndexSet(exp, lp_degree=2.0)
+    def test_exponents(self, SpatialDimension, LpDegree):
+        """Test the inequality check between MultiIndexSets w/ diff. exponents.
+        """
+        # Create two sets with different exponents but the same lp-degree.
+        exp_1 = get_exponent_matrix(SpatialDimension, 2, np.inf)
+        mi_1 = MultiIndexSet(exp_1, lp_degree=np.inf)
+        exp_2 = get_exponent_matrix(SpatialDimension, 3, np.inf)
+        mi_2 = MultiIndexSet(exp_2, lp_degree=np.inf)
 
-    # Assertion
-    assert mi_1 != mi_2
+        # Assertion
+        assert mi_1 != mi_2
 
+    @pytest.mark.parametrize("spatial_dimension", [0, 1, 5])
+    def test_empty_set(self, spatial_dimension, LpDegree):
+        """Test the equality check between two instances of empty sets.
 
-def test_inequality_exponents(SpatialDimension, LpDegree):
-    """Test the inequality check between MultiIndexSets w/ diff. exponents.
+        Notes
+        -----
+        - This test is related to Issue #132.
+        """
+        # Create an empty set
+        exponent = np.empty((0, spatial_dimension))
+        mi_1 = MultiIndexSet(exponent, lp_degree=1.0)
+        mi_2 = MultiIndexSet(exponent, lp_degree=2.0)
 
-    Notes
-    -----
-    - This test is related to Issue #107.
-    """
-    # Create two sets with different exponents but the same lp-degree.
-    exp_1 = get_exponent_matrix(SpatialDimension, 2, np.inf)
-    mi_1 = MultiIndexSet(exp_1, lp_degree=np.inf)
-    exp_2 = get_exponent_matrix(SpatialDimension, 3, np.inf)
-    mi_2 = MultiIndexSet(exp_2, lp_degree=np.inf)
-
-    # Assertion
-    assert mi_1 != mi_2
+        # Assertion
+        assert mi_1 != mi_2
 
 
 class TestMultiplication:
@@ -737,7 +993,7 @@ class TestMultiplication:
 
     Notes
     -----
-    - These tests are related to Issue #119 and #125.
+    - These tests are related to Issue #119, #125, and #132.
     """
     def test_operator_outplace(self, mi_pair):
         """Multiply two instances via (outplace) operator."""
@@ -809,7 +1065,7 @@ class TestUnion:
 
     Notes
     -----
-    - This series of tests is related to Issue #124.
+    - This series of tests is related to Issue #124 and #132.
     """
     def test_outplace_operator(self, mi_pair):
         """Take the union via the union operator."""
@@ -847,7 +1103,7 @@ class TestUnion:
         assert mi_union_2 == mi_union_3
         assert mi_union_3 == mi_union_4
 
-    def test_inplace_op(self, mi_pair):
+    def test_inplace_operator(self, mi_pair):
         """Take the union with the inplace operator."""
         # Problem setup
         mi_1, mi_2 = mi_pair
@@ -878,6 +1134,46 @@ class TestUnion:
         assert mi_ref == mi_1
 
 
+class TestSubset:
+    """"""
+    def test_empty_set(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test that an empty set is a subset of any set.
+
+        Notes
+        -----
+        - This test is related to Issue #132.
+        """
+        # Create a multi-index set (not empty)
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Create an empty set
+        mi_empty = MultiIndexSet(np.array([[]]), LpDegree)
+
+        # Assertions
+        assert mi_empty.is_sub_index_set_of(mi)
+        assert not mi.is_sub_index_set_of(mi_empty)
+
+
+class TestSuperset:
+    """"""
+    def test_empty_set(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test that any set is a superset of the empty set.
+
+        Notes
+        -----
+        - This test is related to Issue #132.
+        """
+        # Create a multi-index set (not empty)
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Create an empty set
+        mi_empty = MultiIndexSet(np.array([[]]), LpDegree)
+
+        # Assertions
+        assert mi.is_super_index_set_of(mi_empty)
+        assert not mi_empty.is_super_index_set_of(mi)
+
+
 def _create_mi_union_ref(mi_1: MultiIndexSet, mi_2: MultiIndexSet):
     """Create a reference of the union of two MultiIndexSets.
 
@@ -899,7 +1195,12 @@ def _create_mi_union_ref(mi_1: MultiIndexSet, mi_2: MultiIndexSet):
         exp_mi_2 = expand_dim(exp_mi_2, mi_1.spatial_dimension)
     else:
         exp_mi_1 = expand_dim(exp_mi_1, mi_2.spatial_dimension)
-    exp_union = insert_lexicographically(exp_mi_1, exp_mi_2)
+    if len(mi_1) == 0:
+        exp_union = exp_mi_2
+    elif len(mi_2) == 0:
+        exp_union = exp_mi_1
+    else:
+        exp_union = insert_lexicographically(exp_mi_1, exp_mi_2)
     lp_union = np.max([mi_1.lp_degree, mi_2.lp_degree])
     mi_union = MultiIndexSet(exponents=exp_union, lp_degree=lp_union)
 
@@ -930,7 +1231,8 @@ def _create_mi_prod_ref(mi_1: MultiIndexSet, mi_2: MultiIndexSet):
     exponents_1 = mi_1.exponents
     exponents_2 = mi_2.exponents
 
-    if (m_1 == m_2) and (lp_1 == lp_2 == 1.0):
+    is_empty = len(mi_1) == 0 or len(mi_2) == 0
+    if (m_1 == m_2) and (lp_1 == lp_2 == 1.0) and not is_empty:
         # This reference only applies if lp-degree is 1.0 with the same dim.
         total_degree = d_1 + d_2  # the sum of degrees
         m = np.max([m_1, m_2])
@@ -938,8 +1240,13 @@ def _create_mi_prod_ref(mi_1: MultiIndexSet, mi_2: MultiIndexSet):
 
         return mi_prod_ref
 
-    exponents_prod = multiply_indices(exponents_1, exponents_2)
     lp_prod = max([lp_1, lp_2])
+
+    if is_empty:
+        exponents_prod = np.empty((0, np.max((m_1, m_2))))
+    else:
+        exponents_prod = multiply_indices(exponents_1, exponents_2)
+
     mi_prod_ref = MultiIndexSet(exponents=exponents_prod, lp_degree=lp_prod)
 
     return mi_prod_ref

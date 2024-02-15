@@ -859,6 +859,9 @@ def multiply_indices(
            [0, 1],
            [1, 1],
            [2, 1]])
+    >>> my_indices_4 = np.empty((0, 2))
+    >>> multiply_indices(my_indices_3, my_indices_4)  # empty set
+    array([], shape=(0, 2), dtype=int32)
     """
     # --- Adjust the dimension
     m_1 = indices_1.shape[1]
@@ -870,8 +873,12 @@ def multiply_indices(
 
     # --- Take the cross product (maybe expensive for large arrays of indices)
     prod = list(product(indices_1, indices_2))
+    # The product may be empty
     prod = np.array([np.sum(np.array(i), axis=0) for i in prod])
-    prod = lex_sort(prod)
+    if len(prod) != 0:
+        prod = lex_sort(prod)
+    else:
+        prod = np.empty((0, np.max([m_1, m_2])), dtype=INT_DTYPE)
 
     return prod
 
@@ -929,6 +936,11 @@ def union_indices(
            [2, 0],
            [0, 1],
            [1, 1]])
+    >>> my_indices_4 = np.empty((0, 1), dtype=int)
+    >>> union_indices(my_indices_3, my_indices_4)
+    array([[0],
+           [1],
+           [2]])
     """
     # --- Adjust the dimension
     m_1 = indices_1.shape[1]

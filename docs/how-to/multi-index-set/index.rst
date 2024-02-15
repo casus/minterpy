@@ -16,3 +16,4 @@ multi-index sets.
    Make a Multi-Index Set Downward-Closed <multi-index-set-downward-closed>
    Create the Union of Multi-Index Sets <multi-index-set-union>
    Multiply Multi-Index Sets <multi-index-set-multiply>
+   Create an Empty Multi-Index Set <multi-index-set-empty>

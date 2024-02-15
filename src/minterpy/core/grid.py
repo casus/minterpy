@@ -67,6 +67,8 @@ class Grid:
             raise TypeError(
                 f"the indices must be given as {MultiIndexSet} class instance"
             )
+        if len(multi_index) == 0:
+            raise ValueError("MultiIndexSet must not be empty!")
         # NOTE: the multi indices of a grid must be NOT be 'lexicographically complete in order to form a basis!
         # HOWEVER: building a MultiIndexTree requires complete indices
         self.multi_index: MultiIndexSet = multi_index

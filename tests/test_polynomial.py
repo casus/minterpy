@@ -34,3 +34,14 @@ def test_init_polynomials(Polynom):
     mi = MultiIndexSet.from_degree(2, 1, 1)
     coeffs = np.arange(len(mi), dtype=float)
     assert_call(Polynom, mi, coeffs)
+
+
+@pytest.mark.parametrize("spatial_dimension", [0, 1, 5])
+def test_empty_set(spatial_dimension, Polynom, LpDegree):
+    """Test construction with an empty set."""
+    # Create an empty set
+    mi = MultiIndexSet(np.empty((0, spatial_dimension)), LpDegree)
+
+    # Assertion
+    with pytest.raises(ValueError):
+        Polynom(mi)
