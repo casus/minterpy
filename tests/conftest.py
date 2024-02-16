@@ -17,7 +17,7 @@ SEED = 12345678
 
 # Global settings
 MIN_POLY_DEG = 0
-MAX_POLY_DEG = 20
+MAX_POLY_DEG = 25
 
 # asserts that a call runs as expected
 def assert_call(fct, *args, **kwargs):
@@ -341,10 +341,11 @@ def build_rnd_exponents(dim, n, seed=None):
     Exponents are generated within the intervall ``[MIN_POLY_DEG,MAX_POLY_DEG]``
 
     """
-    if seed is None:
-        seed = SEED
-    np.random.seed(seed)
-    return np.random.randint(MIN_POLY_DEG, MAX_POLY_DEG, (n, dim))
+    rng = np.random.default_rng(seed)
+
+    exponents = rng.integers(MIN_POLY_DEG, MAX_POLY_DEG, (n, dim), dtype=int)
+
+    return exponents
 
 
 def build_rnd_coeffs(mi, nr_poly=None, seed=None):
