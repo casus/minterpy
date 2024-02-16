@@ -259,7 +259,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         if type(grid) is not Grid:
             raise ValueError(f"unexpected type {type(grid)} of the input grid")
 
-        if not grid.multi_index.is_super_index_set_of(self.multi_index):
+        if not grid.multi_index.is_superset(self.multi_index):
             raise ValueError(
                 "the multi indices of a polynomial must be a subset of the indices of the grid in use"
             )
@@ -676,7 +676,7 @@ class MultivariatePolynomialSingleABC(MultivariatePolynomialABC):
         else:
             # also the active monomials change
             prev_indices = self.multi_index
-            if not prev_indices.is_sub_index_set_of(new_indices):
+            if not prev_indices.is_subset(new_indices):
                 raise ValueError(
                     "an index set of a polynomial can only be expanded, "
                     "but the old indices contain multi indices not present in the new indices."

@@ -696,7 +696,7 @@ def _verify_grid(grid: Grid, multi_index: Optional[MultiIndexSet] = None):
         raise TypeError(f"Unexpected type {type(grid)} of the input grid!")
 
     if multi_index is not None:
-        if not grid.multi_index.is_super_index_set_of(multi_index):
+        if not grid.multi_index.is_superset(multi_index):
             raise ValueError(
                 "The multi-indices of a polynomial must be a subset of "
                 "the multi-indices of the grid in use!"

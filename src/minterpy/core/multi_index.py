@@ -337,33 +337,6 @@ class MultiIndexSet:
         """
         raise NotImplementedError("MultiIndexSet.ordering() is not implemented yet.")
 
-    def contains_these_exponents(self, vectors: ARRAY) -> bool:
-        """Checks if this instance contains a given set of exponents.
-
-        :param vectors: Exponents to be checked.
-        :type vectors: np.ndarray
-
-        """
-        return all_indices_are_contained(vectors, self._exponents)
-
-    def is_super_index_set_of(self, sub_set: "MultiIndexSet") -> bool:
-        """Checks if this instance is a super of the given instance of :class:`MultiIndexSet`.
-
-        :param sub_set: Subset to be checked.
-        :type super_set: MultiIndexSet
-
-        .. todo::
-            - use comparison hooks for this functionality
-        """
-        if len(sub_set) == 0:
-            # Every set is a superset of the empty set
-            return True
-        if len(self) == 0:
-            # The empty set is not a superset of any set except the empty set
-            return False
-
-        return self.contains_these_exponents(sub_set.exponents)
-
     def _new_instance_if_necessary(self, new_exponents: ARRAY) -> "MultiIndexSet":
         """constructs a new instance only if the exponents are different
 
@@ -474,6 +447,40 @@ class MultiIndexSet:
 
             return new_instance
 
+    def contains_these_exponents(
+        self,
+        exponents: np.ndarray,
+        expand_dim: bool = False,
+    ) -> bool:
+        """Checks if this instance contains a given set of exponents.
+
+        Parameters
+        ----------
+        exponents : :class:`numpy:numpy.ndarray`
+            A two-dimensional array of exponents (multi-indices) to be
+            checked.
+        expand_dim : bool, optional
+            Flag to allow the dimension of an instance is expanded if there is
+            a difference.
+
+        Returns
+        -------
+        bool
+            ``True`` if all of the multi-indices in ``exponents`` are
+            contained in the current instance; ``False`` otherwise.
+        """
+        exps_self = self._exponents
+        # Expand the dimension if asked
+        if expand_dim:
+            m_self = self.spatial_dimension
+            m_other = exponents.shape[1]
+            if m_self < m_other:
+                exps_self = expand_dim_(exps_self, m_other)
+            if m_self > m_other:
+                exponents = expand_dim_(exponents, m_self)
+
+        return all_indices_are_contained(exponents, exps_self)
+
     def expand_dim(
         self,
         new_dimension: int,
@@ -554,7 +561,7 @@ class MultiIndexSet:
         ----------
         other : `MultiIndexSet`
             The superset instance.
-        expand_dim : bool
+        expand_dim : bool, optional
             Flag to allow the dimension of an instance is expanded if there is
             a difference.
 
@@ -576,20 +583,7 @@ class MultiIndexSet:
             # Any set, except the empty set, is not a subset of the empty set
             return False
 
-        # Expand the dimension before checking
-        if expand_dim:
-            m_self = self.spatial_dimension
-            m_other = other.spatial_dimension
-            exps_self = self._exponents
-            exps_other = other._exponents
-            if m_self < m_other:
-                exps_self = expand_dim_(exps_self, m_other)
-            if m_self > m_other:
-                exps_other = expand_dim_(exps_other, m_self)
-
-            return all_indices_are_contained(exps_self, exps_other)
-
-        return other.contains_these_exponents(self.exponents)
+        return other.contains_these_exponents(self.exponents, expand_dim)
 
     def is_propsubset(
         self,
@@ -602,7 +596,7 @@ class MultiIndexSet:
         ----------
         other : `MultiIndexSet`
             The superset instance.
-        expand_dim : bool
+        expand_dim : bool, optional
             Flag to allow the dimension of an instance is expanded if there is
             a difference.
 
@@ -622,6 +616,41 @@ class MultiIndexSet:
             return False
 
         return self.is_subset(other, expand_dim)
+
+    def is_superset(
+        self,
+        other: "MultiIndexSet",
+        expand_dim: bool = False,
+    ) -> bool:
+        """Checks if this instance is a subset of another.
+
+        Parameters
+        ----------
+        other : `MultiIndexSet`
+            The subset instance.
+        expand_dim : bool, optional
+            Flag to allow the dimension of an instance is expanded if there is
+            a difference.
+
+        Returns
+        -------
+        bool
+            ``True`` if the instance is a superset of another;
+            ``False`` otherwise.
+
+        Notes
+        -----
+        - The spatial dimension of the sets is irrelevant if one of the sets is
+          empty.
+        """
+        if len(other) == 0:
+            # Every set is a superset of the empty set
+            return True
+        if len(self) == 0:
+            # The empty set is not a superset of any set except the empty set
+            return False
+
+        return self.contains_these_exponents(other.exponents, expand_dim)
 
     def make_complete(
         self,
@@ -897,13 +926,28 @@ class MultiIndexSet:
 
         return self
 
+    def __ge__(self, other: "MultiIndexSet") -> bool:
+        """Check if this instance is a subset of another via '>=' operator.
+
+        Notes
+        -----
+        - The checking does not keep the spatial dimensions of both instances
+          strictly. If there's a dimension mismatch, a dimension expansion
+          is carried out.
+        - To carry out subset check without dimension expansion, use the method
+          `is_subset()` instead.
+        """
+        # Check for subset allowing the expansion of spatial dimension
+        return self.is_superset(other, expand_dim=True)
+
     def __le__(self, other: "MultiIndexSet") -> bool:
         """Check if this instance is a subset of another via '<=' operator.
 
         Notes
         -----
         - The checking does not keep the spatial dimensions of both instances
-          strictly. If there's a dimension mismatch, an exception is raised.
+          strictly. If there's a dimension mismatch, a dimension expansion
+          is carried out.
         - To carry out subset check without dimension expansion, use the method
           `is_subset()` instead.
         """
@@ -916,7 +960,8 @@ class MultiIndexSet:
         Notes
         -----
         - The checking does not keep the spatial dimensions of both instances
-          strictly. If there's a dimension mismatch, an exception is raised.
+          strictly. If there's a dimension mismatch, a dimension expansion
+          is carried out.
         - To carry out subset check without dimension expansion, use the method
           `is_subset()` instead.
         """
