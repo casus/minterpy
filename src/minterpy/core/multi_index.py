@@ -11,7 +11,7 @@ from minterpy.jit_compiled_utils import (
     all_indices_are_contained,
 )
 from minterpy.core.utils import (
-    expand_dim,
+    expand_dim as expand_dim_,
     get_poly_degree,
     get_exponent_matrix,
     insert_lexicographically,
@@ -346,24 +346,6 @@ class MultiIndexSet:
         """
         return all_indices_are_contained(vectors, self._exponents)
 
-    def is_sub_index_set_of(self, super_set: "MultiIndexSet") -> bool:
-        """Checks if this instance is a subset of the given instance of :class:`MultiIndexSet`.
-
-        :param super_set: Superset to be checked.
-        :type super_set: MultiIndexSet
-
-        .. todo::
-            - use comparison hooks for this functionality
-        """
-        if len(self) == 0:
-            # The empty set is a subset of every set.
-            return True
-        if len(super_set) == 0:
-            # Any set, except the empty set, is not a subset of the empty set
-            return False
-
-        return super_set.contains_these_exponents(self.exponents)
-
     def is_super_index_set_of(self, sub_set: "MultiIndexSet") -> bool:
         """Checks if this instance is a super of the given instance of :class:`MultiIndexSet`.
 
@@ -532,7 +514,7 @@ class MultiIndexSet:
           to ``False`` (the default) creates a shallow copy.
         """
         # Expand the dimension of the current exponents, i.e., add a new column
-        expanded_exponents = expand_dim(
+        expanded_exponents = expand_dim_(
             self._exponents, new_dimension
         )
 
@@ -560,6 +542,54 @@ class MultiIndexSet:
             )
 
             return new_instance
+
+    def is_subset(
+        self,
+        other: "MultiIndexSet",
+        expand_dim: bool = False,
+    ) -> bool:
+        """Checks if this instance is a subset of another.
+
+        Parameters
+        ----------
+        other : `MultiIndexSet`
+            The superset instance.
+        expand_dim : bool
+            Flag to allow the dimension of an instance is expanded if there is
+            a difference.
+
+        Returns
+        -------
+        bool
+            ``True`` if the instance is a subset of another;
+            ``False`` otherwise.
+
+        Notes
+        -----
+        - The spatial dimension of the sets is irrelevant if one of the sets is
+          empty.
+        """
+        if len(self) == 0:
+            # The empty set is a subset of every set.
+            return True
+        if len(other) == 0:
+            # Any set, except the empty set, is not a subset of the empty set
+            return False
+
+        # Expand the dimension before checking
+        if expand_dim:
+            m_self = self.spatial_dimension
+            m_other = other.spatial_dimension
+            exps_self = self._exponents
+            exps_other = other._exponents
+            if m_self < m_other:
+                exps_self = expand_dim_(exps_self, m_other)
+            if m_self > m_other:
+                exps_other = expand_dim_(exps_other, m_self)
+
+            return all_indices_are_contained(exps_self, exps_other)
+
+        return other.contains_these_exponents(self.exponents)
 
     def make_complete(
         self,
@@ -684,6 +714,36 @@ class MultiIndexSet:
 
             return new_instance
 
+    def multiply(
+        self,
+        other: "MultiIndexSet",
+        inplace: bool = False,
+    ) -> Optional["MultiIndexSet"]:
+        """Multiply an instance of `MultiIndexSet` with another."""
+        # Get the exponents of the operands
+        exp_self = self.exponents
+        exp_other = other.exponents
+
+        # Take the product of the exponents (multi-indices multiplication)
+        exp_prod = multiply_indices(exp_self, exp_other)
+
+        # Decide the lp-degree of the product
+        lp_degree_self = self.lp_degree
+        lp_degree_other = other.lp_degree
+        lp_degree_prod = max([lp_degree_self, lp_degree_other])
+
+        if inplace:
+            self._exponents = exp_prod
+            self._lp_degree = lp_degree_prod
+            # NOTE: Reset properties
+            self._is_complete = None
+            self._is_downward_closed = None
+
+        else:
+            return self.__class__(
+                exponents=exp_prod, lp_degree=lp_degree_prod,
+            )
+
     def union(
         self,
         other: "MultiIndexSet",
@@ -714,6 +774,8 @@ class MultiIndexSet:
         -----
         - If the operands are equal in value, setting ``inplace`` to ``False``
           (the default) creates a shallow copy.
+        - The spatial dimension of the sets is irrelevant if one of the sets is
+          empty.
         """
         # If equal no need to make any union
         if self == other:
@@ -747,36 +809,6 @@ class MultiIndexSet:
         else:
             return self.__class__(
                 exponents=exponents_union, lp_degree=lp_degree_union
-            )
-
-    def multiply(
-        self,
-        other: "MultiIndexSet",
-        inplace: bool = False,
-    ) -> Optional["MultiIndexSet"]:
-        """Multiply an instance of `MultiIndexSet` with another."""
-        # Get the exponents of the operands
-        exp_self = self.exponents
-        exp_other = other.exponents
-
-        # Take the product of the exponents (multi-indices multiplication)
-        exp_prod = multiply_indices(exp_self, exp_other)
-
-        # Decide the lp-degree of the product
-        lp_degree_self = self.lp_degree
-        lp_degree_other = other.lp_degree
-        lp_degree_prod = max([lp_degree_self, lp_degree_other])
-
-        if inplace:
-            self._exponents = exp_prod
-            self._lp_degree = lp_degree_prod
-            # NOTE: Reset properties
-            self._is_complete = None
-            self._is_downward_closed = None
-
-        else:
-            return self.__class__(
-                exponents=exp_prod, lp_degree=lp_degree_prod,
             )
 
     def __eq__(self, other: "MultiIndexSet") -> bool:
@@ -833,8 +865,21 @@ class MultiIndexSet:
 
         return self
 
+    def __le__(self, other: "MultiIndexSet") -> bool:
+        """Check if this instance is a subset of another via '<=' operator.
+
+        Notes
+        -----
+        - The checking strictly keeps the spatial dimensions of both instances.
+          If there's a dimension mismatch, an exception is raised.
+        - To carry out subset check allowing dimension expansion use the method
+          `is_subset()` instead.
+        """
+        # Check for subset without expanding the dimensions.
+        return self.is_subset(other, expand_dim=True)
+
     def __or__(self, other: "MultiIndexSet") -> "MultiIndexSet":
-        """Combine an instance of `MultiIndexSet` with another via op.
+        """Combine an instance of `MultiIndexSet` with another via '|' oper.
 
         Parameters
         ----------
