@@ -1204,10 +1204,10 @@ class TestSubset:
         mi_3 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, np.inf)
 
         # Assertions
+        assert mi_1.is_subset(mi_1)
         assert mi_1.is_subset(mi_2)
-        assert mi_1.is_subset(mi_2, expand_dim=True)
         assert mi_2.is_subset(mi_3)
-        assert mi_2.is_subset(mi_3, expand_dim=True)
+        assert mi_2.is_subset(mi_3, expand_dim=True)  # with parameter
 
     def test_operator_same_dims(self, SpatialDimension, PolyDegree):
         """Test checking subset of the same dimension via an operator.
@@ -1222,6 +1222,7 @@ class TestSubset:
         mi_3 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, np.inf)
 
         # Assertions
+        assert mi_1 <= mi_1
         assert mi_1 <= mi_2
         assert mi_2 <= mi_3
 
@@ -1281,6 +1282,113 @@ class TestSubset:
         # Assertions
         assert not mi_1 <= mi_2
         assert not mi_2 <= mi_1
+
+
+class TestPropSubset:
+    """All tests related to checking the proper subset of MultiIndexSet's.
+
+    Notes
+    -----
+    - These tests are related to Issue #129.
+    """
+    def test_empty_set(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test that an empty set is a proper subset of any set, except itself.
+
+        Notes
+        -----
+        - This test is related to Issue #132.
+        """
+        # Create a multi-index set (not empty)
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Create an empty set
+        mi_empty = MultiIndexSet(np.array([[]]), LpDegree)
+
+        # Assertions
+        assert mi_empty.is_propsubset(mi)
+        assert mi_empty < mi
+        assert not mi.is_propsubset(mi_empty)
+        assert not mi < mi_empty
+        # Not with itself
+        assert not mi_empty.is_propsubset(mi_empty)
+        assert not mi_empty < mi_empty
+
+    def test_method_same_dims(self, SpatialDimension, LpDegree):
+        """Test checking proper subset of the same dimension via a method call.
+        """
+        # Create multi-index sets
+        mi_1 = MultiIndexSet.from_degree(SpatialDimension, 2, LpDegree)
+        mi_2 = MultiIndexSet.from_degree(SpatialDimension, 4, LpDegree)
+
+        # Assertions
+        assert not mi_1.is_propsubset(mi_1)  # With itself
+        assert mi_1.is_propsubset(mi_2)
+        assert mi_1.is_propsubset(mi_2, expand_dim=True)
+
+    def test_operator_same_dims(self, SpatialDimension, LpDegree):
+        """Test checking proper subset of the same dimension via an operator.
+        """
+        # Create multi-index sets
+        mi_1 = MultiIndexSet.from_degree(SpatialDimension, 2, LpDegree)
+        mi_2 = MultiIndexSet.from_degree(SpatialDimension, 4, LpDegree)
+
+        # Assertions
+        assert not mi_1 < mi_1  # With itself
+        assert mi_1 < mi_2
+
+    def test_method_diff_dims(self, LpDegree):
+        """Test checking proper subset of diff. dimensions via a method call.
+        """
+        # Create multi-index sets
+        mi_1 = MultiIndexSet.from_degree(1, 2, LpDegree)
+        mi_2 = MultiIndexSet.from_degree(2, 4, LpDegree)
+
+        # Assertions
+        assert mi_1.is_propsubset(mi_2, expand_dim=True)
+        with pytest.raises(ValueError):
+            mi_1.is_propsubset(mi_2, expand_dim=False)
+
+    def test_identity(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test checking identity from proper subset checking."""
+        # Create two identical multi-index set
+        mi1 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+        mi2 = copy.copy(mi1)
+
+        # Assertion: This only applies if the dimension is the same
+        assert mi1 <= mi2
+        assert not mi1 < mi2
+        assert mi1 == mi2
+        assert mi2 <= mi1
+        assert not mi2 < mi1
+        assert mi1 == mi2
+
+    @pytest.mark.parametrize("spatial_dimension", [2, 3, 4])
+    def test_method_not_propsubset(self, spatial_dimension, LpDegree):
+        """Test checking not a proper subset via a method call."""
+        # Create multi-index sets
+        num_points = 50
+        exps_1 = build_rnd_exponents(spatial_dimension, num_points)
+        exps_2 = build_rnd_exponents(spatial_dimension, num_points)
+        mi_1 = MultiIndexSet(exps_1, LpDegree)
+        mi_2 = MultiIndexSet(exps_2, LpDegree)
+
+        # Assertions
+        assert not mi_1.is_propsubset(mi_2)
+        assert not mi_2.is_propsubset(mi_1)
+
+    @pytest.mark.parametrize("spatial_dimension", [2, 3, 4])
+    def test_operator_not_propsubset(self, spatial_dimension, LpDegree):
+        """Test checking not a proper subset via an operator."""
+        # Create multi-index sets
+        num_points = 20
+        exps_1 = build_rnd_exponents(spatial_dimension, num_points)
+        exps_2 = build_rnd_exponents(spatial_dimension, num_points)
+        mi_1 = MultiIndexSet(exps_1, LpDegree)
+        mi_2 = MultiIndexSet(exps_2, LpDegree)
+
+        # Assertions
+        assert not mi_1 < mi_2
+        assert not mi_2 < mi_1
 
 
 class TestSuperset:
