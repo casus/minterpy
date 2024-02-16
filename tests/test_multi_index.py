@@ -1407,8 +1407,100 @@ class TestSuperset:
         mi_empty = MultiIndexSet(np.array([[]]), LpDegree)
 
         # Assertions
-        assert mi.is_super_index_set_of(mi_empty)
-        assert not mi_empty.is_super_index_set_of(mi)
+        assert mi.is_superset(mi_empty)
+        assert not mi_empty.is_superset(mi)
+
+    def test_method_same_dims(self, SpatialDimension, PolyDegree):
+        """Test checking superset of the same dimension via a method call.
+
+        Notes
+        -----
+        - This test is related to Issue #129.
+        """
+        # Create multi-index sets
+        mi_1 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, 1.0)
+        mi_2 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, 2.0)
+        mi_3 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, np.inf)
+
+        # Assertions
+        assert mi_3.is_superset(mi_2)
+        assert mi_2.is_superset(mi_1)
+        assert mi_1.is_superset(mi_1)
+        assert mi_3.is_superset(mi_2, expand_dim=True)  # with parameter
+
+    def test_operator_same_dims(self, SpatialDimension, PolyDegree):
+        """Test checking superset of the same dimension via an operator.
+
+        Notes
+        -----
+        - This test is related to Issue #129.
+        """
+        # Create multi-index sets
+        mi_1 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, 1.0)
+        mi_2 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, 2.0)
+        mi_3 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, np.inf)
+
+        # Assertions
+        assert mi_3 >= mi_2
+        assert mi_2 >= mi_1
+        assert mi_1 >= mi_1
+
+    def test_method_diff_dims(self, PolyDegree, LpDegree):
+        """Test checking superset of different dimensions via a method call.
+
+        Notes
+        -----
+        - This test is related to Issue #129.
+        """
+        # Create multi-index sets
+        mi_1 = MultiIndexSet.from_degree(1, PolyDegree, LpDegree)
+        mi_2 = MultiIndexSet.from_degree(2, PolyDegree, LpDegree)
+        mi_3 = MultiIndexSet.from_degree(3, PolyDegree, LpDegree)
+
+        # Assertions
+        assert mi_3.is_superset(mi_2, expand_dim=True)
+        assert mi_2.is_superset(mi_1, expand_dim=True)
+
+        with pytest.raises(ValueError):
+            mi_3.is_superset(mi_2, expand_dim=False)
+
+    @pytest.mark.parametrize("spatial_dimension", [2, 3, 4])
+    def test_method_not_subset(self, spatial_dimension, LpDegree):
+        """Test checking not a superset via a method call.
+
+        Notes
+        -----
+        - This test is related to Issue #129.
+        """
+        # Create multi-index sets
+        num_points = 50
+        exps_1 = build_rnd_exponents(spatial_dimension, num_points)
+        exps_2 = build_rnd_exponents(spatial_dimension, num_points)
+        mi_1 = MultiIndexSet(exps_1, LpDegree)
+        mi_2 = MultiIndexSet(exps_2, LpDegree)
+
+        # Assertions
+        assert not mi_1.is_superset(mi_2)
+        assert not mi_2.is_superset(mi_1)
+
+    @pytest.mark.parametrize("spatial_dimension", [2, 3, 4])
+    def test_operator_not_subset(self, spatial_dimension, LpDegree):
+        """Test checking not a superset via an operator.
+
+        Notes
+        -----
+        - This test is related to Issue #129.
+        """
+        # Create multi-index sets
+        num_points = 20
+        exps_1 = build_rnd_exponents(spatial_dimension, num_points)
+        exps_2 = build_rnd_exponents(spatial_dimension, num_points)
+        mi_1 = MultiIndexSet(exps_1, LpDegree)
+        mi_2 = MultiIndexSet(exps_2, LpDegree)
+
+        # Assertions
+        assert not mi_1 >= mi_2
+        assert not mi_2 >= mi_1
 
 
 def _create_mi_union_ref(mi_1: MultiIndexSet, mi_2: MultiIndexSet):
