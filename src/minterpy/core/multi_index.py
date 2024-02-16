@@ -591,6 +591,38 @@ class MultiIndexSet:
 
         return other.contains_these_exponents(self.exponents)
 
+    def is_propsubset(
+        self,
+        other: "MultiIndexSet",
+        expand_dim: bool = False,
+    ) -> bool:
+        """Checks if this instance is a proper subset of another.
+
+        Parameters
+        ----------
+        other : `MultiIndexSet`
+            The superset instance.
+        expand_dim : bool
+            Flag to allow the dimension of an instance is expanded if there is
+            a difference.
+
+        Returns
+        -------
+        bool
+            ``True`` if the instance is a proper subset of another;
+            ``False`` otherwise.
+
+        Notes
+        -----
+        - The spatial dimension of the sets is irrelevant if one of the sets is
+          empty.
+        """
+        if len(self) == len(other):
+            # Proper subset can't have the same number of elements
+            return False
+
+        return self.is_subset(other, expand_dim)
+
     def make_complete(
         self,
         inplace: bool = False,
@@ -870,13 +902,26 @@ class MultiIndexSet:
 
         Notes
         -----
-        - The checking strictly keeps the spatial dimensions of both instances.
-          If there's a dimension mismatch, an exception is raised.
-        - To carry out subset check allowing dimension expansion use the method
+        - The checking does not keep the spatial dimensions of both instances
+          strictly. If there's a dimension mismatch, an exception is raised.
+        - To carry out subset check without dimension expansion, use the method
           `is_subset()` instead.
         """
-        # Check for subset without expanding the dimensions.
+        # Check for subset allowing the expansion of spatial dimension
         return self.is_subset(other, expand_dim=True)
+
+    def __lt__(self, other: "MultiIndexSet") -> bool:
+        """Check if this instance is a proper subset of another via '<=' opert.
+
+        Notes
+        -----
+        - The checking does not keep the spatial dimensions of both instances
+          strictly. If there's a dimension mismatch, an exception is raised.
+        - To carry out subset check without dimension expansion, use the method
+          `is_subset()` instead.
+        """
+        # Check for proper subset allowing the expansion of spatial dimension.
+        return self.is_propsubset(other, expand_dim=True)
 
     def __or__(self, other: "MultiIndexSet") -> "MultiIndexSet":
         """Combine an instance of `MultiIndexSet` with another via '|' oper.
