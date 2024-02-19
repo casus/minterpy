@@ -987,6 +987,10 @@ class MultiIndexSet:
             item = np.array(item)
             item = np.atleast_2d(item)
 
+            if item.size == 0:
+                # Empty item
+                return False
+
             # "search_lex_sorted" can only check element with consistent dim.
             # The dimension must be expanded
             spatial_dimension = item.shape[1]
