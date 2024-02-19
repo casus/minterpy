@@ -1283,6 +1283,23 @@ class TestSubset:
         assert not mi_1 <= mi_2
         assert not mi_2 <= mi_1
 
+    def test_not_subset_diff_dims(self):
+        """Test checking not subset of different dimensions via a method call.
+
+        Notes
+        -----
+        - This test is related to Issue #129.
+        - This test specifically checks for different dimensions.
+        """
+        # Create multi-index sets
+        mi_1 = MultiIndexSet.from_degree(1, 2, 1.0)
+        mi_2 = MultiIndexSet.from_degree(2, 2, 2.0)
+        mi_3 = MultiIndexSet.from_degree(3, 2, 3.0)
+
+        # Assertions
+        assert not mi_3.is_subset(mi_2, expand_dim=True)
+        assert not mi_2.is_subset(mi_1, expand_dim=True)
+
 
 class TestPropSubset:
     """All tests related to checking the proper subset of MultiIndexSet's.
@@ -1608,6 +1625,83 @@ class TestPropSuperset:
         # Assertions
         assert not mi_1 > mi_2
         assert not mi_2 > mi_1
+
+
+class TestDisjoint:
+    """All tests related to disjoint check.
+
+    Notes
+    -----
+    - These tests are related to Issue #129.
+    """
+    def test_empty_set(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test that an empty set is disjoint with every set, inc. itself."""
+        # Create an empty set
+        mi_empty = MultiIndexSet(np.array([[]]), LpDegree)
+        # Create a complete multi-index set
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Assertion
+        assert mi_empty.is_disjoint(mi_empty)
+        assert mi_empty.is_disjoint(mi)
+        assert mi.is_disjoint(mi_empty)
+        assert mi.is_disjoint(mi_empty, expand_dim=False)
+
+    def test_not_disjoint_same_dim(self, SpatialDimension, LpDegree):
+        """Test not disjoint sets having the same dimension."""
+        # Create two sets whose intersection is not zero (known a priori)
+        mi_1 = MultiIndexSet.from_degree(SpatialDimension, 2, LpDegree)
+        mi_2 = MultiIndexSet.from_degree(SpatialDimension, 4, LpDegree)
+
+        # Assertion
+        assert not mi_1.is_disjoint(mi_2)
+        assert not mi_2.is_disjoint(mi_1)
+
+    def test_disjoint_same_dim(self, SpatialDimension, LpDegree):
+        """Test disjoint sets having the same dimension."""
+        # Create two disjoint sets (known a priori)
+        exps_1 = np.eye(SpatialDimension)
+        exps_2 = 2 * np.eye(SpatialDimension)
+        mi_1 = MultiIndexSet(exps_1, LpDegree)
+        mi_2 = MultiIndexSet(exps_2, LpDegree)
+
+        # Assertions
+        assert mi_1.is_disjoint(mi_2)
+        assert mi_2.is_disjoint(mi_1)
+
+    def test_not_disjoint_diff_dims(self, PolyDegree, LpDegree):
+        """Test not disjoint sets having different dimensions."""
+        # Create two sets
+        mi_1 = MultiIndexSet.from_degree(2, PolyDegree, LpDegree)
+        mi_2 = MultiIndexSet.from_degree(4, PolyDegree, LpDegree)
+
+        # Assertions
+        # No dimension expansion
+        with pytest.raises(ValueError):
+            mi_1.is_disjoint(mi_2)
+        with pytest.raises(ValueError):
+            mi_2.is_disjoint(mi_1)
+        # Dimension expansion
+        assert not mi_1.is_disjoint(mi_2, expand_dim=True)
+        assert not mi_2.is_disjoint(mi_1, expand_dim=True)
+
+    def test_disjoint_diff_dims(selfself, LpDegree):
+        """Test disjoint sets having different dimensions."""
+        # Create two disjoint sets (known a priori)
+        exps_1 = np.eye(5)
+        exps_2 = 2 * np.eye(6)
+        mi_1 = MultiIndexSet(exps_1, LpDegree)
+        mi_2 = MultiIndexSet(exps_2, LpDegree)
+
+        # Assertion
+        # No dimension expansion
+        with pytest.raises(ValueError):
+            mi_1.is_disjoint(mi_2)
+        with pytest.raises(ValueError):
+            mi_2.is_disjoint(mi_1)
+        # Dimension expansion
+        assert mi_1.is_disjoint(mi_2, expand_dim=True)
+        assert mi_2.is_disjoint(mi_1, expand_dim=True)
 
 
 def _create_mi_union_ref(mi_1: MultiIndexSet, mi_2: MultiIndexSet):

@@ -21,6 +21,7 @@ from minterpy.core.utils import (
     gen_missing_backward_neighbors,
     insert_lexicographically,
     is_complete,
+    is_disjoint,
     is_downward_closed,
     make_complete,
     make_downward_closed,
@@ -274,6 +275,47 @@ def test_is_complete(SpatialDimension, PolyDegree, LpDegree):
         indices = np.delete(indices, -1, axis=0)
         # Assertion: Completeness lost
         assert not is_complete(indices, PolyDegree, LpDegree)
+
+
+class TestIsDisjoint:
+    """All tests related to disjoint check between to multi-index arrays.
+
+    Notes
+    -----
+    - These tests are related to Issue #129.
+    """
+    def test_disjoint(self, SpatialDimension):
+        """Test two disjoint sets."""
+        indices_1 = np.eye(SpatialDimension, dtype=int)
+        indices_2 = 2 * np.eye(SpatialDimension, dtype=int)
+
+        # Assertions
+        assert is_disjoint(indices_1, indices_2)
+        assert is_disjoint(indices_2, indices_1)
+
+    def test_not_disjoint(self, SpatialDimension, LpDegree):
+        """Test two not disjoint sets."""
+        # Create two not disjoint sets
+        indices_1 = get_exponent_matrix(SpatialDimension, 2, LpDegree)
+        indices_2 = get_exponent_matrix(SpatialDimension, 4, LpDegree)
+
+        # Assertions
+        assert not is_disjoint(indices_1, indices_2)
+        assert not is_disjoint(indices_2, indices_1)
+
+    def test_not_disjoint_diff_dims(self, SpatialDimension, LpDegree):
+        """Test two not disjoint sets having different dimensions."""
+        # Create two sets
+        indices_1 = np.eye(2, dtype=int)
+        indices_2 = np.eye(4, dtype=int)
+
+        # Assertions
+        # Different dimension automatically disjoint
+        assert is_disjoint(indices_1, indices_2)
+        assert is_disjoint(indices_2, indices_1)
+        # ...unless the dimension is expanded
+        assert not is_disjoint(indices_1, indices_2, True)
+        assert not is_disjoint(indices_2, indices_1, True)
 
 
 # --- is_downward_closed()

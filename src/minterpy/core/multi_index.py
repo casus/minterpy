@@ -16,6 +16,7 @@ from minterpy.core.utils import (
     get_exponent_matrix,
     insert_lexicographically,
     is_complete,
+    is_disjoint,
     is_downward_closed,
     lex_sort,
     make_complete,
@@ -550,6 +551,50 @@ class MultiIndexSet:
 
             return new_instance
 
+    def is_disjoint(
+        self,
+        other: "MultiIndexSet",
+        expand_dim: bool = False,
+    ) -> bool:
+        """Return ``True`` if two sets have a null intersection.
+
+        Parameters
+        ----------
+        other : `MultiIndexSet`
+            The other instance of multi-index set.
+        expand_dim : bool, optional
+            Flag to allow the spatial dimension of an instance to be expanded
+            if there is a difference.
+
+        Raises
+        ------
+        ValueError
+            If the number of spatial dimensions of the two sets
+            are not the same and ``expand_dim`` is set to ``False``.
+
+        Notes
+        -----
+        - The spatial dimension of the sets is irrelevant if one of the sets is
+          empty.
+        """
+        # Empty set
+        if len(self) == 0 or len(other) == 0:
+            return True
+
+        # Check dimension
+        m_1 = self.spatial_dimension
+        m_2 = other.spatial_dimension
+        if not expand_dim and m_1 != m_2:
+            raise ValueError(
+                f"The number of columns of the arrays must be equal! "
+                f"Got instead {m_1} and {m_2}."
+            )
+
+        exps_self = self._exponents
+        exps_other = other._exponents
+
+        return is_disjoint(exps_self, exps_other, expand_dim_=expand_dim)
+
     def is_subset(
         self,
         other: "MultiIndexSet",
@@ -562,8 +607,8 @@ class MultiIndexSet:
         other : `MultiIndexSet`
             The superset instance.
         expand_dim : bool, optional
-            Flag to allow the dimension of an instance is expanded if there is
-            a difference.
+            Flag to allow the spatial dimension of an instance to be expanded
+            if there is a difference.
 
         Returns
         -------
@@ -629,8 +674,8 @@ class MultiIndexSet:
         other : `MultiIndexSet`
             The subset instance.
         expand_dim : bool, optional
-            Flag to allow the dimension of an instance is expanded if there is
-            a difference.
+            Flag to allow the spatial dimension of an instance to be expanded
+            if there is a difference.
 
         Returns
         -------
@@ -664,8 +709,8 @@ class MultiIndexSet:
         other : `MultiIndexSet`
             The subset instance.
         expand_dim : bool, optional
-            Flag to allow the dimension of an instance is expanded if there is
-            a difference.
+            Flag to allow the spatial dimension of an instance to be expanded
+            if there is a difference.
 
         Returns
         -------
