@@ -10,11 +10,12 @@ from itertools import product
 from math import ceil
 from typing import Iterable, no_type_check
 
-from minterpy.global_settings import DEFAULT_LP_DEG, INT_DTYPE
+from minterpy.global_settings import DEFAULT_LP_DEG, INT_DTYPE, NOT_FOUND
 from minterpy.jit_compiled_utils import (
     fill_match_positions,
     is_index_contained,
     is_lex_smaller_or_equal,
+    search_lex_sorted,
 )
 from minterpy.utils import cartesian_product, lp_norm, lp_sum
 
@@ -461,6 +462,86 @@ def is_complete(
         return False
 
     return False
+
+
+def is_disjoint(
+    indices_1: np.ndarray,
+    indices_2: np.ndarray,
+    expand_dim_: bool = False,
+) -> bool:
+    """Check if an array of multi-indices is disjoint with another.
+
+    Parameters
+    ----------
+    indices_1 : :class:`numpy:numpy.ndarray`
+        Two-dimensional integer array of shape ``(N1, m)``, where ``N1`` is
+        the number of multi-indices and ``m`` is the number
+        of spatial dimensions.
+    indices_2 : :class:`numpy:numpy.ndarray`
+        Two-dimensional integer array of shape ``(N2, m)``, where ``N2`` is
+        the number of multi-indices and ``m`` is the number
+        of spatial dimensions.
+    expand_dim_ : bool, optional
+        Flag to allow the spatial dimension (i.e., the number of columns) of
+        the indices to be expanded if there is a difference.
+
+    Returns
+    -------
+    bool
+        ``True`` if the multi-index sets are disjoint and ``False``
+        otherwise. The function also returns ``True`` if the number of columns
+        are different and ``expand_dim`` is set to ``False``.
+
+    Examples
+    --------
+    >>> my_indices_1 = np.array([
+    ... [0, 0, 0],
+    ... [1, 0, 0],
+    ... [1, 1, 1]])
+    >>> my_indices_2 = np.array([
+    ... [0, 0, 0],
+    ... [1, 1, 1]])
+    >>> is_disjoint(my_indices_1, my_indices_2)
+    False
+    >>> my_indices_3 = np.array([
+    ... [2, 0, 1],
+    ... [1, 2, 1]])
+    >>> is_disjoint(my_indices_1, my_indices_3)
+    True
+    >>> my_indices_4 = np.array([
+    ... [0, 0],
+    ... [1, 0]])
+    >>> is_disjoint(my_indices_1, my_indices_4)
+    True
+    >>> is_disjoint(my_indices_1, my_indices_4, expand_dim_=True)
+    False
+    """
+    m_1 = indices_1.shape[1]
+    m_2 = indices_2.shape[1]
+    if expand_dim_:
+        if m_1 < m_2:
+            indices_1 = expand_dim(indices_1, m_2)
+        if m_1 > m_2:
+            indices_2 = expand_dim(indices_2, m_1)
+    else:
+        if m_1 != m_2:
+            return True
+
+    # So the search is carried out with the smaller array
+    n_1 = indices_1.shape[0]
+    n_2 = indices_2.shape[0]
+    if n_1 > n_2:
+        main_indices = indices_1
+        search_indices = indices_2
+    else:
+        main_indices = indices_2
+        search_indices = indices_1
+
+    for search_index in search_indices:
+        if search_lex_sorted(main_indices, search_index) != NOT_FOUND:
+            return False
+
+    return True
 
 
 def is_downward_closed(indices: np.ndarray) -> bool:
