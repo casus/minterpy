@@ -1096,6 +1096,126 @@ class TestMultiplication:
         assert mi_1 == mi_prod_ref
 
 
+class TestContainmentCheck:
+    """Tests about checking the containment of an element in MultiIndexSet.
+
+    Notes
+    -----
+    - This series of tests is related to Issue #128.
+    """
+    def test_in(self, SpatialDimension, PolyDegree, LpDegree):
+        """Check the containment of an element."""
+        # Problem setup
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Take a random element
+        idx = np.random.choice(len(mi))
+
+        # Assertion: an element of a set must be contained by the set
+        assert mi.exponents[idx] in mi
+
+    def test_not_in(self, SpatialDimension, PolyDegree, LpDegree):
+        """Check the negative containment of an element."""
+        # Problem setup
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Take the highest index
+        index = np.copy(mi.exponents[-1])  # copy, to modify
+        index += 1  # Ensure the element is not in the set
+
+        # Assertion
+        assert index not in mi
+        assert np.array([]) not in mi  # empty
+
+    def test_list(self, SpatialDimension, PolyDegree, LpDegree):
+        """Check using lists as operand."""
+        # Problem setup
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Take a random element
+        idx = np.random.choice(len(mi))
+        indices = mi.exponents[idx].tolist()
+
+        # Assertion: an element of a set must be contained by the set
+        assert indices in mi
+
+    def test_wrong_type(self, SpatialDimension, PolyDegree, LpDegree):
+        """Check using operand of a wrong type."""
+        # Problem setup
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Test element
+        indices = "a"
+
+        # Assertion
+        assert indices not in mi
+
+    @pytest.mark.parametrize("spatial_dimension", [2, 3, 4])
+    def test_wrong_dimension(self, spatial_dimension):
+        """Check using operand of a wrong dimension, but can be expanded."""
+        # Problem setup
+        mi = MultiIndexSet.from_degree(spatial_dimension, 2, np.inf)
+
+        # Test elements
+        dim = mi.exponents.shape[1]
+        indices_1 = np.ones(dim-1, dtype=int)  # smaller dimension
+        indices_2 = np.zeros(dim+1, dtype=int)  # larger dimension
+
+        # Assertions: Automatic dimension expansion
+        assert indices_1 in mi
+        assert indices_2 in mi
+
+    def test_squeeze(self, SpatialDimension, PolyDegree, LpDegree):
+        """Check using an operand with a squeezable dimension."""
+        # Problem setup
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Take an element and increase dimension
+        idx = np.random.choice(len(mi))
+        indices = np.expand_dims(mi.exponents[idx], axis=0)
+
+        # Assertion
+        assert indices in mi
+
+    def test_squeeze_list(self, SpatialDimension, PolyDegree, LpDegree):
+        """Check using a list operand with a squeezable dimension."""
+        # Problem setup
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Take an element and increase dimension
+        idx = np.random.choice(len(mi))
+        indices = np.expand_dims(mi.exponents[idx], axis=0).tolist()
+
+        # Assertion
+        assert indices in mi
+
+    def test_multiple_elems(self, SpatialDimension, PolyDegree, LpDegree):
+        """Check using an operand with multiple index elements."""
+        # Problem setup
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Take random elements
+        if len(mi) > 1:
+            idx = np.random.randint(len(mi), size=2)
+            indices = mi.exponents[idx]
+
+            # Assertion
+            assert indices not in mi
+
+    def test_multiple_elems_list(self, SpatialDimension, PolyDegree, LpDegree):
+        """Check using an operand with multiple index elements as list."""
+        # Problem setup
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Take random elements
+        if len(mi) > 1:
+            idx = np.random.randint(len(mi), size=2)
+            indices = mi.exponents[idx].tolist()
+
+            # Assertion
+            assert indices not in mi
+
+
 class TestUnion:
     """All tests related to taking the union of MultiIndexSet instances.
 

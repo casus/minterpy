@@ -1,14 +1,21 @@
 """
 Module of the MultiIndexSet class
 """
+import numpy as np
+
 from copy import copy
 from typing import Optional
 
-import numpy as np
+from minterpy.global_settings import (
+    ARRAY,
+    INT_DTYPE,
+    DEFAULT_LP_DEG,
+    NOT_FOUND,
+)
 
-from minterpy.global_settings import ARRAY, INT_DTYPE, DEFAULT_LP_DEG
 from minterpy.jit_compiled_utils import (
     all_indices_are_contained,
+    search_lex_sorted,
 )
 from minterpy.core.utils import (
     expand_dim as expand_dim_,
@@ -949,6 +956,59 @@ class MultiIndexSet:
                 exponents=exponents_union, lp_degree=lp_degree_union
             )
 
+    def __contains__(self, item: np.ndarray) -> bool:
+        """Check if an element is contained by a `MultiIndexSet` instance.
+
+        Parameters
+        ----------
+        item : np.ndarray
+            An element of multi-index set, a one-dimensional integer array,
+            to check whether it is contained in this
+            :py:class:`.MultiIndexSet` instance.
+
+        Returns
+        -------
+        bool
+            ``True`` if the item is an element of the instance,
+            and ``False`` otherwise.
+
+        Notes
+        -----
+        - Containment check is very forgiving; wrong type, wrong dimension,
+          multi-element checks will not raise an exception
+          but simply return ``False``.
+        - If the dimension is not consistent then expansion is allowed with
+          zero padding.
+        """
+        exps_self = self._exponents
+
+        try:
+            # Convert to a NumPy array of at least two-dimensional
+            item = np.array(item)
+            item = np.atleast_2d(item)
+
+            # "search_lex_sorted" can only check element with consistent dim.
+            # The dimension must be expanded
+            spatial_dimension = item.shape[1]
+
+            if spatial_dimension > self.spatial_dimension:
+                exps_self = expand_dim_(exps_self, spatial_dimension)
+            if spatial_dimension < self.spatial_dimension:
+                item = expand_dim_(item, self.spatial_dimension)
+
+            # Check for containment
+            if item.shape[0] > 1:
+                # More than one element to check -> False
+                return False
+            idx = search_lex_sorted(exps_self, item[0])
+            if idx == NOT_FOUND:
+                return False
+
+            return True
+
+        except (TypeError, ValueError):
+            return False
+
     def __eq__(self, other: "MultiIndexSet") -> bool:
         """Check the equality of `MultiIndexSet` instances via ``==`` operator.
 
@@ -994,9 +1054,18 @@ class MultiIndexSet:
 
         Parameters
         ----------
+        other : `MultiIndexSet`
+            The second operand of the multi-index set multiplication.
 
         Returns
         -------
+        `MultiIndexSet`
+            The product of two multi-index sets.
+            If the :math:`l_p`-degrees of the operands are different,
+            then the larger :math:`l_p`-degree becomes the :math:`l_p`-degree
+            of the product set.
+            If the dimension differs, the product set has the dimension
+            of the set with the larger dimension.
         """
         # Multiply and modify the instance
         self.multiply(other, inplace=True)
@@ -1022,7 +1091,7 @@ class MultiIndexSet:
 
         Notes
         -----
-        - The checking does n   ot keep the spatial dimensions of both instances
+        - The checking does not keep the spatial dimensions of both instances
           strictly. If there's a dimension mismatch, a dimension expansion
           is carried out.
         - To carry out subset check without dimension expansion, use the method
