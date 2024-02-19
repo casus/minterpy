@@ -1125,7 +1125,7 @@ class TestContainmentCheck:
 
         # Assertion
         assert index not in mi
-        assert np.array([]) not in mi  # empty
+        assert np.array([], dtype=int) not in mi  # empty
 
     def test_list(self, SpatialDimension, PolyDegree, LpDegree):
         """Check using lists as operand."""
