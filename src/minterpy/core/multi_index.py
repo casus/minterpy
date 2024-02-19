@@ -1,7 +1,7 @@
 """
 Module of the MultiIndexSet class
 """
-from copy import copy, deepcopy
+from copy import copy
 from typing import Optional
 
 import numpy as np
@@ -652,6 +652,38 @@ class MultiIndexSet:
 
         return self.contains_these_exponents(other.exponents, expand_dim)
 
+    def is_propsuperset(
+        self,
+        other: "MultiIndexSet",
+        expand_dim: bool = False,
+    ) -> bool:
+        """Checks if this instance is a proper superset of another.
+
+        Parameters
+        ----------
+        other : `MultiIndexSet`
+            The subset instance.
+        expand_dim : bool, optional
+            Flag to allow the dimension of an instance is expanded if there is
+            a difference.
+
+        Returns
+        -------
+        bool
+            ``True`` if the instance is a proper superset of another;
+            ``False`` otherwise.
+
+        Notes
+        -----
+        - The spatial dimension of the sets is irrelevant if one of the sets is
+          empty.
+        """
+        if len(self) == len(other):
+            # Proper superset can't have the same number of elements
+            return False
+
+        return self.is_superset(other, expand_dim)
+
     def make_complete(
         self,
         inplace: bool = False,
@@ -873,7 +905,7 @@ class MultiIndexSet:
             )
 
     def __eq__(self, other: "MultiIndexSet") -> bool:
-        """Check the equality of `MultiIndexSet` instances.
+        """Check the equality of `MultiIndexSet` instances via ``==`` operator.
 
         Parameters
         ----------
@@ -893,7 +925,7 @@ class MultiIndexSet:
         )
 
     def __mul__(self, other: "MultiIndexSet") -> "MultiIndexSet":
-        """Multiply an instance of `MultiIndexSet` with another.
+        """Multiply an instance of `MultiIndexSet` with another via ``*`` op.
 
         Parameters
         ----------
@@ -927,7 +959,7 @@ class MultiIndexSet:
         return self
 
     def __ge__(self, other: "MultiIndexSet") -> bool:
-        """Check if this instance is a subset of another via '>=' operator.
+        """Check if this instance is a subset of another via ``>=`` operator.
 
         Notes
         -----
@@ -940,8 +972,22 @@ class MultiIndexSet:
         # Check for subset allowing the expansion of spatial dimension
         return self.is_superset(other, expand_dim=True)
 
+    def __gt__(self, other: "MultiIndexSet") -> bool:
+        """Check if this instance is a subset of another via ``>`` operator.
+
+        Notes
+        -----
+        - The checking does n   ot keep the spatial dimensions of both instances
+          strictly. If there's a dimension mismatch, a dimension expansion
+          is carried out.
+        - To carry out subset check without dimension expansion, use the method
+          `is_subset()` instead.
+        """
+        # Check for subset allowing the expansion of spatial dimension
+        return self.is_propsuperset(other, expand_dim=True)
+
     def __le__(self, other: "MultiIndexSet") -> bool:
-        """Check if this instance is a subset of another via '<=' operator.
+        """Check if this instance is a subset of another via ``<=`` operator.
 
         Notes
         -----
@@ -955,7 +1001,7 @@ class MultiIndexSet:
         return self.is_subset(other, expand_dim=True)
 
     def __lt__(self, other: "MultiIndexSet") -> bool:
-        """Check if this instance is a proper subset of another via '<=' opert.
+        """Check if this instance is a proper subset of another via ``<=`` op.
 
         Notes
         -----
@@ -969,7 +1015,7 @@ class MultiIndexSet:
         return self.is_propsubset(other, expand_dim=True)
 
     def __or__(self, other: "MultiIndexSet") -> "MultiIndexSet":
-        """Combine an instance of `MultiIndexSet` with another via '|' oper.
+        """Combine an instance of `MultiIndexSet` with another via ``|`` oper.
 
         Parameters
         ----------

@@ -1503,6 +1503,113 @@ class TestSuperset:
         assert not mi_2 >= mi_1
 
 
+class TestPropSuperset:
+    """All tests related to checking the proper superset of MultiIndexSet's.
+
+    Notes
+    -----
+    - These tests are related to Issue #129.
+    """
+    def test_empty_set(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test that any set is a proper superset of an empty set.
+
+        Notes
+        -----
+        - This test is related to Issue #132.
+        """
+        # Create a multi-index set (not empty)
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # Create an empty set
+        mi_empty = MultiIndexSet(np.array([[]]), LpDegree)
+
+        # Assertions
+        assert mi.is_propsuperset(mi_empty)
+        assert mi > mi_empty
+        assert not mi_empty.is_propsuperset(mi)
+        assert not mi_empty > mi
+        # Empty set is not a proper superset of itself
+        assert not mi_empty.is_propsuperset(mi_empty)
+        assert not mi_empty < mi_empty
+
+    def test_method_same_dims(self, SpatialDimension, LpDegree):
+        """Test checking proper superset of the same dim. via a method call.
+        """
+        # Create multi-index sets
+        mi_1 = MultiIndexSet.from_degree(SpatialDimension, 2, LpDegree)
+        mi_2 = MultiIndexSet.from_degree(SpatialDimension, 4, LpDegree)
+
+        # Assertions
+        assert not mi_1.is_propsuperset(mi_1)  # With itself
+        assert mi_2.is_propsuperset(mi_1)
+        assert mi_2.is_propsuperset(mi_1, expand_dim=True)
+
+    def test_operator_same_dims(self, SpatialDimension, LpDegree):
+        """Test checking proper superset of the same dimension via an operator.
+        """
+        # Create multi-index sets
+        mi_1 = MultiIndexSet.from_degree(SpatialDimension, 2, LpDegree)
+        mi_2 = MultiIndexSet.from_degree(SpatialDimension, 4, LpDegree)
+
+        # Assertions
+        assert not mi_1 > mi_1  # With itself
+        assert mi_2 > mi_1
+
+    def test_method_diff_dims(self, LpDegree):
+        """Test checking proper superset of diff. dimensions via a method call.
+        """
+        # Create multi-index sets
+        mi_1 = MultiIndexSet.from_degree(1, 2, LpDegree)
+        mi_2 = MultiIndexSet.from_degree(2, 4, LpDegree)
+
+        # Assertions
+        assert mi_2.is_propsuperset(mi_1, expand_dim=True)
+        with pytest.raises(ValueError):
+            mi_2.is_propsuperset(mi_1, expand_dim=False)
+
+    def test_identity(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test checking identity from proper superset checking."""
+        # Create two identical multi-index set
+        mi1 = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+        mi2 = copy.copy(mi1)
+
+        # Assertion: This only applies if the dimension is the same
+        assert mi1 >= mi2
+        assert not mi1 > mi2
+        assert mi1 == mi2
+        assert mi2 >= mi1
+        assert not mi2 > mi1
+        assert mi1 == mi2
+
+    @pytest.mark.parametrize("spatial_dimension", [2, 3, 4])
+    def test_method_not_propsuperset(self, spatial_dimension, LpDegree):
+        """Test checking not a proper superset via a method call."""
+        # Create multi-index sets
+        num_points = 50
+        exps_1 = build_rnd_exponents(spatial_dimension, num_points)
+        exps_2 = build_rnd_exponents(spatial_dimension, num_points)
+        mi_1 = MultiIndexSet(exps_1, LpDegree)
+        mi_2 = MultiIndexSet(exps_2, LpDegree)
+
+        # Assertions
+        assert not mi_1.is_propsuperset(mi_2)
+        assert not mi_2.is_propsuperset(mi_1)
+
+    @pytest.mark.parametrize("spatial_dimension", [2, 3, 4])
+    def test_operator_not_propsuperset(self, spatial_dimension, LpDegree):
+        """Test checking not a proper superset via an operator."""
+        # Create multi-index sets
+        num_points = 20
+        exps_1 = build_rnd_exponents(spatial_dimension, num_points)
+        exps_2 = build_rnd_exponents(spatial_dimension, num_points)
+        mi_1 = MultiIndexSet(exps_1, LpDegree)
+        mi_2 = MultiIndexSet(exps_2, LpDegree)
+
+        # Assertions
+        assert not mi_1 > mi_2
+        assert not mi_2 > mi_1
+
+
 def _create_mi_union_ref(mi_1: MultiIndexSet, mi_2: MultiIndexSet):
     """Create a reference of the union of two MultiIndexSets.
 
