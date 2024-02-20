@@ -43,7 +43,6 @@ from .verification import (
 __all__ = ["MultiIndexSet"]
 
 
-# TODO implement (set) comparison operations based on the multi index utils (>=, == ...)
 class MultiIndexSet:
     """A class to represent the set of multi-indices.
 
@@ -95,7 +94,6 @@ class MultiIndexSet:
                 self._exponents = exponents
             self._is_complete = False
             self._is_downward_closed = False
-            self._exponents_completed = None
 
             return
 
@@ -173,26 +171,6 @@ class MultiIndexSet:
           of a given dimension of a multi-dimensional polynomial basis.
         """
         return self._exponents
-
-    @property
-    def exponents_completed(self):
-        """
-        The completed version of the exponent array.
-
-        :return: A complete array of the ``exponents``, i.e. in lexicographical ordering, every exponent which is missing in ``exponents``, will be filled with the right entry.
-        :rtype: np.ndarray
-
-        """
-        # NOTE: exponents which are not complete ("with holes") cause problems with DDS, evaluation...
-        # compute and store a completed version of the indices for these operations!
-        if self._exponents_completed is None:  # lazy evaluation
-            if self.is_complete:
-                self._exponents_completed = self._exponents
-            else:
-                self._exponents_completed = make_complete(
-                    self._exponents, self.lp_degree
-                )
-        return self._exponents_completed
 
     @property
     def lp_degree(self) -> float:
@@ -282,97 +260,6 @@ class MultiIndexSet:
             self._is_downward_closed = is_downward_closed(self.exponents)
 
         return self._is_downward_closed
-
-    def __str__(self):
-        return "\n".join(["MultiIndexSet", str(self._exponents)])
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __len__(self):
-        """Return the cardinality of the multi-index set."""
-        return self._exponents.shape[0]
-
-    def __add__(self):
-        """This function is not implemented yet.
-
-        :raise NotImplementedError: If this function is called.
-
-        """
-        raise NotImplementedError("MultiIndexSet.__add__() is not implemented yet.")
-
-    def __deepcopy__(self, memo):
-        """Create of a deepcopy.
-
-        This function is called, if one uses the top-level function
-        ``deepcopy()`` on an instance of this class.
-
-        Returns
-        -------
-        `MultiIndexSet`
-            A deep copy of the current instance.
-
-        Notes
-        -----
-        - Some properties of :class:`MultiIndexSet` are lazily evaluated,
-          this custom implementation of `copy()` allows the values of
-          already computed properties to be copied.
-        - A deep copy contains a deep copy of the property exponents.
-
-        See Also
-        --------
-        copy.deepcopy
-            copy operator form the python standard library.
-        """
-        # Create a new empty instance
-        exponent = np.empty(shape=(0, self.spatial_dimension), dtype=INT_DTYPE)
-        new_instance = self.__class__(exponent, self._lp_degree)
-
-        # Some properties are lazily evaluated, copy to avoid re-computation
-        new_instance._exponents = self._exponents.copy()
-        new_instance._lp_degree = self._lp_degree
-        new_instance._poly_degree = self._poly_degree
-        new_instance._is_complete = self._is_complete
-        new_instance._is_downward_closed = self._is_downward_closed
-
-        return new_instance
-
-    def ordering(self, order):
-        """This function is not implemented yet.
-
-        :raise NotImplementedError: If this function is called.
-
-        """
-        raise NotImplementedError("MultiIndexSet.ordering() is not implemented yet.")
-
-    def _new_instance_if_necessary(self, new_exponents: ARRAY) -> "MultiIndexSet":
-        """constructs a new instance only if the exponents are different
-
-        .. todo::
-            - this should be a separate function rather than a member function.
-            - this should use the comparison hooks instead of attribute checking.
-        """
-        old_exponents = self._exponents
-        if new_exponents is old_exponents:
-            return self
-        new_instance = self.__class__(new_exponents, self.lp_degree)
-        # TODO add to the completed exponents and re-complete again
-        if self._exponents_completed is not None:
-            _exponents_completed = insert_lexicographically(
-                self._exponents_completed, new_exponents
-            )
-            if (
-                _exponents_completed is not self._exponents_completed
-            ):  # some exponents have been added:
-                # make complete again!
-                _exponents_completed = make_complete(
-                    _exponents_completed, self.lp_degree
-                )
-            new_instance._exponents_completed = _exponents_completed
-            # also set the exponents of the new_instance
-            # TODO avoid redundancy. why store both _exponents and _exponents_completed?
-            # new_instance._exponents = _exponents_completed
-        return new_instance
 
     def add_exponents(
         self,
@@ -563,7 +450,7 @@ class MultiIndexSet:
         other: "MultiIndexSet",
         expand_dim: bool = False,
     ) -> bool:
-        """Return ``True`` if two sets have a null intersection.
+        """Return ``True`` if this instance is disjoint with another.
 
         Parameters
         ----------
@@ -607,7 +494,7 @@ class MultiIndexSet:
         other: "MultiIndexSet",
         expand_dim: bool = False,
     ) -> bool:
-        """Checks if this instance is a subset of another.
+        """Return ``True`` if this instance is a subset of another.
 
         Parameters
         ----------
@@ -642,7 +529,7 @@ class MultiIndexSet:
         other: "MultiIndexSet",
         expand_dim: bool = False,
     ) -> bool:
-        """Checks if this instance is a proper subset of another.
+        """Return ``True`` if this instance is a proper subset of another.
 
         Parameters
         ----------
@@ -674,7 +561,7 @@ class MultiIndexSet:
         other: "MultiIndexSet",
         expand_dim: bool = False,
     ) -> bool:
-        """Checks if this instance is a subset of another.
+        """Return ``True`` if this instance is a superset of another.
 
         Parameters
         ----------
@@ -709,7 +596,7 @@ class MultiIndexSet:
         other: "MultiIndexSet",
         expand_dim: bool = False,
     ) -> bool:
-        """Checks if this instance is a proper superset of another.
+        """Return ``True`` if this instance is a proper subset of another.
 
         Parameters
         ----------
@@ -894,7 +781,7 @@ class MultiIndexSet:
         other: "MultiIndexSet",
         inplace: bool = False
     ) -> Optional["MultiIndexSet"]:
-        """Take the union between two MultiIndexSet instances.
+        """Create a union between this instance with another.
 
         Parameters
         ----------
@@ -955,6 +842,16 @@ class MultiIndexSet:
             return self.__class__(
                 exponents=exponents_union, lp_degree=lp_degree_union
             )
+
+    def __str__(self):
+        return "\n".join(["MultiIndexSet", str(self._exponents)])
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __len__(self):
+        """Return the cardinality of the multi-index set."""
+        return self._exponents.shape[0]
 
     def __contains__(self, item: np.ndarray) -> bool:
         """Check if an element is contained by a `MultiIndexSet` instance.
@@ -1174,5 +1071,38 @@ class MultiIndexSet:
 
         return self
 
-    # TODO make_derivable(): add (only) partial derivative exponent vectors,
-    # NOTE: not meaningful since derivation requires complete index sets anyway?
+    def __deepcopy__(self, memo):
+        """Create of a deepcopy.
+
+        This function is called, if one uses the top-level function
+        ``deepcopy()`` on an instance of this class.
+
+        Returns
+        -------
+        `MultiIndexSet`
+            A deep copy of the current instance.
+
+        Notes
+        -----
+        - Some properties of :class:`MultiIndexSet` are lazily evaluated,
+          this custom implementation of `copy()` allows the values of
+          already computed properties to be copied.
+        - A deep copy contains a deep copy of the property exponents.
+
+        See Also
+        --------
+        copy.deepcopy
+            copy operator form the python standard library.
+        """
+        # Create a new empty instance
+        exponent = np.empty(shape=(0, self.spatial_dimension), dtype=INT_DTYPE)
+        new_instance = self.__class__(exponent, self._lp_degree)
+
+        # Some properties are lazily evaluated, copy to avoid re-computation
+        new_instance._exponents = self._exponents.copy()
+        new_instance._lp_degree = self._lp_degree
+        new_instance._poly_degree = self._poly_degree
+        new_instance._is_complete = self._is_complete
+        new_instance._is_downward_closed = self._is_downward_closed
+
+        return new_instance
