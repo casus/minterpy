@@ -844,10 +844,24 @@ class MultiIndexSet:
             )
 
     def __str__(self):
-        return "\n".join(["MultiIndexSet", str(self._exponents)])
+        cls_name = self.__class__.__name__
+        return (
+            f"{cls_name}(m={self.spatial_dimension}, "
+            f"n={self._poly_degree}, "
+            f"p={self._lp_degree})\n"
+            f"{str(self._exponents)}"
+        )
 
     def __repr__(self):
-        return self.__str__()
+        cls_name = self.__class__.__name__
+        exponents = repr(self._exponents).splitlines()
+        exponents = "\n".join([f"  {_}" for _ in exponents])
+        return (
+            f"{cls_name}(\n"
+            f"{exponents},\n"
+            f"  lp_degree={self._lp_degree}\n"
+            f")"
+        )
 
     def __len__(self):
         """Return the cardinality of the multi-index set."""
