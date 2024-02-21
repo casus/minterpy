@@ -1824,6 +1824,56 @@ class TestDisjoint:
         assert mi_2.is_disjoint(mi_1, expand_dim=True)
 
 
+class TestPrint:
+    """All tests related to the string representation of MultiIndexSet.
+
+    Notes
+    -----
+    - These tests are related to Issue #133.
+    """
+    def test_repr(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test __repr__ string representation."""
+        # Create a multi-index set
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # __repr__()
+        out = repr(mi)
+        # exponents are printed with some additional spaces.
+        exps = "\n".join([f"  {_}" for _ in repr(mi.exponents).splitlines()])
+
+        # Assertions
+        assert f"lp_degree={mi.lp_degree}" in out
+        assert exps in out
+
+    def test_str(self, SpatialDimension, PolyDegree, LpDegree):
+        """Test __str__ string representation."""
+        # Create a multi-index set
+        mi = MultiIndexSet.from_degree(SpatialDimension, PolyDegree, LpDegree)
+
+        # __str__()
+        out = str(mi)
+
+        # Assertions
+        assert f"m={mi.spatial_dimension}" in out
+        assert f"n={mi.poly_degree}" in out
+        assert f"p={mi.lp_degree}" in out
+        assert str(mi.exponents) in out
+
+    @pytest.mark.parametrize("spatial_dimension", [0, 1, 2, 3])
+    def test_repr_empty(self, spatial_dimension, LpDegree):
+        """Test __repr__ string representation of empty set."""
+        # Create an empty set
+        exponent = np.empty((0, spatial_dimension), dtype=int)
+        mi = MultiIndexSet(exponent, LpDegree)
+
+        # __repr__()
+        out = repr(mi)
+
+        # Assertions
+        assert repr(mi.exponents) in out
+        assert f"lp_degree={mi.lp_degree}" in out
+
+
 def _create_mi_union_ref(mi_1: MultiIndexSet, mi_2: MultiIndexSet):
     """Create a reference of the union of two MultiIndexSets.
 
