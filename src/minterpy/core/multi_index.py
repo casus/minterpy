@@ -1,5 +1,35 @@
 """
-Module of the MultiIndexSet class
+This module contains the implementation of the `MultiIndexSet` class.
+
+The `MultiIndexSet` class represents the multi-index sets of exponents that
+define the multivariate polynomials regardless of their chosen basis.
+
+Background information
+----------------------
+
+Multi-index sets :math:`A \subseteq \mathbb{N}^m` generalize the notion of
+polynomial degree to multiple dimensions :math:`m \in \mathbb{N}`.
+More detailed background information can be found in
+:ref:`fundamentals/polynomial-bases:Multi-index sets and polynomial degree`.
+
+Implementation details
+----------------------
+
+An instance of `MultiIndexSet` class consists of two main properties:
+the set of exponents and the :math:`l_p`-degree (i.e., the :math:`p` in the
+:math:`l_p`-norm of the exponents).
+
+The set of exponents is always given as a two-dimensional array of non-negative
+integers of shape ``(N, m)`` where ``N`` corresponds to the number of elements
+and ``m`` corresponds to the *spatial dimension* of the set.
+The :math:`l_p`-degree is always given as a scalar of type `float`.
+
+How-To Guides
+-------------
+
+The relevant section of the :doc:`docs </how-to/multi-index-set/index>`
+contains several how-to guides related to instances of the `MultiIndexSet`
+class demonstrating their usages and features.
 """
 import numpy as np
 
@@ -138,8 +168,8 @@ class MultiIndexSet:
         -------
         MultiIndexSet
             An instance of :py:class:`.MultiIndexSet` in the given
-            ``spatial_dimension`` with a complete set of exponents with respect
-            to the given ``poly_degree`` and ``lp_degree``.
+            ``spatial_dimension`` with a complete set of exponents
+            with respect to the given ``poly_degree`` and ``lp_degree``.
         """
         # Verify the parameters
         poly_degree = verify_poly_degree(poly_degree)
@@ -207,8 +237,9 @@ class MultiIndexSet:
         int
             The dimension of the domain space, on which a polynomial described
             by this instance of :py:class:`.MultiIndexSet` lives.
-            It is equal to the number of elements (columns) in each element
-            of multi-indices.
+            It is equal to the number of elements in each element
+            of multi-indices (i.e., the number of columns of the array
+            of multi-indices)
         """
         return self._exponents.shape[1]
 
@@ -347,7 +378,7 @@ class MultiIndexSet:
         exponents: np.ndarray,
         expand_dim: bool = False,
     ) -> bool:
-        """Checks if this instance contains a given set of exponents.
+        """Return ``True`` if this instance contains a given set of exponents.
 
         Parameters
         ----------
@@ -361,8 +392,8 @@ class MultiIndexSet:
         Returns
         -------
         bool
-            ``True`` if all of the multi-indices in ``exponents`` are
-            contained in the current instance; ``False`` otherwise.
+            ``True`` if all the multi-indices in ``exponents`` are contained
+            in the current instance; ``False`` otherwise.
         """
         exps_self = self._exponents
         # Expand the dimension if asked
@@ -751,7 +782,27 @@ class MultiIndexSet:
         other: "MultiIndexSet",
         inplace: bool = False,
     ) -> Optional["MultiIndexSet"]:
-        """Multiply an instance of `MultiIndexSet` with another."""
+        """Multiply an instance of `MultiIndexSet` with another.
+
+        Parameters
+        ----------
+        other : `MultiIndexSet`
+            The second operand of the multi-index set multiplication (i.e.,
+            ``other`` in ``self * other``).
+        inplace : bool, optional
+            Flag to determine whether the current instance is modified in-place
+            with the product of the two multi-indices.
+            If ``inplace`` is set to ``False``, a new
+            :py:class:`.MultiIndexSet` instance is created.
+            The default is set to ``False``.
+
+        Returns
+        -------
+        `MultiIndexSet`, optional
+            The multi-index set having the product of the two sets of
+            exponents. If ``inplace`` is set to ``True``, then the modification
+            is carried out in-place without an explicit output.
+        """
         # Get the exponents of the operands
         exp_self = self.exponents
         exp_other = other.exponents
@@ -791,9 +842,9 @@ class MultiIndexSet:
         inplace : bool, optional
             Flag to determine whether the current instance is modified
             in-place with the union of the two multi-indices.
-            If ``inplace`` is ``False``, a new :py:class:`.MultiIndexSet`
-            instance is created.
-            The default is ``False``.
+            If ``inplace`` is set to ``False``, a new
+            :py:class:`.MultiIndexSet` instance is created.
+            The default is set to ``False``.
 
         Returns
         -------
@@ -1099,7 +1150,7 @@ class MultiIndexSet:
         Notes
         -----
         - Some properties of :class:`MultiIndexSet` are lazily evaluated,
-          this custom implementation of `copy()` allows the values of
+          this custom implementation of `copy.deepcopy` allows the values of
           already computed properties to be copied.
         - A deep copy contains a deep copy of the property exponents.
 

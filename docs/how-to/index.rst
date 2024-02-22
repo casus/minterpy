@@ -3,7 +3,8 @@ How-to Guides
 #############
 
 This page contains a series of guides on how to carry out routine numerical
-tasks with polynomials in Minterpy.
+tasks with polynomials in Minterpy as well as demonstrating important features
+of the main components of Minterpy.
 
 .. toctree::
    :maxdepth: 2

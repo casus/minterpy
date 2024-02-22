@@ -1,5 +1,5 @@
 """
-Test suite for multi_index.py
+Test suite for instances of the `MultiIndexSet` class.
 """
 import copy
 import numpy as np
@@ -16,13 +16,8 @@ from numpy.testing import assert_raises
 
 from minterpy import MultiIndexSet
 from minterpy.core.utils import (
-    get_poly_degree,
     get_exponent_matrix,
-    find_match_between,
     multiply_indices,
-    is_downward_closed,
-    is_complete,
-    union_indices,
     insert_lexicographically,
     expand_dim,
 )

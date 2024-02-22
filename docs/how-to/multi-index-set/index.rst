@@ -1,9 +1,9 @@
-###############
-Multi-Index Set
-###############
+################
+Multi-Index Sets
+################
 
-This page lists all the available How-To Guides related to
-multi-index sets.
+This page lists all the available How-To Guides related to instances of
+the :py:class:`.MultiIndexSet` class (i.e., the multi-index sets).
 
 .. toctree::
    :maxdepth: 1
