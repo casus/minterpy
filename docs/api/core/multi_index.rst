@@ -2,8 +2,6 @@
 Multi-Index Sets
 ################
 
-:construction: Here we need a description of multi index sets :construction:
-
 .. automodule:: minterpy.core.multi_index
 
 .. autoclass:: MultiIndexSet
